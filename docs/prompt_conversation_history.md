@@ -1160,8 +1160,511 @@ The design is clean, practical, and covers all your requirements. Here's what we
 Shall we start Phase 1 — Google Sheets API setup + Authentication? 🎯
 
 ---
+## 3. Why MVVM
+**AI**
+MVVM Architecture — Deep Dive
+Understanding the Pattern That Powers Modern Android Apps
 
-## 3. Implementation Plan
+🤔 First, Why Do We Need Architecture At All?
+Let's start with a real problem before introducing the solution.
+Imagine you write your app with NO architecture:
+// MainActivity.kt — THE NIGHTMARE SCENARIO
+class MainActivity : AppCompatActivity() {
+
+    // UI setup here...
+    // API calls here...
+    // Data parsing here...
+    // Business logic here...
+    // Navigation here...
+    // Error handling here...
+    // User input handling here...
+
+    // 800 lines later... 😱
+}
+
+What goes wrong?
+┌─────────────────────────────────────────────────────────────────┐
+│                    THE PROBLEMS                                 │
+│                                                                 │
+│  🐛 Bug in API call?                                            │
+│     → You search through 800 lines to find it                  │
+│                                                                 │
+│  📱 Screen rotates?                                             │
+│     → App crashes, data lost                                    │
+│                                                                 │
+│  ➕ Want to add a new feature?                                  │
+│     → Touch one thing, break three others                       │
+│                                                                 │
+│  👥 Another developer reads your code?                          │
+│     → Completely lost                                           │
+│                                                                 │
+│  🧪 Want to test your logic?                                    │
+│     → Nearly impossible                                         │
+└─────────────────────────────────────────────────────────────────┘
+
+
+💡 This is called "Spaghetti Code" — everything tangled together. MVVM is the solution.
+
+
+🏛️ What is MVVM?
+MVVM = Model — View — ViewModel
+It is a design pattern that splits your app into 3 clearly defined layers, each with one job and one job only.
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│   M  →  MODEL       "The Data &amp; Business Logic"                 │
+│   V  →  VIEW        "The UI — What the user sees"              │
+│   VM →  VIEWMODEL   "The Bridge — Connects M and V"            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+The Simple Analogy — A Restaurant 🍽️
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  CUSTOMER          →   VIEW        (places order, sees food)    │
+│                                                                 │
+│  WAITER            →   VIEWMODEL   (takes order to kitchen,     │
+│                                     brings food back)           │
+│                                                                 │
+│  KITCHEN + PANTRY  →   MODEL       (prepares food, stores       │
+│                                     ingredients)               │
+│                                                                 │
+│  The customer NEVER goes into the kitchen.                      │
+│  The kitchen NEVER talks directly to the customer.             │
+│  The waiter manages ALL communication between them.            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+
+🔍 Each Layer Explained In Detail
+
+🖼️ V — VIEW (What the user sees &amp; touches)
+In Android: Your Compose Screens (.kt files with @Composable)
+Its ONLY job:
+✅ Display data on screen
+✅ Capture user actions (button taps, text input)
+✅ Send those actions to ViewModel
+✅ React to state changes from ViewModel
+
+❌ NEVER makes API calls
+❌ NEVER contains business logic
+❌ NEVER directly touches data
+
+Real example from our app:
+// TransactionScreen.kt — THE VIEW
+@Composable
+fun TransactionScreen(viewModel: TransactionViewModel) {
+
+    // 👁️ OBSERVE state from ViewModel
+    val uiState by viewModel.uiState.collectAsState()
+
+    // 🎨 DISPLAY the data
+    LazyColumn {
+        items(uiState.transactions) { transaction ->
+            TransactionItem(transaction = transaction)
+        }
+    }
+
+    // 🔘 CAPTURE user action → send to ViewModel
+    FloatingActionButton(
+        onClick = { viewModel.onAddClicked() }
+    ) {
+        Icon(Icons.Default.Add, contentDescription = "Add")
+    }
+
+    // ⏳ REACT to loading state
+    if (uiState.isLoading) {
+        CircularProgressIndicator()
+    }
+}
+
+
+💡 Notice: The View has zero idea where the data comes from. It just displays whatever the ViewModel gives it.
+
+
+🧠 VM — VIEWMODEL (The Brain / Bridge)
+In Android: Classes that extend ViewModel()
+Its ONLY job:
+✅ Hold the UI state (what should be shown right now)
+✅ React to user actions from the View
+✅ Call the Repository to get/save data
+✅ Expose updated state back to the View
+✅ Survive screen rotation (this is a big deal!)
+
+❌ NEVER directly updates UI
+❌ NEVER knows about Android UI components
+❌ NEVER makes direct API calls
+
+Real example from our app:
+// TransactionViewModel.kt — THE VIEWMODEL
+class TransactionViewModel(
+    private val repository: ExpenseRepository
+) : ViewModel() {
+
+    // 📦 UI STATE — View observes this
+    private val _uiState = MutableStateFlow(TransactionUiState())
+    val uiState: StateFlow<TransactionUiState> = _uiState
+
+    // 🚀 Called when screen first opens
+    init {
+        loadTransactions()
+    }
+
+    // 📥 LOAD data from repository
+    fun loadTransactions() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+
+            val result = repository.getTransactions()
+
+            _uiState.update {
+                it.copy(
+                    transactions = result,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    // ➕ USER ACTION: Add button clicked
+    fun onAddClicked() {
+        _uiState.update { it.copy(showAddSheet = true) }
+    }
+
+    // 💾 USER ACTION: Save new transaction
+    fun saveTransaction(transaction: Transaction) {
+        viewModelScope.launch {
+            repository.addTransaction(transaction)
+            loadTransactions() // refresh list
+        }
+    }
+
+    // 🗑️ USER ACTION: Delete transaction
+    fun deleteTransaction(txnId: String) {
+        viewModelScope.launch {
+            repository.deleteTransaction(txnId)
+            loadTransactions() // refresh list
+        }
+    }
+}
+
+
+💡 The ViewModel is like a manager — it coordinates work but delegates the actual work to the Repository.
+
+
+📦 M — MODEL (Data + Business Logic)
+The Model layer has two parts in our app:
+Part A: Data Classes (The Shape of Data)
+// models/Transaction.kt
+data class Transaction(
+    val txnId: String,
+    val date: String,
+    val amount: Double,
+    val category: String,
+    val subcategory: String,
+    val paymentMethod: String,
+    val description: String,
+    val account: String,
+    val transferId: String? = null
+)
+
+// models/TransactionUiState.kt
+data class TransactionUiState(
+    val transactions: List<Transaction> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val showAddSheet: Boolean = false
+)
+
+Part B: Repository (The Data Manager)
+// repository/ExpenseRepository.kt
+class ExpenseRepository(
+    private val sheetsApi: SheetsApiService
+) {
+
+    // 📖 GET transactions from Google Sheet
+    suspend fun getTransactions(): List<Transaction> {
+        val response = sheetsApi.getRows("Transactions!A:I")
+        return parseTransactions(response)
+    }
+
+    // ➕ ADD transaction to Google Sheet
+    suspend fun addTransaction(transaction: Transaction) {
+        val row = transactionToRow(transaction)
+        sheetsApi.appendRow("Transactions!A:I", row)
+    }
+
+    // 🗑️ DELETE transaction from Google Sheet
+    suspend fun deleteTransaction(txnId: String) {
+        val rowIndex = findRowByTxnId(txnId)
+        sheetsApi.deleteRow(rowIndex)
+    }
+
+    // 🔄 TRANSFER between accounts (business logic lives here)
+    suspend fun transferBetweenAccounts(request: TransferRequest) {
+        val transferId = "TRF_${System.currentTimeMillis()}"
+
+        // Business rule: Transfer = 2 rows
+        val debitRow = createDebitRow(request, transferId)
+        val creditRow = createCreditRow(request, transferId)
+
+        sheetsApi.appendRows(listOf(debitRow, creditRow))
+    }
+
+    // 🔧 Private helpers — parsing, formatting
+    private fun parseTransactions(response: SheetsResponse)
+        : List<Transaction> { ... }
+
+    private fun transactionToRow(t: Transaction)
+        : List<Any> { ... }
+}
+
+Part C: API Service (The Network Caller)
+// api/SheetsApiService.kt
+interface SheetsApiService {
+
+    @GET("spreadsheets/{id}/values/{range}")
+    suspend fun getRows(
+        @Path("range") range: String
+    ): SheetsResponse
+
+    @POST("spreadsheets/{id}/values/{range}:append")
+    suspend fun appendRow(
+        @Path("range") range: String,
+        @Body data: AppendRequest
+    ): AppendResponse
+
+    @POST("spreadsheets/{id}:batchUpdate")
+    suspend fun deleteRow(
+        @Body request: BatchUpdateRequest
+    ): BatchUpdateResponse
+}
+
+
+🔄 How They All Connect — The Data Flow
+Flow 1: Loading Transactions (App Opens)
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  1. TransactionScreen opens                                     │
+│          │                                                      │
+│          ▼                                                      │
+│  2. ViewModel.loadTransactions() called automatically           │
+│          │                                                      │
+│          ▼                                                      │
+│  3. ViewModel sets isLoading = true                             │
+│          │                                                      │
+│          ▼                                                      │
+│  4. View sees isLoading = true → shows spinner ⏳               │
+│          │                                                      │
+│          ▼                                                      │
+│  5. ViewModel calls Repository.getTransactions()                │
+│          │                                                      │
+│          ▼                                                      │
+│  6. Repository calls SheetsApiService.getRows()                 │
+│          │                                                      │
+│          ▼                                                      │
+│  7. Google Sheets API returns raw data                          │
+│          │                                                      │
+│          ▼                                                      │
+│  8. Repository parses raw data → List<Transaction>              │
+│          │                                                      │
+│          ▼                                                      │
+│  9. ViewModel receives List<Transaction>                        │
+│          │                                                      │
+│          ▼                                                      │
+│  10. ViewModel updates state:                                   │
+│       transactions = list, isLoading = false                    │
+│          │                                                      │
+│          ▼                                                      │
+│  11. View sees new state → hides spinner, shows list ✅          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+Flow 2: User Adds a Transaction
+User fills form → taps SAVE
+        │
+        ▼
+View calls viewModel.saveTransaction(transaction)
+        │
+        ▼
+ViewModel calls repository.addTransaction(transaction)
+        │
+        ▼
+Repository formats data → calls sheetsApi.appendRow()
+        │
+        ▼
+Google Sheets API adds row to sheet
+        │
+        ▼
+Repository returns success
+        │
+        ▼
+ViewModel calls loadTransactions() to refresh
+        │
+        ▼
+View automatically updates with new transaction ✅
+
+
+🌊 Understanding StateFlow — How View Knows to Update
+This is the magic glue between ViewModel and View.
+┌─────────────────────────────────────────────────────────────────┐
+│                    STATEFLOW CONCEPT                            │
+│                                                                 │
+│  Think of it like a TV broadcast:                               │
+│                                                                 │
+│  ViewModel = TV Station                                         │
+│  StateFlow = The broadcast signal                               │
+│  View = Your TV                                                 │
+│                                                                 │
+│  Whenever the station updates the broadcast,                    │
+│  every TV watching it automatically shows the new content.      │
+│                                                                 │
+│  You don't call the TV station to ask for updates.             │
+│  The TV is always LISTENING. Updates come automatically.        │
+└─────────────────────────────────────────────────────────────────┘
+
+// In ViewModel — the "broadcast station"
+private val _uiState = MutableStateFlow(TransactionUiState())
+val uiState: StateFlow<TransactionUiState> = _uiState
+
+// When data changes, update the broadcast:
+_uiState.update { currentState ->
+    currentState.copy(transactions = newList)
+}
+
+// ─────────────────────────────────────────
+
+// In View — the "TV watching the broadcast"
+val uiState by viewModel.uiState.collectAsState()
+
+// Now uiState is ALWAYS current.
+// Compose automatically redraws when it changes. ✅
+
+
+📱 The Screen Rotation Superpower
+This is one of the most important reasons to use ViewModel.
+WITHOUT ViewModel:
+─────────────────
+User opens app
+App loads 50 transactions from API ✅
+User rotates phone
+Android DESTROYS and RECREATES the Activity 😱
+All data is GONE
+App loads 50 transactions from API AGAIN 😤
+Wasted API call, bad UX
+
+WITH ViewModel:
+───────────────
+User opens app
+ViewModel loads 50 transactions from API ✅
+User rotates phone
+Android DESTROYS and RECREATES the Activity
+BUT ViewModel SURVIVES rotation! 🎉
+View reconnects to existing ViewModel
+Data is still there, no reload needed ✅
+
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│   SCREEN ROTATION TIMELINE                                      │
+│                                                                 │
+│   Activity/Screen  ──────────────X  ──────────────────────      │
+│                    created    destroyed   recreated             │
+│                                                                 │
+│   ViewModel        ─────────────────────────────────────────    │
+│                    created              SURVIVES!               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+
+📁 How This Looks in Your Project
+app/
+└── src/main/java/com/yourname/expensetracker/
+    │
+    ├── ui/                          ← VIEW LAYER
+    │   ├── screens/
+    │   │   ├── DashboardScreen.kt
+    │   │   ├── TransactionScreen.kt
+    │   │   ├── SearchScreen.kt
+    │   │   ├── AccountsScreen.kt
+    │   │   └── SignInScreen.kt
+    │   └── components/
+    │       ├── TransactionItem.kt
+    │       ├── AccountCard.kt
+    │       └── MonthNavigator.kt
+    │
+    ├── viewmodel/                   ← VIEWMODEL LAYER
+    │   ├── TransactionViewModel.kt
+    │   ├── DashboardViewModel.kt
+    │   ├── SearchViewModel.kt
+    │   └── AccountViewModel.kt
+    │
+    ├── repository/                  ← MODEL LAYER (Part 1)
+    │   └── ExpenseRepository.kt
+    │
+    ├── api/                         ← MODEL LAYER (Part 2)
+    │   ├── SheetsApiService.kt
+    │   └── models/
+    │       ├── SheetsResponse.kt
+    │       └── AppendRequest.kt
+    │
+    ├── model/                       ← DATA CLASSES
+    │   ├── Transaction.kt
+    │   ├── Account.kt
+    │   ├── Category.kt
+    │   └── TransactionUiState.kt
+    │
+    └── utils/                       ← HELPERS
+        ├── DateUtils.kt
+        └── CurrencyUtils.kt
+
+
+✅ MVVM Rules — Quick Reference Card
+┌─────────────────────────────────────────────────────────────────┐
+│                     THE GOLDEN RULES                            │
+│                                                                 │
+│  VIEW                                                           │
+│  ✅ Observes ViewModel state                                    │
+│  ✅ Sends user actions to ViewModel                             │
+│  ❌ Never calls API directly                                    │
+│  ❌ Never contains if/else business logic                       │
+│                                                                 │
+│  VIEWMODEL                                                      │
+│  ✅ Holds and manages UI state                                  │
+│  ✅ Calls Repository for data                                   │
+│  ✅ Survives screen rotation                                    │
+│  ❌ Never imports Android UI (no Context, no View)              │
+│  ❌ Never calls API directly                                    │
+│                                                                 │
+│  REPOSITORY                                                     │
+│  ✅ Single source of truth for data                             │
+│  ✅ Contains business logic (transfer = 2 rows)                 │
+│  ✅ Calls API Service                                           │
+│  ❌ Never knows about UI                                        │
+│  ❌ Never knows about ViewModel                                 │
+│                                                                 │
+│  API SERVICE                                                    │
+│  ✅ Makes network calls only                                    │
+│  ✅ Returns raw data                                            │
+│  ❌ Never contains business logic                               │
+│  ❌ Never knows about UI or ViewModel                           │
+└─────────────────────────────────────────────────────────────────┘
+
+
+🎯 Summary — Why MVVM for YOUR App
+┌─────────────────────────────────────────────────────────────────┐
+│  Benefit              │  What it means for you                  │
+│─────────────────────── │─────────────────────────────────────── │
+│  Separation of concerns│ Easy to find and fix bugs              │
+│  Screen rotation safe  │ No data loss when phone rotates        │
+│  Testable              │ Can test logic without running app      │
+│  Scalable              │ Easy to add new features               │
+│  Industry standard     │ Skills transfer to any Android job     │
+│  Google recommended    │ Best practices from day one            │
+└─────────────────────────────────────────────────────────────────┘
+
+
+🎉 The best part? Once you understand MVVM with this app, you'll recognize it in every Android codebase you ever read. It's the universal language of Android development!
+
+## 4. Implementation Plan
 Now lets do the planning.
 Since this is my 1st app development, I would like to do an end-to-end POC first to get handson with all the components.
 Once PoC is successful, we will move on to feature by feature implementation again end-to-end. Prepare a plan and implementation strategy.
