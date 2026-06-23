@@ -24,9 +24,7 @@ An Android app to track family expenses using Google Sheets as a live backend.
 | Document | Description |
 |---|---|
 | [Master Prompt](docs/master-prompt.md) | Original requirements |
-| [Feasibility Study](docs/feasibility-study.md) | Feasibility analysis |
-| [Technical & UX Design](docs/technical-ux-design.md) | Architecture & screen designs |
-| [Implementation Plan](docs/implementation-plan.md) | Step-by-step build plan |
+| [Prompt conversation](docs/prompt_conversation_history.md) | Complete raw conversation history |
 
 ## 🗺️ Build Phases
 - [ ] Phase 1: POC (Proof of Concept)
