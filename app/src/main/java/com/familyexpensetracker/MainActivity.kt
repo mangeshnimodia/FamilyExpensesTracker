@@ -47,13 +47,11 @@ class MainActivity : ComponentActivity() {
                     val authorizationResult = Identity.getAuthorizationClient(this)
                         .getAuthorizationResultFromIntent(result.data)
                     
-                    // We already know the email because we passed it to authorize()
-                    // But we can try to get it from the result too
                     val email = authorizationResult.toGoogleSignInAccount()?.email
                     if (email != null) {
                         initializeSheets(email)
                     } else {
-                        // Fallback to searching for the email in accounts if result is opaque
+                        // Fallback: If email is missing, check device accounts
                         val accounts = AccountManager.get(this).getAccountsByType("com.google")
                         if (accounts.isNotEmpty()) {
                             initializeSheets(accounts[0].name)
@@ -68,7 +66,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Try silent authorization with the primary account
+        // Try silent authorization with primary account
         val accounts = AccountManager.get(this).getAccountsByType("com.google")
         if (accounts.isNotEmpty()) {
             checkExistingAuthorization(accounts[0].name)
@@ -119,8 +117,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startSignIn() {
+        // Using the non-deprecated version of newChooseAccountIntent
         val intent = AccountManager.newChooseAccountIntent(
-            null, null, arrayOf("com.google"), true, null, null, null, null
+            null,
+            null,
+            arrayOf("com.google"),
+            null,
+            null,
+            null,
+            null,
         )
         accountPickerLauncher.launch(intent)
     }
