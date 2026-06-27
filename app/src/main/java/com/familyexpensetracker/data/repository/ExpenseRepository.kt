@@ -1,11 +1,10 @@
 package com.familyexpensetracker.data.repository
 
 import com.familyexpensetracker.data.model.Transaction
-import com.familyexpensetracker.data.remote.GoogleSheetsHelper
-
+import com.familyexpensetracker.data.remote.GoogleSheetsDataSource
 import java.util.Date
 
-class ExpenseRepository(private val googleSheetsHelper: GoogleSheetsHelper) {
-    suspend fun getTransactions(startDate: Date? = null) = googleSheetsHelper.getTransactions(startDate)
-    suspend fun addTransaction(transaction: Transaction) = googleSheetsHelper.addTransaction(transaction)
+class ExpenseRepository(private val googleSheetsDataSource: GoogleSheetsDataSource) {
+    suspend fun getTransactions(startDate: Date? = null) = googleSheetsDataSource.getTransactions(startDate)
+    suspend fun addTransaction(transaction: Transaction) = googleSheetsDataSource.addTransaction(transaction)
 }
