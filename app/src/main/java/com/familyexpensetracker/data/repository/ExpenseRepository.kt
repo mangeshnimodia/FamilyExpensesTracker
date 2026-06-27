@@ -7,4 +7,5 @@ import java.util.Date
 class ExpenseRepository(private val googleSheetsDataSource: GoogleSheetsDataSource) {
     suspend fun getTransactions(startDate: Date? = null) = googleSheetsDataSource.getTransactions(startDate)
     suspend fun addTransaction(transaction: Transaction) = googleSheetsDataSource.addTransaction(transaction)
+    suspend fun deleteTransaction(txnId: String) = googleSheetsDataSource.deleteTransaction(txnId)
 }

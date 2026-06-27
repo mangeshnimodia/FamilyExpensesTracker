@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import com.familyexpensetracker.data.remote.GoogleSheetsDataSource
 import com.familyexpensetracker.data.remote.GoogleSheetsServiceProvider
 import com.familyexpensetracker.data.repository.ExpenseRepository
-import com.familyexpensetracker.ui.screens.POCScreen
+import com.familyexpensetracker.ui.screens.TransactionsScreen
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val currentViewModel = viewModel
                     if (currentViewModel != null) {
-                        POCScreen(currentViewModel)
+                        TransactionsScreen(currentViewModel)
                     } else {
                         Box(contentAlignment = Alignment.Center) {
                             Button(onClick = { startSignIn() }) {
