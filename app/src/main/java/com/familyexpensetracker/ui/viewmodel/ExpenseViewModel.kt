@@ -3,14 +3,20 @@ package com.familyexpensetracker.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.familyexpensetracker.data.model.Transaction
-import com.familyexpensetracker.data.repository.ExpenseRepository
+import com.familyexpensetracker.data.repository.AddTransactionRepository
+import com.familyexpensetracker.data.repository.DeleteTransactionRepository
+import com.familyexpensetracker.data.repository.FetchTransactionsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.*
 
-class ExpenseViewModel(private val repository: ExpenseRepository) : ViewModel() {
+class ExpenseViewModel(
+    private val fetchRepository: FetchTransactionsRepository,
+    private val addRepository: AddTransactionRepository,
+    private val deleteRepository: DeleteTransactionRepository
+) : ViewModel() {
     private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
     val transactions: StateFlow<List<Transaction>> = _transactions.asStateFlow()
 
@@ -35,7 +41,7 @@ class ExpenseViewModel(private val repository: ExpenseRepository) : ViewModel() 
             _isLoading.value = true
             _errorMessage.value = null
             try {
-                repository.addTransaction(transaction)
+                addRepository.add(transaction)
                 _selectedDate.value = transactionDate
                 performFetch(transactionDate)
             } catch (e: Exception) {
@@ -51,7 +57,7 @@ class ExpenseViewModel(private val repository: ExpenseRepository) : ViewModel() 
             _isLoading.value = true
             _errorMessage.value = null
             try {
-                repository.deleteTransaction(txnId)
+                deleteRepository.delete(txnId)
                 _selectedDate.value?.let { performFetch(it) }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -74,7 +80,7 @@ class ExpenseViewModel(private val repository: ExpenseRepository) : ViewModel() 
             calendar.set(Calendar.MILLISECOND, 0)
             val midnightDate = calendar.time
 
-            _transactions.value = repository.getTransactions(midnightDate)
+            _transactions.value = fetchRepository.fetch(midnightDate)
         } catch (e: Exception) {
             e.printStackTrace()
             _errorMessage.value = "Fetch failed: ${e.message}"

@@ -19,9 +19,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.familyexpensetracker.data.remote.GoogleSheetsDataSource
+import com.familyexpensetracker.data.remote.AddTransactionDataSource
+import com.familyexpensetracker.data.remote.DeleteTransactionDataSource
+import com.familyexpensetracker.data.remote.FetchTransactionsDataSource
 import com.familyexpensetracker.data.remote.GoogleSheetsServiceProvider
-import com.familyexpensetracker.data.repository.ExpenseRepository
+import com.familyexpensetracker.data.repository.AddTransactionRepository
+import com.familyexpensetracker.data.repository.DeleteTransactionRepository
+import com.familyexpensetracker.data.repository.FetchTransactionsRepository
 import com.familyexpensetracker.ui.screens.TransactionsScreen
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
@@ -51,7 +55,6 @@ class MainActivity : ComponentActivity() {
                     if (email != null) {
                         initializeSheets(email)
                     } else {
-                        // Fallback: If email is missing, check device accounts
                         val accounts = AccountManager.get(this).getAccountsByType("com.google")
                         if (accounts.isNotEmpty()) {
                             initializeSheets(accounts[0].name)
@@ -66,7 +69,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Try silent authorization with primary account
         val accounts = AccountManager.get(this).getAccountsByType("com.google")
         if (accounts.isNotEmpty()) {
             checkExistingAuthorization(accounts[0].name)
@@ -112,12 +114,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
             .addOnFailureListener {
-                // Ignore silent failure
             }
     }
 
     private fun startSignIn() {
-        // Using the non-deprecated version of newChooseAccountIntent
         val intent = AccountManager.newChooseAccountIntent(
             null,
             null,
@@ -161,8 +161,16 @@ class MainActivity : ComponentActivity() {
     private fun initializeSheets(email: String) {
         val serviceProvider = GoogleSheetsServiceProvider(this)
         val sheetsService = serviceProvider.getSheetsService(email)
-        val googleSheetsDataSource = GoogleSheetsDataSource(sheetsService)
-        val repository = ExpenseRepository(googleSheetsDataSource)
-        viewModel = ExpenseViewModel(repository)
+        
+        val fetchDataSource = FetchTransactionsDataSource(sheetsService)
+        val fetchRepository = FetchTransactionsRepository(fetchDataSource)
+        
+        val addDataSource = AddTransactionDataSource(sheetsService)
+        val addRepository = AddTransactionRepository(addDataSource)
+        
+        val deleteDataSource = DeleteTransactionDataSource(sheetsService)
+        val deleteRepository = DeleteTransactionRepository(deleteDataSource)
+        
+        viewModel = ExpenseViewModel(fetchRepository, addRepository, deleteRepository)
     }
 }
