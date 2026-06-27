@@ -1,8 +1,12 @@
 package com.familyexpensetracker
 
+import android.accounts.Account
+import android.accounts.AccountManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +14,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.familyexpensetracker.data.remote.GoogleSheetsDataSource
@@ -17,40 +24,65 @@ import com.familyexpensetracker.data.remote.GoogleSheetsServiceProvider
 import com.familyexpensetracker.data.repository.ExpenseRepository
 import com.familyexpensetracker.ui.screens.POCScreen
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.identity.AuthorizationRequest
+import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
 
 class MainActivity : ComponentActivity() {
-    private lateinit var viewModel: ExpenseViewModel
+    private var viewModel: ExpenseViewModel? by mutableStateOf(null)
 
-    private val signInLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
+    private val accountPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
     ) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        if (task.isSuccessful) {
-            val account = task.result
-            account?.email?.let { email ->
-                initializeSheets(email)
-            }
+        if (result.resultCode == RESULT_OK) {
+            val email = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
+            email?.let { authorizeAndInitialize(it) }
         }
     }
 
+    private val authorizeLauncher: ActivityResultLauncher<IntentSenderRequest> =
+        registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                try {
+                    val authorizationResult = Identity.getAuthorizationClient(this)
+                        .getAuthorizationResultFromIntent(result.data)
+                    
+                    // We already know the email because we passed it to authorize()
+                    // But we can try to get it from the result too
+                    val email = authorizationResult.toGoogleSignInAccount()?.email
+                    if (email != null) {
+                        initializeSheets(email)
+                    } else {
+                        // Fallback to searching for the email in accounts if result is opaque
+                        val accounts = AccountManager.get(this).getAccountsByType("com.google")
+                        if (accounts.isNotEmpty()) {
+                            initializeSheets(accounts[0].name)
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        val lastAccount = GoogleSignIn.getLastSignedInAccount(this)
-        if (lastAccount != null && lastAccount.email != null) {
-            initializeSheets(lastAccount.email!!)
-        } else {
-            startSignIn()
+
+        // Try silent authorization with the primary account
+        val accounts = AccountManager.get(this).getAccountsByType("com.google")
+        if (accounts.isNotEmpty()) {
+            checkExistingAuthorization(accounts[0].name)
         }
 
         setContent {
             MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    if (::viewModel.isInitialized) {
-                        POCScreen(viewModel)
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
+                    val currentViewModel = viewModel
+                    if (currentViewModel != null) {
+                        POCScreen(currentViewModel)
                     } else {
                         Box(contentAlignment = Alignment.Center) {
                             Button(onClick = { startSignIn() }) {
@@ -63,13 +95,62 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun startSignIn() {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .requestScopes(Scope("https://www.googleapis.com/auth/spreadsheets"))
+    private fun checkExistingAuthorization(email: String) {
+        val requestedScopes = listOf(
+            Scope("https://www.googleapis.com/auth/spreadsheets"),
+            Scope("https://www.googleapis.com/auth/userinfo.email"),
+            Scope("https://www.googleapis.com/auth/userinfo.profile"),
+        )
+        val authorizationRequest = AuthorizationRequest.builder()
+            .setRequestedScopes(requestedScopes)
+            .setAccount(Account(email, "com.google"))
             .build()
-        val client = GoogleSignIn.getClient(this, gso)
-        signInLauncher.launch(client.signInIntent)
+
+        Identity.getAuthorizationClient(this)
+            .authorize(authorizationRequest)
+            .addOnSuccessListener { result ->
+                if (!result.hasResolution()) {
+                    initializeSheets(email)
+                }
+            }
+            .addOnFailureListener {
+                // Ignore silent failure
+            }
+    }
+
+    private fun startSignIn() {
+        val intent = AccountManager.newChooseAccountIntent(
+            null, null, arrayOf("com.google"), true, null, null, null, null
+        )
+        accountPickerLauncher.launch(intent)
+    }
+
+    private fun authorizeAndInitialize(email: String) {
+        val requestedScopes = listOf(
+            Scope("https://www.googleapis.com/auth/spreadsheets"),
+            Scope("https://www.googleapis.com/auth/userinfo.email"),
+            Scope("https://www.googleapis.com/auth/userinfo.profile"),
+        )
+        val authorizationRequest = AuthorizationRequest.builder()
+            .setRequestedScopes(requestedScopes)
+            .setAccount(Account(email, "com.google"))
+            .build()
+
+        Identity.getAuthorizationClient(this)
+            .authorize(authorizationRequest)
+            .addOnSuccessListener { result ->
+                if (result.hasResolution()) {
+                    val pendingIntent = result.pendingIntent
+                    authorizeLauncher.launch(
+                        IntentSenderRequest.Builder(pendingIntent!!.intentSender).build(),
+                    )
+                } else {
+                    initializeSheets(email)
+                }
+            }
+            .addOnFailureListener { e ->
+                e.printStackTrace()
+            }
     }
 
     private fun initializeSheets(email: String) {
@@ -78,13 +159,5 @@ class MainActivity : ComponentActivity() {
         val googleSheetsDataSource = GoogleSheetsDataSource(sheetsService)
         val repository = ExpenseRepository(googleSheetsDataSource)
         viewModel = ExpenseViewModel(repository)
-        
-        setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    POCScreen(viewModel)
-                }
-            }
-        }
     }
 }

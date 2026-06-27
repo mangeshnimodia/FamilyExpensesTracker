@@ -28,17 +28,17 @@ fun POCScreen(viewModel: ExpenseViewModel) {
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             Button(
                 onClick = { viewModel.fetchTransactions() },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Fetch Transactions")
             }
@@ -55,11 +55,11 @@ fun POCScreen(viewModel: ExpenseViewModel) {
                         subcategory = "Snacks",
                         paymentMethod = "Cash",
                         description = "POC Entry",
-                        account = "Wallet"
+                        account = "Wallet",
                     )
                     viewModel.addTransaction(newTxn)
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Add POC Entry (₹100)")
             }

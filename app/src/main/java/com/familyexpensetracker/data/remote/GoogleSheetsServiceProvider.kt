@@ -10,7 +10,8 @@ class GoogleSheetsServiceProvider(private val context: Context) {
     
     fun getSheetsService(accountName: String): Sheets {
         val credential = GoogleAccountCredential.usingOAuth2(
-            context, listOf("https://www.googleapis.com/auth/spreadsheets")
+            context,
+            listOf("https://www.googleapis.com/auth/spreadsheets"),
         ).setSelectedAccountName(accountName)
 
         return Sheets.Builder(
