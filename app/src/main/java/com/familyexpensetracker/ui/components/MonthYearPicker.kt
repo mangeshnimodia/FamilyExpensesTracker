@@ -23,7 +23,8 @@ fun MonthYearPickerDialog(
     onDismiss: () -> Unit
 ) {
     var selectedYear by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
-    val months = DateFormatSymbols().months
+    val months = DateFormatSymbols.getInstance().months
+    val validMonths = remember(months) { months.filter { it.isNotEmpty() } }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -52,21 +53,23 @@ fun MonthYearPickerDialog(
             }
         },
         text = {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                itemsIndexed(months.filter { it.isNotEmpty() }) { index, month ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onMonthSelected(selectedYear, index) }
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = month.take(3))
+            Box(modifier = Modifier.height(250.dp)) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    contentPadding = PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    itemsIndexed(validMonths) { index, month ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onMonthSelected(selectedYear, index) }
+                                .padding(8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = month.take(3))
+                        }
                     }
                 }
             }
