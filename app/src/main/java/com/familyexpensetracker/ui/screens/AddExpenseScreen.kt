@@ -10,7 +10,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.Transaction
+import com.familyexpensetracker.ui.components.AppDatePicker
+import com.familyexpensetracker.ui.components.CategoryDropdown
+import com.familyexpensetracker.ui.components.SubcategoryDropdown
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
+import com.familyexpensetracker.utils.AppConstants
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -18,46 +22,36 @@ import java.util.*
 @Composable
 fun AddExpenseScreen(
     viewModel: ExpenseViewModel,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
-    var amount by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
-    var subcategory by remember { mutableStateOf("") }
-    var paymentMethod by remember { mutableStateOf("Cash") }
-    var account by remember { mutableStateOf("Passbook") }
-    var description by remember { mutableStateOf("") }
-    var transferId by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf(value = "") }
+    var category by remember { mutableStateOf(value = AppConstants.DEFAULT_CATEGORY) }
+    var subcategory by remember { mutableStateOf(value = AppConstants.DEFAULT_SUBCATEGORY) }
+    var paymentMethod by remember { mutableStateOf(value = AppConstants.DEFAULT_PAYMENT_METHOD) }
+    var account by remember { mutableStateOf(value = AppConstants.DEFAULT_ACCOUNT) }
+    var description by remember { mutableStateOf(value = "") }
+    var transferId by remember { mutableStateOf(value = "") }
+
+    val categoriesMap by viewModel.categories.collectAsState()
+    var categoryExpanded by remember { mutableStateOf(value = false) }
+    var subcategoryExpanded by remember { mutableStateOf(value = false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadCategories()
+    }
     
     val calendar = Calendar.getInstance()
     var selectedDate by remember { mutableStateOf(calendar.time) }
-    var showDatePicker by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(value = false) }
     
     val dateFormatter = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
 
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedDate.time
+        AppDatePicker(
+            initialDate = selectedDate,
+            onDateSelected = { selectedDate = it },
+            onDismiss = { showDatePicker = false },
         )
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let {
-                        selectedDate = Date(it)
-                    }
-                    showDatePicker = false
-                }) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
     }
 
     Scaffold(
@@ -95,18 +89,26 @@ fun AddExpenseScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            OutlinedTextField(
-                value = category,
-                onValueChange = { category = it },
-                label = { Text("Category") },
-                modifier = Modifier.fillMaxWidth()
+            CategoryDropdown(
+                selectedCategory = category,
+                categories = categoriesMap.keys.toList(),
+                expanded = categoryExpanded,
+                onExpandedChange = { categoryExpanded = it },
+                onCategorySelected = {
+                    category = it
+                    subcategory = ""
+                },
+                onDismiss = { categoryExpanded = false }
             )
 
-            OutlinedTextField(
-                value = subcategory,
-                onValueChange = { subcategory = it },
-                label = { Text("Subcategory") },
-                modifier = Modifier.fillMaxWidth()
+            SubcategoryDropdown(
+                selectedSubcategory = subcategory,
+                subcategories = categoriesMap[category] ?: emptyList(),
+                expanded = subcategoryExpanded,
+                enabled = category.isNotBlank(),
+                onExpandedChange = { subcategoryExpanded = it },
+                onSubcategorySelected = { subcategory = it },
+                onDismiss = { subcategoryExpanded = false }
             )
 
             OutlinedTextField(
@@ -151,13 +153,13 @@ fun AddExpenseScreen(
                         paymentMethod = paymentMethod,
                         description = description,
                         account = account,
-                        transferId = if (transferId.isBlank()) null else transferId
+                        transferId = transferId.ifBlank { null }
                     )
                     viewModel.addTransaction(transaction, selectedDate)
                     onDismiss()
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = amount.toIntOrNull()?.let { it > 0 } == true &&
+                enabled = (amount.toIntOrNull()?.let { it > 0 } == true) &&
                         category.isNotBlank() &&
                         paymentMethod.isNotBlank() &&
                         account.isNotBlank()

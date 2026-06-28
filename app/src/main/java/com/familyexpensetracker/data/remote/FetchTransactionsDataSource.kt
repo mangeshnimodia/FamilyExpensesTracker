@@ -1,6 +1,7 @@
 package com.familyexpensetracker.data.remote
 
 import com.familyexpensetracker.data.model.Transaction
+import com.familyexpensetracker.utils.AppConstants
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.ValueRange
 import kotlinx.coroutines.Dispatchers
@@ -9,8 +10,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class FetchTransactionsDataSource(private val service: Sheets) {
-    private val spreadsheetId = "17Vf1XbIATnDRslj5BoNJFlDyq7SFINnyiAhX-Sx1FWU"
-    private val range = "Transactions!A:I"
+    private val spreadsheetId = AppConstants.SPREADSHEET_ID
+    private val range = AppConstants.RANGE_TRANSACTIONS
 
     suspend fun fetch(startDate: Date? = null): List<Transaction> = withContext(Dispatchers.IO) {
         val response: ValueRange = service.spreadsheets().values()[spreadsheetId, range]
@@ -37,7 +38,7 @@ class FetchTransactionsDataSource(private val service: Sheets) {
             transactions.filter { txn ->
                 try {
                     val txnDate = dateFormat.parse(txn.date)
-                    txnDate != null && txnDate == startDate
+                    txnDate != null && (txnDate == startDate)
                 } catch (_: Exception) {
                     false
                 }

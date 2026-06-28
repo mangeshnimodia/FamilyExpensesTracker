@@ -19,15 +19,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.familyexpensetracker.data.local.LocalCategoriesDataSource
 import com.familyexpensetracker.data.remote.AddTransactionDataSource
 import com.familyexpensetracker.data.remote.DeleteTransactionDataSource
+import com.familyexpensetracker.data.remote.FetchCategoriesDataSource
 import com.familyexpensetracker.data.remote.FetchTransactionsDataSource
 import com.familyexpensetracker.data.remote.GoogleSheetsServiceProvider
 import com.familyexpensetracker.data.repository.AddTransactionRepository
 import com.familyexpensetracker.data.repository.DeleteTransactionRepository
+import com.familyexpensetracker.data.repository.FetchCategoriesRepository
 import com.familyexpensetracker.data.repository.FetchTransactionsRepository
 import com.familyexpensetracker.ui.screens.TransactionsScreen
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
+import com.familyexpensetracker.utils.AppConstants
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
@@ -96,11 +100,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun checkExistingAuthorization(email: String) {
-        val requestedScopes = listOf(
-            Scope("https://www.googleapis.com/auth/spreadsheets"),
-            Scope("https://www.googleapis.com/auth/userinfo.email"),
-            Scope("https://www.googleapis.com/auth/userinfo.profile"),
-        )
+        val requestedScopes = AppConstants.SCOPES.map { Scope(it) }
         val authorizationRequest = AuthorizationRequest.builder()
             .setRequestedScopes(requestedScopes)
             .setAccount(Account(email, "com.google"))
@@ -131,11 +131,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun authorizeAndInitialize(email: String) {
-        val requestedScopes = listOf(
-            Scope("https://www.googleapis.com/auth/spreadsheets"),
-            Scope("https://www.googleapis.com/auth/userinfo.email"),
-            Scope("https://www.googleapis.com/auth/userinfo.profile"),
-        )
+        val requestedScopes = AppConstants.SCOPES.map { Scope(it) }
         val authorizationRequest = AuthorizationRequest.builder()
             .setRequestedScopes(requestedScopes)
             .setAccount(Account(email, "com.google"))
@@ -170,7 +166,11 @@ class MainActivity : ComponentActivity() {
         
         val deleteDataSource = DeleteTransactionDataSource(sheetsService)
         val deleteRepository = DeleteTransactionRepository(deleteDataSource)
+
+        val categoriesDataSource = FetchCategoriesDataSource(sheetsService)
+        val localCategoriesDataSource = LocalCategoriesDataSource(this)
+        val categoriesRepository = FetchCategoriesRepository(categoriesDataSource, localCategoriesDataSource)
         
-        viewModel = ExpenseViewModel(fetchRepository, addRepository, deleteRepository)
+        viewModel = ExpenseViewModel(fetchRepository, addRepository, deleteRepository, categoriesRepository)
     }
 }

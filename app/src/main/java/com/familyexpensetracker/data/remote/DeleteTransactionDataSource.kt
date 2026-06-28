@@ -1,16 +1,17 @@
 package com.familyexpensetracker.data.remote
 
+import com.familyexpensetracker.utils.AppConstants
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class DeleteTransactionDataSource(private val service: Sheets) {
-    private val spreadsheetId = "17Vf1XbIATnDRslj5BoNJFlDyq7SFINnyiAhX-Sx1FWU"
+    private val spreadsheetId = AppConstants.SPREADSHEET_ID
 
     suspend fun delete(txnId: String) = withContext(Dispatchers.IO) {
         // 1. Find the row index
-        val response = service.spreadsheets().values()[spreadsheetId, "Transactions!A:A"]
+        val response = service.spreadsheets().values()[spreadsheetId, AppConstants.RANGE_TXN_IDS]
             .execute()
         val values = response.getValues() ?: return@withContext
         
@@ -24,9 +25,9 @@ class DeleteTransactionDataSource(private val service: Sheets) {
 
         if (rowIndex != -1) {
             // 2. Get the sheetId for "Transactions"
-            val spreadsheet = service.spreadsheets().get(spreadsheetId).execute()
-            val sheetId = spreadsheet.sheets.find { it.properties.title == "Transactions" }?.properties?.sheetId
-                ?: throw Exception("Sheet 'Transactions' not found")
+            val spreadsheet = service.spreadsheets()[spreadsheetId].execute()
+            val sheetId = spreadsheet.sheets.find { it.properties.title == AppConstants.SHEET_NAME_TRANSACTIONS }?.properties?.sheetId
+                ?: throw Exception("Sheet '${AppConstants.SHEET_NAME_TRANSACTIONS}' not found")
 
             // 3. Delete the row
             val deleteRequest = Request().setDeleteDimension(
@@ -35,7 +36,7 @@ class DeleteTransactionDataSource(private val service: Sheets) {
                         .setSheetId(sheetId)
                         .setDimension("ROWS")
                         .setStartIndex(rowIndex)
-                        .setEndIndex(rowIndex + 1)
+                        .setEndIndex(rowIndex + 1),
                 )
             )
             

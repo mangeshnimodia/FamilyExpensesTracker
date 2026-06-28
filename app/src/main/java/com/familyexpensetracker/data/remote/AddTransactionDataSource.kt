@@ -1,6 +1,7 @@
 package com.familyexpensetracker.data.remote
 
 import com.familyexpensetracker.data.model.Transaction
+import com.familyexpensetracker.utils.AppConstants
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.AppendValuesResponse
 import com.google.api.services.sheets.v4.model.ValueRange
@@ -8,8 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class AddTransactionDataSource(private val service: Sheets) {
-    private val spreadsheetId = "17Vf1XbIATnDRslj5BoNJFlDyq7SFINnyiAhX-Sx1FWU"
-    private val range = "Transactions!A:I"
+    private val spreadsheetId = AppConstants.SPREADSHEET_ID
+    private val range = AppConstants.RANGE_TRANSACTIONS
 
     suspend fun add(transaction: Transaction): AppendValuesResponse = withContext(Dispatchers.IO) {
         val values = listOf(

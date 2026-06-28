@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.familyexpensetracker.ui.components.AppDatePicker
 import com.familyexpensetracker.ui.components.TransactionItem
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
 import java.text.SimpleDateFormat
@@ -37,7 +38,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     
     val snackbarHostState = remember { SnackbarHostState() }
     val dateFormatter = SimpleDateFormat("EEE, dd MMM yyyy", Locale.getDefault())
-    var showDatePicker by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(value = false) }
 
     // Initial fetch for today if not already fetched
     LaunchedEffect(Unit) {
@@ -54,29 +55,11 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     }
 
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedDate?.time ?: System.currentTimeMillis()
+        AppDatePicker(
+            initialDate = selectedDate,
+            onDateSelected = { viewModel.fetchTransactions(it) },
+            onDismiss = { showDatePicker = false },
         )
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let {
-                        viewModel.fetchTransactions(Date(it))
-                    }
-                    showDatePicker = false
-                }) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
     }
 
     NavHost(navController = navController, startDestination = "main_list") {
@@ -110,7 +93,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         .padding(padding)
                 ) {
                     // Total Amount Highlight
-                    if (selectedDate != null && !isLoading) {
+                    if (selectedDate != null && (!isLoading)) {
                         Surface(
                             color = MaterialTheme.colorScheme.primaryContainer,
                             modifier = Modifier.fillMaxWidth()
@@ -157,10 +140,9 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                     val transaction = transactions[index]
                                     TransactionItem(
                                         txn = transaction,
-                                        onDelete = {
-                                            viewModel.deleteTransaction(transaction.txnId)
-                                        }
-                                    )
+                                    ) {
+                                        viewModel.deleteTransaction(transaction.txnId)
+                                    }
                                 }
                             }
                         }

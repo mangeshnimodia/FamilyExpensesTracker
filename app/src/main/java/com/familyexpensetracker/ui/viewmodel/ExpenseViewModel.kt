@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.repository.AddTransactionRepository
 import com.familyexpensetracker.data.repository.DeleteTransactionRepository
+import com.familyexpensetracker.data.repository.FetchCategoriesRepository
 import com.familyexpensetracker.data.repository.FetchTransactionsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,12 +16,16 @@ import java.util.*
 class ExpenseViewModel(
     private val fetchRepository: FetchTransactionsRepository,
     private val addRepository: AddTransactionRepository,
-    private val deleteRepository: DeleteTransactionRepository
+    private val deleteRepository: DeleteTransactionRepository,
+    private val categoriesRepository: FetchCategoriesRepository,
 ) : ViewModel() {
     private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
     val transactions: StateFlow<List<Transaction>> = _transactions.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
+    private val _categories = MutableStateFlow<Map<String, List<String>>>(emptyMap())
+    val categories: StateFlow<Map<String, List<String>>> = _categories.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(value = false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
@@ -33,6 +38,16 @@ class ExpenseViewModel(
         _selectedDate.value = date
         viewModelScope.launch {
             performFetch(date)
+        }
+    }
+
+    fun loadCategories() {
+        viewModelScope.launch {
+            try {
+                _categories.value = categoriesRepository.fetch()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -72,12 +87,13 @@ class ExpenseViewModel(
         _errorMessage.value = null
         try {
             // Set time to midnight for consistent filtering
-            val calendar = Calendar.getInstance()
-            calendar.time = date
-            calendar.set(Calendar.HOUR_OF_DAY, 0)
-            calendar.set(Calendar.MINUTE, 0)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.MILLISECOND, 0)
+            val calendar = Calendar.getInstance().apply {
+                time = date
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
             val midnightDate = calendar.time
 
             _transactions.value = fetchRepository.fetch(midnightDate)

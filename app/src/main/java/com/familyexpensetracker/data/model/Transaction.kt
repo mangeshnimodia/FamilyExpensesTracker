@@ -9,5 +9,5 @@ data class Transaction(
     val paymentMethod: String = "",
     val description: String = "",
     val account: String = "",
-    val transferId: String? = null
+    val transferId: String? = null,
 )
