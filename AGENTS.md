@@ -34,4 +34,4 @@ For every functionality a new class/file exists.
 No helper classes. Its violation of SRP
 
 ## Tests
-Have unit tests for each file. The test should reside in different plugin but follow same package fragments as its production class.
+Have unit tests for each file with 100% code coverage.

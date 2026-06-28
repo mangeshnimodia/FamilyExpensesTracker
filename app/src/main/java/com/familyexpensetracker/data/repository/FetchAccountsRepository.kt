@@ -12,6 +12,10 @@ class FetchAccountsRepository(
     companion object {
         private var cachedAccounts: List<String>? = null
         private val mutex = Mutex()
+
+        fun clearCache() {
+            cachedAccounts = null
+        }
     }
 
     suspend fun fetch(): List<String> {

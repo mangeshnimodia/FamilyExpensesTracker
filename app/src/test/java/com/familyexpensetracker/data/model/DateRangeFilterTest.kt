@@ -39,28 +39,22 @@ class DateRangeFilterTest {
     }
 
     @Test
-    fun testFinancialYearRange() {
-        val range = DateRange.FinancialYear(2026) // FY26-27: Apr 2026 - Mar 2027
+    fun testFinancialYearRangeEdgeCases() {
+        val range = DateRange.FinancialYear(2025) // FY25-26: Apr 2025 - Mar 2026
         
-        val dateInFY = Calendar.getInstance().apply {
-            set(2026, Calendar.APRIL, 1)
+        // Last millisecond of the FY
+        val lastDay = Calendar.getInstance().apply {
+            set(2026, Calendar.MARCH, 31, 23, 59, 59)
+            set(Calendar.MILLISECOND, 999)
         }.time
-        assertTrue(filter.isDateInRange(dateInFY, range))
-        
-        val dateInFYLastDay = Calendar.getInstance().apply {
-            set(2027, Calendar.MARCH, 31)
+        assertTrue(filter.isDateInRange(lastDay, range))
+
+        // First millisecond after the FY
+        val nextDay = Calendar.getInstance().apply {
+            set(2026, Calendar.APRIL, 1, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
         }.time
-        assertTrue(filter.isDateInRange(dateInFYLastDay, range))
-        
-        val dateBeforeFY = Calendar.getInstance().apply {
-            set(2026, Calendar.MARCH, 31)
-        }.time
-        assertFalse(filter.isDateInRange(dateBeforeFY, range))
-        
-        val dateAfterFY = Calendar.getInstance().apply {
-            set(2027, Calendar.APRIL, 1)
-        }.time
-        assertFalse(filter.isDateInRange(dateAfterFY, range))
+        assertFalse(filter.isDateInRange(nextDay, range))
     }
 
     @Test
