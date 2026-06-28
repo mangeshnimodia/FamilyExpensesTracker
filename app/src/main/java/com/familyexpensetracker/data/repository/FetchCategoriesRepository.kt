@@ -9,11 +9,8 @@ class FetchCategoriesRepository(
     private val remoteDataSource: FetchCategoriesDataSource,
     private val localDataSource: LocalCategoriesDataSource,
 ) {
-    
-    companion object {
-        private var cachedCategories: Map<String, List<String>>? = null
-        private val mutex = Mutex()
-    }
+    private var cachedCategories: Map<String, List<String>>? = null
+    private val mutex = Mutex()
 
     suspend fun fetch(): Map<String, List<String>> {
         // 1. Check RAM cache
@@ -30,7 +27,7 @@ class FetchCategoriesRepository(
                 return@withLock localCategories
             }
             
-            // 4. Fetch from remote and save
+            // 4. Fetch from remote and save to both RAM and ROM
             val remoteCategories = remoteDataSource.fetch()
             localDataSource.saveCategories(remoteCategories)
             cachedCategories = remoteCategories

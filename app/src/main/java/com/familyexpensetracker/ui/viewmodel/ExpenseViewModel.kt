@@ -18,14 +18,18 @@ class ExpenseViewModel(
     private val fetchRepository: FetchTransactionsRepository,
     private val addRepository: AddTransactionRepository,
     private val deleteRepository: DeleteTransactionRepository,
-    private val categoriesRepository: FetchCategoriesRepository,
+    private val expenseCategoriesRepository: FetchCategoriesRepository,
+    private val incomeCategoriesRepository: FetchCategoriesRepository,
     private val accountsRepository: FetchAccountsRepository,
 ) : ViewModel() {
     private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
     val transactions: StateFlow<List<Transaction>> = _transactions.asStateFlow()
 
-    private val _categories = MutableStateFlow<Map<String, List<String>>>(emptyMap())
-    val categories: StateFlow<Map<String, List<String>>> = _categories.asStateFlow()
+    private val _expenseCategories = MutableStateFlow<Map<String, List<String>>>(emptyMap())
+    val expenseCategories: StateFlow<Map<String, List<String>>> = _expenseCategories.asStateFlow()
+
+    private val _incomeCategories = MutableStateFlow<Map<String, List<String>>>(emptyMap())
+    val incomeCategories: StateFlow<Map<String, List<String>>> = _incomeCategories.asStateFlow()
 
     private val _accounts = MutableStateFlow<List<String>>(emptyList())
     val accounts: StateFlow<List<String>> = _accounts.asStateFlow()
@@ -40,16 +44,18 @@ class ExpenseViewModel(
     val selectedDate: StateFlow<Date?> = _selectedDate.asStateFlow()
 
     fun fetchTransactions(date: Date) {
-        _selectedDate.value = date
+        val normalizedDate = normalizeDate(date)
+        _selectedDate.value = normalizedDate
         viewModelScope.launch {
-            performFetch(date)
+            performFetch(normalizedDate)
         }
     }
 
     fun loadCategories() {
         viewModelScope.launch {
             try {
-                _categories.value = categoriesRepository.fetch()
+                _expenseCategories.value = expenseCategoriesRepository.fetch()
+                _incomeCategories.value = incomeCategoriesRepository.fetch()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -72,8 +78,9 @@ class ExpenseViewModel(
             _errorMessage.value = null
             try {
                 addRepository.add(transaction)
-                _selectedDate.value = transactionDate
-                performFetch(transactionDate)
+                val normalizedDate = normalizeDate(transactionDate)
+                _selectedDate.value = normalizedDate
+                performFetch(normalizedDate)
             } catch (e: Exception) {
                 e.printStackTrace()
                 _errorMessage.value = "Add failed: ${e.message}"
@@ -97,21 +104,21 @@ class ExpenseViewModel(
         }
     }
 
+    private fun normalizeDate(date: Date): Date {
+        return Calendar.getInstance().apply {
+            time = date
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.time
+    }
+
     private suspend fun performFetch(date: Date) {
         _isLoading.value = true
         _errorMessage.value = null
         try {
-            // Set time to midnight for consistent filtering
-            val calendar = Calendar.getInstance().apply {
-                time = date
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-            val midnightDate = calendar.time
-
-            _transactions.value = fetchRepository.fetch(midnightDate)
+            _transactions.value = fetchRepository.fetch(date)
         } catch (e: Exception) {
             e.printStackTrace()
             _errorMessage.value = "Fetch failed: ${e.message}"

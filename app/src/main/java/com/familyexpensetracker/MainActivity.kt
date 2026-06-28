@@ -170,9 +170,13 @@ class MainActivity : ComponentActivity() {
         val deleteDataSource = DeleteTransactionDataSource(sheetsService)
         val deleteRepository = DeleteTransactionRepository(deleteDataSource)
 
-        val categoriesDataSource = FetchCategoriesDataSource(sheetsService)
-        val localCategoriesDataSource = LocalCategoriesDataSource(this)
-        val categoriesRepository = FetchCategoriesRepository(categoriesDataSource, localCategoriesDataSource)
+        val expenseCategoriesDataSource = FetchCategoriesDataSource(sheetsService, AppConstants.RANGE_EXPENSE_CATEGORIES)
+        val localExpenseCategoriesDataSource = LocalCategoriesDataSource(this, AppConstants.KEY_EXPENSE_CATEGORIES_MAP)
+        val expenseCategoriesRepository = FetchCategoriesRepository(expenseCategoriesDataSource, localExpenseCategoriesDataSource)
+
+        val incomeCategoriesDataSource = FetchCategoriesDataSource(sheetsService, AppConstants.RANGE_INCOME_CATEGORIES)
+        val localIncomeCategoriesDataSource = LocalCategoriesDataSource(this, AppConstants.KEY_INCOME_CATEGORIES_MAP)
+        val incomeCategoriesRepository = FetchCategoriesRepository(incomeCategoriesDataSource, localIncomeCategoriesDataSource)
 
         val accountsDataSource = FetchAccountsDataSource(sheetsService)
         val localAccountsDataSource = LocalAccountsDataSource(this)
@@ -182,7 +186,8 @@ class MainActivity : ComponentActivity() {
             fetchRepository,
             addRepository,
             deleteRepository,
-            categoriesRepository,
+            expenseCategoriesRepository,
+            incomeCategoriesRepository,
             accountsRepository,
         )
     }

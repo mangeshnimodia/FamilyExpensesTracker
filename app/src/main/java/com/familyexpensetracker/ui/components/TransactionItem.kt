@@ -23,12 +23,12 @@ fun TransactionItem(txn: Transaction, onDelete: () -> Unit = {}) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     val categoryText = if (txn.subcategory.isNotBlank()) {
                         "${txn.category}/${txn.subcategory}"
@@ -54,9 +54,16 @@ fun TransactionItem(txn: Transaction, onDelete: () -> Unit = {}) {
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
+                val amountColor = if (txn.amount < 0) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    androidx.compose.ui.graphics.Color(0xFF4CAF50) // Material Green
+                }
                 Text(
-                    text = "Amount: ₹${txn.amount} | Account: ${txn.account}",
-                    style = MaterialTheme.typography.bodyMedium
+                    text = "Amount: ₹${kotlin.math.abs(txn.amount)} | Account: ${txn.account}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = amountColor,
+                    fontWeight = FontWeight.Bold,
                 )
             }
             IconButton(onClick = onDelete) {

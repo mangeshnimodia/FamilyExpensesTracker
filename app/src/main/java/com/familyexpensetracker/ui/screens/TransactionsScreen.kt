@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -58,8 +59,9 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
         AppDatePicker(
             initialDate = selectedDate,
             onDateSelected = { viewModel.fetchTransactions(it) },
-            onDismiss = { showDatePicker = false },
-        )
+        ) {
+            showDatePicker = false
+        }
     }
 
     NavHost(navController = navController, startDestination = "main_list") {
@@ -72,13 +74,18 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                             Text(selectedDate?.let { dateFormatter.format(it) } ?: "Transactions")
                         },
                         actions = {
+                            IconButton(onClick = { 
+                                selectedDate?.let { viewModel.fetchTransactions(it) }
+                            }) {
+                                Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                            }
                             IconButton(onClick = { showDatePicker = true }) {
                                 Icon(Icons.Default.DateRange, contentDescription = "Select Date")
                             }
                             IconButton(onClick = { (context as? Activity)?.finish() }) {
                                 Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Exit App")
                             }
-                        }
+                        },
                     )
                 },
                 floatingActionButton = {
@@ -93,7 +100,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         .padding(padding)
                 ) {
                     // Total Amount Highlight
-                    if (selectedDate != null && (!isLoading)) {
+                    if ((selectedDate != null) && (!isLoading)) {
                         Surface(
                             color = MaterialTheme.colorScheme.primaryContainer,
                             modifier = Modifier.fillMaxWidth()
@@ -109,13 +116,18 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
+                                val totalColor = if (totalAmount < 0) {
+                                    MaterialTheme.colorScheme.error
+                                } else {
+                                    androidx.compose.ui.graphics.Color(0xFF4CAF50) // Material Green
+                                }
                                 Text(
-                                    text = "₹${"%.2f".format(totalAmount)}",
+                                    text = "₹${"%.2f".format(kotlin.math.abs(totalAmount))}",
                                     style = MaterialTheme.typography.titleLarge.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 22.sp
                                     ),
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = totalColor
                                 )
                             }
                         }

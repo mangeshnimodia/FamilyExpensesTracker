@@ -35,10 +35,16 @@ class FetchTransactionsDataSource(private val service: Sheets) {
         }.toList()
 
         if (startDate != null) {
+            val startCalendar = Calendar.getInstance().apply { time = startDate }
             transactions.filter { txn ->
                 try {
                     val txnDate = dateFormat.parse(txn.date)
-                    txnDate != null && (txnDate == startDate)
+                    if (txnDate == null) return@filter false
+                    val txnCalendar = Calendar.getInstance().apply { time = txnDate }
+                    
+                    txnCalendar.get(Calendar.YEAR) == startCalendar.get(Calendar.YEAR) &&
+                    txnCalendar.get(Calendar.MONTH) == startCalendar.get(Calendar.MONTH) &&
+                    txnCalendar.get(Calendar.DAY_OF_MONTH) == startCalendar.get(Calendar.DAY_OF_MONTH)
                 } catch (_: Exception) {
                     false
                 }

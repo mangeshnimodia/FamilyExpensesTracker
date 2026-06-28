@@ -11,6 +11,8 @@ Completed -
 1. Add entry
 2. Show all entries for given date with sum at the top
 3. Delete an entry
+4. Add income
+5. Show income in Green and expenses in Red
 
 # Architecture
 Refer [README.md](/README.md)
