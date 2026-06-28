@@ -87,7 +87,7 @@ fun AddExpenseScreen(
             OutlinedTextField(
                 value = amount,
                 onValueChange = { if (it.all { char -> char.isDigit() }) amount = it },
-                label = { Text("Amount (Positive Integer)") },
+                label = { Text("Amount") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
             )

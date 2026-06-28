@@ -30,8 +30,13 @@ fun TransactionItem(txn: Transaction, onDelete: () -> Unit = {}) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    val categoryText = if (txn.subcategory.isNotBlank()) {
+                        "${txn.category}/${txn.subcategory}"
+                    } else {
+                        txn.category
+                    }
                     Text(
-                        text = txn.category,
+                        text = categoryText,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
