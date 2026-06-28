@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.model.TransactionType
 import com.familyexpensetracker.ui.components.AppDatePicker
@@ -56,7 +57,10 @@ fun AddExpenseScreen(
         viewModel.loadAccounts()
     }
     
-    val initialDate = viewModel.selectedDate.collectAsState().value ?: Calendar.getInstance().time
+    val currentRange by viewModel.selectedDateRange.collectAsState()
+    val initialDate = remember(currentRange) {
+        (currentRange as? DateRange.Day)?.date ?: Calendar.getInstance().time
+    }
     var selectedDate by remember { mutableStateOf(initialDate) }
     var showDatePicker by remember { mutableStateOf(value = false) }
     

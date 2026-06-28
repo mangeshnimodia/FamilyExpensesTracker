@@ -2,6 +2,7 @@ package com.familyexpensetracker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.repository.AddTransactionRepository
 import com.familyexpensetracker.data.repository.DeleteTransactionRepository
@@ -40,20 +41,20 @@ class ExpenseViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    private val _selectedDate = MutableStateFlow<Date?>(null)
-    val selectedDate: StateFlow<Date?> = _selectedDate.asStateFlow()
+    private val _selectedDateRange = MutableStateFlow<DateRange>(DateRange.Day(Date()))
+    val selectedDateRange: StateFlow<DateRange> = _selectedDateRange.asStateFlow()
 
-    fun setSelectedDate(date: Date) {
-        if (_selectedDate.value != date) {
-            _selectedDate.value = date
-            _transactions.value = emptyList() // Clear stale data for old date
+    fun setSelectedDateRange(range: DateRange) {
+        if (_selectedDateRange.value != range) {
+            _selectedDateRange.value = range
+            _transactions.value = emptyList() // Clear stale data for old range
         }
     }
 
     fun fetchTransactions() {
-        val date = _selectedDate.value ?: Date()
+        val range = _selectedDateRange.value
         viewModelScope.launch {
-            performFetch(date)
+            performFetch(range)
         }
     }
 
@@ -84,7 +85,7 @@ class ExpenseViewModel(
             _errorMessage.value = null
             try {
                 addRepository.add(transaction)
-                setSelectedDate(transactionDate)
+                setSelectedDateRange(DateRange.Day(transactionDate))
                 _transactions.value = emptyList() // Clear list to force refresh
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -111,11 +112,11 @@ class ExpenseViewModel(
         }
     }
 
-    private suspend fun performFetch(date: Date) {
+    private suspend fun performFetch(range: DateRange) {
         _isLoading.value = true
         _errorMessage.value = null
         try {
-            _transactions.value = fetchRepository.fetch(date)
+            _transactions.value = fetchRepository.fetch(range)
         } catch (e: Exception) {
             e.printStackTrace()
             _errorMessage.value = "Fetch failed: ${e.message}"

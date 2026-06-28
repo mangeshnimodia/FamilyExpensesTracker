@@ -1,5 +1,7 @@
 package com.familyexpensetracker.data.remote
 
+import com.familyexpensetracker.data.model.DateRange
+import com.familyexpensetracker.data.model.DateRangeFilter
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.utils.AppConstants
 import com.google.api.services.sheets.v4.Sheets
@@ -12,8 +14,9 @@ import java.util.*
 class FetchTransactionsDataSource(private val service: Sheets) {
     private val spreadsheetId = AppConstants.SPREADSHEET_ID
     private val range = AppConstants.RANGE_TRANSACTIONS
+    private val dateRangeFilter = DateRangeFilter()
 
-    suspend fun fetch(startDate: Date? = null): List<Transaction> = withContext(Dispatchers.IO) {
+    suspend fun fetch(dateRange: DateRange? = null): List<Transaction> = withContext(Dispatchers.IO) {
         val response: ValueRange = service.spreadsheets().values()[spreadsheetId, range]
             .execute()
         
@@ -34,17 +37,11 @@ class FetchTransactionsDataSource(private val service: Sheets) {
             )
         }.toList()
 
-        if (startDate != null) {
-            val startCalendar = Calendar.getInstance().apply { time = startDate }
+        if (dateRange != null) {
             transactions.filter { txn ->
                 try {
-                    val txnDate = dateFormat.parse(txn.date)
-                    if (txnDate == null) return@filter false
-                    val txnCalendar = Calendar.getInstance().apply { time = txnDate }
-                    
-                    txnCalendar.get(Calendar.YEAR) == startCalendar.get(Calendar.YEAR) &&
-                    txnCalendar.get(Calendar.MONTH) == startCalendar.get(Calendar.MONTH) &&
-                    txnCalendar.get(Calendar.DAY_OF_MONTH) == startCalendar.get(Calendar.DAY_OF_MONTH)
+                    val txnDate = dateFormat.parse(txn.date) ?: return@filter false
+                    dateRangeFilter.isDateInRange(txnDate, dateRange)
                 } catch (_: Exception) {
                     false
                 }

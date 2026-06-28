@@ -24,13 +24,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.familyexpensetracker.ui.components.AppDatePicker
+import com.familyexpensetracker.ui.components.DateRangeFormatter
+import com.familyexpensetracker.ui.components.DateRangeSelector
 import com.familyexpensetracker.ui.components.GroupedTransactionsView
 import com.familyexpensetracker.ui.components.TransactionItem
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
-import com.familyexpensetracker.utils.AppConstants
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,23 +39,16 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     val transactions by viewModel.transactions.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    val selectedDate by viewModel.selectedDate.collectAsState()
+    val selectedDateRange by viewModel.selectedDateRange.collectAsState()
     
     val totalAmount = transactions.sumOf { it.amount }
     
     val snackbarHostState = remember { SnackbarHostState() }
-    val dateFormatter = remember { SimpleDateFormat(AppConstants.DATE_FORMAT_UI, Locale.getDefault()) }
-    var showDatePicker by remember { mutableStateOf(value = false) }
+    val dateRangeFormatter = remember { DateRangeFormatter() }
+    var showRangeSelector by remember { mutableStateOf(value = false) }
     var viewMode by remember { mutableStateOf(TransactionViewMode.Activity) }
     val listState = rememberLazyListState()
     val scrollbarColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-
-    // Initial set of date if not already set
-    LaunchedEffect(Unit) {
-        if (selectedDate == null) {
-            viewModel.setSelectedDate(Date())
-        }
-    }
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
@@ -66,13 +57,11 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
         }
     }
 
-    if (showDatePicker) {
-        AppDatePicker(
-            initialDate = selectedDate,
-            onDateSelected = { viewModel.setSelectedDate(it) },
-        ) {
-            showDatePicker = false
-        }
+    if (showRangeSelector) {
+        DateRangeSelector(
+            onRangeSelected = { viewModel.setSelectedDateRange(it) },
+            onDismiss = { showRangeSelector = false }
+        )
     }
 
     NavHost(navController = navController, startDestination = "main_list") {
@@ -82,11 +71,14 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                 topBar = {
                     TopAppBar(
                         title = {
-                            Text(selectedDate?.let { dateFormatter.format(it) } ?: "Transactions")
+                            Text(
+                                text = dateRangeFormatter.format(selectedDateRange),
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         },
                         actions = {
-                            IconButton(onClick = { showDatePicker = true }) {
-                                Icon(Icons.Default.DateRange, contentDescription = "Select Date")
+                            IconButton(onClick = { showRangeSelector = true }) {
+                                Icon(Icons.Default.DateRange, contentDescription = "Select Date Range")
                             }
                             IconButton(onClick = { (context as? Activity)?.finish() }) {
                                 Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Exit App")
@@ -106,7 +98,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         .padding(padding)
                 ) {
                     // Total Amount Highlight
-                    if ((selectedDate != null) && (!isLoading)) {
+                    if (!isLoading) {
                         Surface(
                             color = MaterialTheme.colorScheme.primaryContainer,
                             modifier = Modifier.fillMaxWidth()
@@ -118,7 +110,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
-                                    text = "Total for Day:",
+                                    text = "Total:",
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
@@ -171,7 +163,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                     style = MaterialTheme.typography.bodyLarge
                                 )
                                 Text(
-                                    "Tap 🔄 to fetch for this date",
+                                    "Tap 🔄 to fetch for this range",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.outline
                                 )
