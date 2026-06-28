@@ -6,13 +6,17 @@ MOST IMPORTANT - CODING AGENT SHOULD NOT MODIFY THIS FILE UNLESS EXPLICITLY ASKE
 It's in currently in development and being developed as per the plan prepared in docs/prompt_conversation_history.md
 
 # Current Status
-We are following the development plan in (prompt_conversation)[docs/prompt_conversation_history.md]
 Completed -
 1. Add entry
 2. Show all entries for given date with sum at the top
 3. Delete an entry
 4. Add income
 5. Show income in Green and expenses in Red
+6. GroupBy feature (WIP)-
+   1. A toggle/button to switch the view between GroupBy/Activity. Activity is list of all entries (what we currently show)
+   2. In GroupBy, group all the entries by Accounts first. This shows the account name and the subtotal of all entries for that account.
+   3. Expand button on each account, should further group by categories with subtotal of that category
+   4. Expand on each category shows all entries of that category. (Note - no subcategory grouping required)
 
 # Architecture
 Refer [README.md](/README.md)

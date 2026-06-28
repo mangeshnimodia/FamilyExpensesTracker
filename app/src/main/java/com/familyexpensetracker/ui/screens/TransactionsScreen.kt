@@ -25,8 +25,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.familyexpensetracker.ui.components.AppDatePicker
+import com.familyexpensetracker.ui.components.GroupedTransactionsView
 import com.familyexpensetracker.ui.components.TransactionItem
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
+import com.familyexpensetracker.utils.AppConstants
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -44,8 +46,9 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     val totalAmount = transactions.sumOf { it.amount }
     
     val snackbarHostState = remember { SnackbarHostState() }
-    val dateFormatter = SimpleDateFormat("EEE, dd MMM yyyy", Locale.getDefault())
+    val dateFormatter = remember { SimpleDateFormat(AppConstants.DATE_FORMAT_UI, Locale.getDefault()) }
     var showDatePicker by remember { mutableStateOf(value = false) }
+    var viewMode by remember { mutableStateOf(TransactionViewMode.Activity) }
     val listState = rememberLazyListState()
     val scrollbarColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
 
@@ -136,6 +139,25 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         }
                     }
 
+                    // View Mode Toggle (Two "Bullets"/Tabs)
+                    TabRow(
+                        selectedTabIndex = if (viewMode == TransactionViewMode.Activity) 0 else 1,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        divider = {},
+                    ) {
+                        Tab(
+                            selected = viewMode == TransactionViewMode.Activity,
+                            onClick = { viewMode = TransactionViewMode.Activity },
+                            text = { Text("Activity") }
+                        )
+                        Tab(
+                            selected = viewMode == TransactionViewMode.GroupBy,
+                            onClick = { viewMode = TransactionViewMode.GroupBy },
+                            text = { Text("Grouped") }
+                        )
+                    }
+
                     Box(modifier = Modifier.fillMaxSize()) {
                         if (isLoading) {
                             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -155,38 +177,53 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                 )
                             }
                         } else {
-                            LazyColumn(
-                                state = listState,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .drawWithContent {
-                                        drawContent()
-                                        val firstVisibleElementIndex = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
-                                        val needScrollbar = listState.layoutInfo.totalItemsCount > listState.layoutInfo.visibleItemsInfo.size
+                            if (viewMode == TransactionViewMode.Activity) {
+                                LazyColumn(
+                                    state = listState,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .drawWithContent {
+                                            drawContent()
+                                            val firstVisibleElementIndex =
+                                                listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
+                                            val needScrollbar =
+                                                listState.layoutInfo.totalItemsCount > listState.layoutInfo.visibleItemsInfo.size
 
-                                        if (needScrollbar && (firstVisibleElementIndex != null)) {
-                                            val elementHeight = size.height / listState.layoutInfo.totalItemsCount
-                                            val scrollbarHeight = listState.layoutInfo.visibleItemsInfo.size * elementHeight
-                                            val scrollbarOffsetY = firstVisibleElementIndex * elementHeight
+                                            if (needScrollbar && (firstVisibleElementIndex != null)) {
+                                                val elementHeight =
+                                                    size.height / listState.layoutInfo.totalItemsCount
+                                                val scrollbarHeight =
+                                                    listState.layoutInfo.visibleItemsInfo.size * elementHeight
+                                                val scrollbarOffsetY =
+                                                    firstVisibleElementIndex * elementHeight
 
-                                            drawRect(
-                                                color = scrollbarColor,
-                                                topLeft = Offset(size.width - 4.dp.toPx(), scrollbarOffsetY),
-                                                size = Size(4.dp.toPx(), scrollbarHeight),
-                                            )
+                                                drawRect(
+                                                    color = scrollbarColor,
+                                                    topLeft = Offset(
+                                                        size.width - 4.dp.toPx(),
+                                                        scrollbarOffsetY
+                                                    ),
+                                                    size = Size(4.dp.toPx(), scrollbarHeight),
+                                                )
+                                            }
+                                        },
+                                    contentPadding = PaddingValues(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    items(transactions.size) { index ->
+                                        val transaction = transactions[index]
+                                        TransactionItem(
+                                            txn = transaction,
+                                        ) {
+                                            viewModel.deleteTransaction(transaction.txnId)
                                         }
-                                    },
-                                contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                items(transactions.size) { index ->
-                                    val transaction = transactions[index]
-                                    TransactionItem(
-                                        txn = transaction,
-                                    ) {
-                                        viewModel.deleteTransaction(transaction.txnId)
                                     }
                                 }
+                            } else {
+                                GroupedTransactionsView(
+                                    transactions = transactions,
+                                    onDelete = { viewModel.deleteTransaction(it) }
+                                )
                             }
                         }
 

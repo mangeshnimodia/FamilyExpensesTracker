@@ -60,7 +60,7 @@ fun AddExpenseScreen(
     var selectedDate by remember { mutableStateOf(initialDate) }
     var showDatePicker by remember { mutableStateOf(value = false) }
     
-    val dateFormatter = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+    val dateFormatter = remember { SimpleDateFormat(AppConstants.DATE_FORMAT_DB, Locale.getDefault()) }
 
     if (showDatePicker) {
         AppDatePicker(

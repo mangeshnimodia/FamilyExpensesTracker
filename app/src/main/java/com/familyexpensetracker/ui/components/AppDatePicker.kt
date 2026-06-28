@@ -20,8 +20,17 @@ fun AppDatePicker(
         confirmButton = {
             TextButton(
                 onClick = {
-                    datePickerState.selectedDateMillis?.let {
-                        onDateSelected(Date(it))
+                    datePickerState.selectedDateMillis?.let { utcMillis ->
+                        // Convert UTC millis to Local date to avoid "past date" issues
+                        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                        calendar.timeInMillis = utcMillis
+                        val localCalendar = Calendar.getInstance()
+                        localCalendar.set(
+                            calendar.get(Calendar.YEAR),
+                            calendar.get(Calendar.MONTH),
+                            calendar.get(Calendar.DAY_OF_MONTH)
+                        )
+                        onDateSelected(localCalendar.time)
                     }
                     onDismiss()
                 },

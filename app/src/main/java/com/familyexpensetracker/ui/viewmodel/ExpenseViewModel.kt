@@ -44,15 +44,14 @@ class ExpenseViewModel(
     val selectedDate: StateFlow<Date?> = _selectedDate.asStateFlow()
 
     fun setSelectedDate(date: Date) {
-        val normalized = normalizeDate(date)
-        if (_selectedDate.value != normalized) {
-            _selectedDate.value = normalized
+        if (_selectedDate.value != date) {
+            _selectedDate.value = date
             _transactions.value = emptyList() // Clear stale data for old date
         }
     }
 
     fun fetchTransactions() {
-        val date = _selectedDate.value ?: normalizeDate(Date())
+        val date = _selectedDate.value ?: Date()
         viewModelScope.launch {
             performFetch(date)
         }
@@ -110,16 +109,6 @@ class ExpenseViewModel(
                 _isLoading.value = false
             }
         }
-    }
-
-    private fun normalizeDate(date: Date): Date {
-        return Calendar.getInstance().apply {
-            time = date
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.time
     }
 
     private suspend fun performFetch(date: Date) {

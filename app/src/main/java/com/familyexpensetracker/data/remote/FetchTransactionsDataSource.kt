@@ -18,7 +18,7 @@ class FetchTransactionsDataSource(private val service: Sheets) {
             .execute()
         
         val values = response.getValues() ?: return@withContext emptyList<Transaction>()
-        val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+        val dateFormat = SimpleDateFormat(AppConstants.DATE_FORMAT_DB, Locale.getDefault())
         
         val transactions = values.asSequence().drop(1).map { row ->
             Transaction(

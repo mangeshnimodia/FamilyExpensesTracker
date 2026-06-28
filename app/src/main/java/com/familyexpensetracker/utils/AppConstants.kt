@@ -29,4 +29,7 @@ object AppConstants {
     const val KEY_EXPENSE_CATEGORIES_MAP = "expense_categories_map"
     const val KEY_INCOME_CATEGORIES_MAP = "income_categories_map"
     const val KEY_ACCOUNTS_LIST = "accounts_list"
+
+    const val DATE_FORMAT_DB = "yyyy/MM/dd"
+    const val DATE_FORMAT_UI = "EEE, dd MMM yyyy"
 }
