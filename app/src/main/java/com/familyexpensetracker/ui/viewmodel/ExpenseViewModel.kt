@@ -43,11 +43,18 @@ class ExpenseViewModel(
     private val _selectedDate = MutableStateFlow<Date?>(null)
     val selectedDate: StateFlow<Date?> = _selectedDate.asStateFlow()
 
-    fun fetchTransactions(date: Date) {
-        val normalizedDate = normalizeDate(date)
-        _selectedDate.value = normalizedDate
+    fun setSelectedDate(date: Date) {
+        val normalized = normalizeDate(date)
+        if (_selectedDate.value != normalized) {
+            _selectedDate.value = normalized
+            _transactions.value = emptyList() // Clear stale data for old date
+        }
+    }
+
+    fun fetchTransactions() {
+        val date = _selectedDate.value ?: normalizeDate(Date())
         viewModelScope.launch {
-            performFetch(normalizedDate)
+            performFetch(date)
         }
     }
 
@@ -78,12 +85,12 @@ class ExpenseViewModel(
             _errorMessage.value = null
             try {
                 addRepository.add(transaction)
-                val normalizedDate = normalizeDate(transactionDate)
-                _selectedDate.value = normalizedDate
-                performFetch(normalizedDate)
+                setSelectedDate(transactionDate)
+                _transactions.value = emptyList() // Clear list to force refresh
             } catch (e: Exception) {
                 e.printStackTrace()
                 _errorMessage.value = "Add failed: ${e.message}"
+            } finally {
                 _isLoading.value = false
             }
         }
@@ -95,10 +102,11 @@ class ExpenseViewModel(
             _errorMessage.value = null
             try {
                 deleteRepository.delete(txnId)
-                _selectedDate.value?.let { performFetch(it) }
+                _transactions.value = emptyList() // Clear list to force refresh
             } catch (e: Exception) {
                 e.printStackTrace()
                 _errorMessage.value = "Delete failed: ${e.message}"
+            } finally {
                 _isLoading.value = false
             }
         }

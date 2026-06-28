@@ -31,7 +31,6 @@ fun AddExpenseScreen(
     var paymentMethod by remember { mutableStateOf(value = AppConstants.DEFAULT_PAYMENT_METHOD) }
     var account by remember { mutableStateOf(value = AppConstants.DEFAULT_ACCOUNT) }
     var description by remember { mutableStateOf(value = "") }
-    var transferId by remember { mutableStateOf(value = "") }
 
     val expenseCategories by viewModel.expenseCategories.collectAsState()
     val incomeCategories by viewModel.incomeCategories.collectAsState()
@@ -181,13 +180,6 @@ fun AddExpenseScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            OutlinedTextField(
-                value = transferId,
-                onValueChange = { transferId = it },
-                label = { Text("Transfer ID (Optional)") },
-                modifier = Modifier.fillMaxWidth(),
-            )
-
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
@@ -207,7 +199,7 @@ fun AddExpenseScreen(
                         paymentMethod = paymentMethod,
                         description = description,
                         account = account,
-                        transferId = transferId.ifBlank { null },
+                        transferId = null,
                     )
                     viewModel.addTransaction(transaction, selectedDate)
                     onDismiss()

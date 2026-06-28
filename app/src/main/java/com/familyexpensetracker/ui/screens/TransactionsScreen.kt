@@ -2,6 +2,8 @@ package com.familyexpensetracker.ui.screens
 
 import android.app.Activity
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
@@ -11,6 +13,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,11 +46,13 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
     val dateFormatter = SimpleDateFormat("EEE, dd MMM yyyy", Locale.getDefault())
     var showDatePicker by remember { mutableStateOf(value = false) }
+    val listState = rememberLazyListState()
+    val scrollbarColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
 
-    // Initial fetch for today if not already fetched
+    // Initial set of date if not already set
     LaunchedEffect(Unit) {
         if (selectedDate == null) {
-            viewModel.fetchTransactions(Date())
+            viewModel.setSelectedDate(Date())
         }
     }
 
@@ -58,7 +66,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     if (showDatePicker) {
         AppDatePicker(
             initialDate = selectedDate,
-            onDateSelected = { viewModel.fetchTransactions(it) },
+            onDateSelected = { viewModel.setSelectedDate(it) },
         ) {
             showDatePicker = false
         }
@@ -74,11 +82,6 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                             Text(selectedDate?.let { dateFormatter.format(it) } ?: "Transactions")
                         },
                         actions = {
-                            IconButton(onClick = { 
-                                selectedDate?.let { viewModel.fetchTransactions(it) }
-                            }) {
-                                Icon(Icons.Default.Refresh, contentDescription = "Refresh")
-                            }
                             IconButton(onClick = { showDatePicker = true }) {
                                 Icon(Icons.Default.DateRange, contentDescription = "Select Date")
                             }
@@ -109,7 +112,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                 modifier = Modifier
                                     .padding(horizontal = 16.dp, vertical = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
                                     text = "Total for Day:",
@@ -119,7 +122,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                 val totalColor = if (totalAmount < 0) {
                                     MaterialTheme.colorScheme.error
                                 } else {
-                                    androidx.compose.ui.graphics.Color(0xFF4CAF50) // Material Green
+                                    Color(0xFF4CAF50) // Material Green
                                 }
                                 Text(
                                     text = "₹${"%.2f".format(kotlin.math.abs(totalAmount))}",
@@ -137,16 +140,44 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         if (isLoading) {
                             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                         } else if (transactions.isEmpty()) {
-                            Text(
-                                "No transactions for this date",
+                            Column(
                                 modifier = Modifier.align(Alignment.Center),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    "No transactions loaded",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    "Tap 🔄 to fetch for this date",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                            }
                         } else {
-                            androidx.compose.foundation.lazy.LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
+                            LazyColumn(
+                                state = listState,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .drawWithContent {
+                                        drawContent()
+                                        val firstVisibleElementIndex = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
+                                        val needScrollbar = listState.layoutInfo.totalItemsCount > listState.layoutInfo.visibleItemsInfo.size
+
+                                        if (needScrollbar && (firstVisibleElementIndex != null)) {
+                                            val elementHeight = size.height / listState.layoutInfo.totalItemsCount
+                                            val scrollbarHeight = listState.layoutInfo.visibleItemsInfo.size * elementHeight
+                                            val scrollbarOffsetY = firstVisibleElementIndex * elementHeight
+
+                                            drawRect(
+                                                color = scrollbarColor,
+                                                topLeft = Offset(size.width - 4.dp.toPx(), scrollbarOffsetY),
+                                                size = Size(4.dp.toPx(), scrollbarHeight),
+                                            )
+                                        }
+                                    },
                                 contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 items(transactions.size) { index ->
                                     val transaction = transactions[index]
@@ -158,6 +189,18 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                 }
                             }
                         }
+
+                        // Refresh FAB in bottom left
+                        FloatingActionButton(
+                            onClick = { viewModel.fetchTransactions() },
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(16.dp),
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                        }
                     }
                 }
             }
@@ -165,10 +208,9 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
         composable("add") {
             AddExpenseScreen(
                 viewModel = viewModel,
-                onDismiss = {
-                    navController.popBackStack()
-                }
-            )
+            ) {
+                navController.popBackStack()
+            }
         }
     }
 }
