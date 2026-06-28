@@ -3,45 +3,58 @@ package com.familyexpensetracker.ui.components
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SubcategoryDropdown(
-    selectedSubcategory: String,
-    subcategories: List<String>,
+fun AppDropdown(
+    label: String,
+    selectedValue: String,
+    options: List<String>,
     expanded: Boolean,
-    enabled: Boolean,
     onExpandedChange: (Boolean) -> Unit,
-    onSubcategorySelected: (String) -> Unit,
+    onValueSelected: (String) -> Unit,
     onDismiss: () -> Unit,
+    defaultValue: String? = null,
+    enabled: Boolean = true,
 ) {
+    LaunchedEffect(options) {
+        if (options.isNotEmpty()) {
+            if (selectedValue.isBlank() || !options.contains(selectedValue)) {
+                if (defaultValue != null && options.contains(defaultValue)) {
+                    onValueSelected(defaultValue)
+                }
+            }
+        }
+    }
+
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { if (enabled) onExpandedChange(it) },
         modifier = Modifier.fillMaxWidth(),
     ) {
         OutlinedTextField(
-            value = selectedSubcategory,
+            value = selectedValue,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Subcategory") },
+            label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth(),
             enabled = enabled,
         )
-        if (subcategories.isNotEmpty()) {
+        if (options.isNotEmpty()) {
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = onDismiss,
             ) {
-                subcategories.forEach { sub ->
+                options.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(sub) },
+                        text = { Text(option) },
                         onClick = {
-                            onSubcategorySelected(sub)
+                            onValueSelected(option)
                             onDismiss()
                         },
                     )

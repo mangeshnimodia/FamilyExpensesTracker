@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.repository.AddTransactionRepository
 import com.familyexpensetracker.data.repository.DeleteTransactionRepository
+import com.familyexpensetracker.data.repository.FetchAccountsRepository
 import com.familyexpensetracker.data.repository.FetchCategoriesRepository
 import com.familyexpensetracker.data.repository.FetchTransactionsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,12 +19,16 @@ class ExpenseViewModel(
     private val addRepository: AddTransactionRepository,
     private val deleteRepository: DeleteTransactionRepository,
     private val categoriesRepository: FetchCategoriesRepository,
+    private val accountsRepository: FetchAccountsRepository,
 ) : ViewModel() {
     private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
     val transactions: StateFlow<List<Transaction>> = _transactions.asStateFlow()
 
     private val _categories = MutableStateFlow<Map<String, List<String>>>(emptyMap())
     val categories: StateFlow<Map<String, List<String>>> = _categories.asStateFlow()
+
+    private val _accounts = MutableStateFlow<List<String>>(emptyList())
+    val accounts: StateFlow<List<String>> = _accounts.asStateFlow()
 
     private val _isLoading = MutableStateFlow(value = false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -45,6 +50,16 @@ class ExpenseViewModel(
         viewModelScope.launch {
             try {
                 _categories.value = categoriesRepository.fetch()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun loadAccounts() {
+        viewModelScope.launch {
+            try {
+                _accounts.value = accountsRepository.fetch()
             } catch (e: Exception) {
                 e.printStackTrace()
             }

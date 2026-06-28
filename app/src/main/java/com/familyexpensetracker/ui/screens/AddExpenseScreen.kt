@@ -11,8 +11,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.ui.components.AppDatePicker
-import com.familyexpensetracker.ui.components.CategoryDropdown
-import com.familyexpensetracker.ui.components.SubcategoryDropdown
+import com.familyexpensetracker.ui.components.AppDropdown
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
 import com.familyexpensetracker.utils.AppConstants
 import java.text.SimpleDateFormat
@@ -33,11 +32,14 @@ fun AddExpenseScreen(
     var transferId by remember { mutableStateOf(value = "") }
 
     val categoriesMap by viewModel.categories.collectAsState()
+    val accountsList by viewModel.accounts.collectAsState()
     var categoryExpanded by remember { mutableStateOf(value = false) }
     var subcategoryExpanded by remember { mutableStateOf(value = false) }
+    var accountExpanded by remember { mutableStateOf(value = false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadCategories()
+        viewModel.loadAccounts()
     }
     
     val calendar = Calendar.getInstance()
@@ -50,8 +52,9 @@ fun AddExpenseScreen(
         AppDatePicker(
             initialDate = selectedDate,
             onDateSelected = { selectedDate = it },
-            onDismiss = { showDatePicker = false },
-        )
+        ) {
+            showDatePicker = false
+        }
     }
 
     Scaffold(
@@ -62,9 +65,9 @@ fun AddExpenseScreen(
                     TextButton(onClick = onDismiss) {
                         Text("Cancel")
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -72,11 +75,11 @@ fun AddExpenseScreen(
                 .padding(padding)
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             OutlinedButton(
                 onClick = { showDatePicker = true },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Date: ${dateFormatter.format(selectedDate)}")
             }
@@ -86,57 +89,65 @@ fun AddExpenseScreen(
                 onValueChange = { if (it.all { char -> char.isDigit() }) amount = it },
                 label = { Text("Amount (Positive Integer)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
-            CategoryDropdown(
-                selectedCategory = category,
-                categories = categoriesMap.keys.toList(),
+            AppDropdown(
+                label = "Category",
+                selectedValue = category,
+                options = categoriesMap.keys.toList(),
                 expanded = categoryExpanded,
                 onExpandedChange = { categoryExpanded = it },
-                onCategorySelected = {
+                onValueSelected = {
                     category = it
                     subcategory = ""
                 },
-                onDismiss = { categoryExpanded = false }
+                onDismiss = { categoryExpanded = false },
+                defaultValue = AppConstants.DEFAULT_CATEGORY,
             )
 
-            SubcategoryDropdown(
-                selectedSubcategory = subcategory,
-                subcategories = categoriesMap[category] ?: emptyList(),
+            AppDropdown(
+                label = "Subcategory",
+                selectedValue = subcategory,
+                options = categoriesMap[category] ?: emptyList(),
                 expanded = subcategoryExpanded,
                 enabled = category.isNotBlank(),
                 onExpandedChange = { subcategoryExpanded = it },
-                onSubcategorySelected = { subcategory = it },
-                onDismiss = { subcategoryExpanded = false }
+                onValueSelected = { subcategory = it },
+                onDismiss = { subcategoryExpanded = false },
+                defaultValue = AppConstants.DEFAULT_SUBCATEGORY,
             )
 
             OutlinedTextField(
                 value = paymentMethod,
                 onValueChange = { paymentMethod = it },
                 label = { Text("Payment Method") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
-            OutlinedTextField(
-                value = account,
-                onValueChange = { account = it },
-                label = { Text("Account") },
-                modifier = Modifier.fillMaxWidth()
+            AppDropdown(
+                label = "Account",
+                selectedValue = account,
+                options = accountsList,
+                expanded = accountExpanded,
+                onExpandedChange = { accountExpanded = it },
+                onValueSelected = { account = it },
+                onDismiss = { accountExpanded = false },
+                defaultValue = AppConstants.DEFAULT_ACCOUNT,
             )
 
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
                 label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             OutlinedTextField(
                 value = transferId,
                 onValueChange = { transferId = it },
                 label = { Text("Transfer ID (Optional)") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -162,7 +173,7 @@ fun AddExpenseScreen(
                 enabled = (amount.toIntOrNull()?.let { it > 0 } == true) &&
                         category.isNotBlank() &&
                         paymentMethod.isNotBlank() &&
-                        account.isNotBlank()
+                        account.isNotBlank(),
             ) {
                 Text("Add Expense")
             }

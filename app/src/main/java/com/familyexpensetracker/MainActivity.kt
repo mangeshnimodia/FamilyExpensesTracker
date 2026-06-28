@@ -19,14 +19,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.familyexpensetracker.data.local.LocalAccountsDataSource
 import com.familyexpensetracker.data.local.LocalCategoriesDataSource
 import com.familyexpensetracker.data.remote.AddTransactionDataSource
 import com.familyexpensetracker.data.remote.DeleteTransactionDataSource
+import com.familyexpensetracker.data.remote.FetchAccountsDataSource
 import com.familyexpensetracker.data.remote.FetchCategoriesDataSource
 import com.familyexpensetracker.data.remote.FetchTransactionsDataSource
 import com.familyexpensetracker.data.remote.GoogleSheetsServiceProvider
 import com.familyexpensetracker.data.repository.AddTransactionRepository
 import com.familyexpensetracker.data.repository.DeleteTransactionRepository
+import com.familyexpensetracker.data.repository.FetchAccountsRepository
 import com.familyexpensetracker.data.repository.FetchCategoriesRepository
 import com.familyexpensetracker.data.repository.FetchTransactionsRepository
 import com.familyexpensetracker.ui.screens.TransactionsScreen
@@ -170,7 +173,17 @@ class MainActivity : ComponentActivity() {
         val categoriesDataSource = FetchCategoriesDataSource(sheetsService)
         val localCategoriesDataSource = LocalCategoriesDataSource(this)
         val categoriesRepository = FetchCategoriesRepository(categoriesDataSource, localCategoriesDataSource)
+
+        val accountsDataSource = FetchAccountsDataSource(sheetsService)
+        val localAccountsDataSource = LocalAccountsDataSource(this)
+        val accountsRepository = FetchAccountsRepository(accountsDataSource, localAccountsDataSource)
         
-        viewModel = ExpenseViewModel(fetchRepository, addRepository, deleteRepository, categoriesRepository)
+        viewModel = ExpenseViewModel(
+            fetchRepository,
+            addRepository,
+            deleteRepository,
+            categoriesRepository,
+            accountsRepository,
+        )
     }
 }
