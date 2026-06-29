@@ -19,6 +19,7 @@ class ExpenseViewModelTest {
     private val fetchRepository = mockk<FetchTransactionsRepository>()
     private val addRepository = mockk<AddTransactionRepository>()
     private val deleteRepository = mockk<DeleteTransactionRepository>()
+    private val updateRepository = mockk<UpdateTransactionRepository>()
     private val expenseCategoriesRepository = mockk<FetchCategoriesRepository>()
     private val incomeCategoriesRepository = mockk<FetchCategoriesRepository>()
     private val accountsRepository = mockk<FetchAccountsRepository>()
@@ -33,6 +34,7 @@ class ExpenseViewModelTest {
             fetchRepository,
             addRepository,
             deleteRepository,
+            updateRepository,
             expenseCategoriesRepository,
             incomeCategoriesRepository,
             accountsRepository
@@ -83,6 +85,22 @@ class ExpenseViewModelTest {
 
         // Assert
         coVerify { addRepository.add(transaction) }
+        assertTrue(viewModel.selectedDateRange.value is DateRange.Day)
+        assertEquals(emptyList<Transaction>(), viewModel.transactions.value)
+    }
+
+    @Test
+    fun `updateTransaction calls repository and updates range`() = runTest {
+        // Arrange
+        val transaction = mockk<Transaction>()
+        val date = Date()
+        coEvery { updateRepository.update(any()) } returns Unit
+
+        // Act
+        viewModel.updateTransaction(transaction, date)
+
+        // Assert
+        coVerify { updateRepository.update(transaction) }
         assertTrue(viewModel.selectedDateRange.value is DateRange.Day)
         assertEquals(emptyList<Transaction>(), viewModel.transactions.value)
     }

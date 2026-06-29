@@ -55,4 +55,27 @@ class TransactionItemTest {
         
         assert(deleteClicked)
     }
+
+    @Test
+    fun transactionItem_onEditTriggered() {
+        var editedTxn: Transaction? = null
+        val txn = Transaction(
+            txnId = "1",
+            date = "2026/06/28",
+            amount = -150.5,
+            category = "Transport",
+            subcategory = "",
+            paymentMethod = "Card",
+            description = "",
+            account = "Bank"
+        )
+
+        composeTestRule.setContent {
+            TransactionItem(txn = txn, onEdit = { editedTxn = it })
+        }
+
+        composeTestRule.onNodeWithContentDescription("Edit").performClick()
+        
+        assert(editedTxn == txn)
+    }
 }

@@ -82,6 +82,11 @@ class TransactionsScreenTest {
         composeTestRule.onNodeWithText("Milk").assertIsDisplayed()
         // Account name should be visible in the item
         composeTestRule.onNodeWithText("Wallet", substring = true).assertIsDisplayed()
+        
+        // Check for Edit and Delete icons
+        composeTestRule.onNodeWithContentDescription("Edit").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Delete").assertIsDisplayed()
+
         // Total amount highlight shows "₹100.00" (from %.2f)
         // Match only the header which has .00
         composeTestRule.onNodeWithText("100.00", substring = true).assertIsDisplayed()

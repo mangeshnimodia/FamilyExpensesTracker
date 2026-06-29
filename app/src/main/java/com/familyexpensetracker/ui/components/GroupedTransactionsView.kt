@@ -22,7 +22,8 @@ import kotlin.math.abs
 @Composable
 fun GroupedTransactionsView(
     transactions: List<Transaction>,
-    onDelete: (String) -> Unit
+    onDelete: (String) -> Unit,
+    onEdit: (Transaction) -> Unit = {}
 ) {
     if (transactions.isEmpty()) return
 
@@ -83,7 +84,8 @@ fun GroupedTransactionsView(
                             Box(modifier = Modifier.padding(start = 32.dp)) {
                                 TransactionItem(
                                     txn = txn,
-                                    onDelete = { onDelete(txn.txnId) }
+                                    onDelete = { onDelete(txn.txnId) },
+                                    onEdit = { onEdit(it) }
                                 )
                             }
                         }

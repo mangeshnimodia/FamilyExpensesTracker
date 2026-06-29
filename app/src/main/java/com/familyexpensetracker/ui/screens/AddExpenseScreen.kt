@@ -24,14 +24,44 @@ import java.util.*
 fun AddExpenseScreen(
     viewModel: ExpenseViewModel,
     onDismiss: () -> Unit,
+    transactionToEdit: Transaction? = null,
 ) {
-    var transactionType by remember { mutableStateOf(TransactionType.EXPENSE) }
-    var amount by remember { mutableStateOf(value = "") }
-    var category by remember { mutableStateOf(value = AppConstants.DEFAULT_CATEGORY) }
-    var subcategory by remember { mutableStateOf(value = AppConstants.DEFAULT_SUBCATEGORY) }
-    var paymentMethod by remember { mutableStateOf(value = AppConstants.DEFAULT_PAYMENT_METHOD) }
-    var account by remember { mutableStateOf(value = AppConstants.DEFAULT_ACCOUNT) }
-    var description by remember { mutableStateOf(value = "") }
+    var transactionType by remember {
+        mutableStateOf(
+            transactionToEdit?.let { if (it.amount < 0) TransactionType.EXPENSE else TransactionType.INCOME }
+                ?: TransactionType.EXPENSE,
+        )
+    }
+    var amount by remember {
+        mutableStateOf(
+            value = transactionToEdit?.let { kotlin.math.abs(it.amount).toInt().toString() } ?: ""
+        )
+    }
+    var category by remember {
+        mutableStateOf(
+            value = transactionToEdit?.category ?: AppConstants.DEFAULT_CATEGORY
+        )
+    }
+    var subcategory by remember {
+        mutableStateOf(
+            value = transactionToEdit?.subcategory ?: AppConstants.DEFAULT_SUBCATEGORY
+        )
+    }
+    var paymentMethod by remember {
+        mutableStateOf(
+            value = transactionToEdit?.paymentMethod ?: AppConstants.DEFAULT_PAYMENT_METHOD
+        )
+    }
+    var account by remember {
+        mutableStateOf(
+            value = transactionToEdit?.account ?: AppConstants.DEFAULT_ACCOUNT
+        )
+    }
+    var description by remember {
+        mutableStateOf(
+            value = transactionToEdit?.description ?: ""
+        )
+    }
 
     val expenseCategories by viewModel.expenseCategories.collectAsState()
     val incomeCategories by viewModel.incomeCategories.collectAsState()
@@ -42,13 +72,17 @@ fun AddExpenseScreen(
     var subcategoryExpanded by remember { mutableStateOf(value = false) }
     var accountExpanded by remember { mutableStateOf(value = false) }
 
+    val dateFormatter = remember { SimpleDateFormat(AppConstants.DATE_FORMAT_DB, Locale.getDefault()) }
+
     LaunchedEffect(transactionType) {
-        if (transactionType == TransactionType.EXPENSE) {
-            category = AppConstants.DEFAULT_CATEGORY
-            subcategory = AppConstants.DEFAULT_SUBCATEGORY
-        } else if (transactionType == TransactionType.INCOME) {
-            category = AppConstants.DEFAULT_INCOME_CATEGORY
-            subcategory = AppConstants.DEFAULT_INCOME_SUBCATEGORY
+        if (transactionToEdit == null) {
+            if (transactionType == TransactionType.EXPENSE) {
+                category = AppConstants.DEFAULT_CATEGORY
+                subcategory = AppConstants.DEFAULT_SUBCATEGORY
+            } else if (transactionType == TransactionType.INCOME) {
+                category = AppConstants.DEFAULT_INCOME_CATEGORY
+                subcategory = AppConstants.DEFAULT_INCOME_SUBCATEGORY
+            }
         }
     }
 
@@ -58,13 +92,17 @@ fun AddExpenseScreen(
     }
     
     val currentRange by viewModel.selectedDateRange.collectAsState()
-    val initialDate = remember(currentRange) {
-        (currentRange as? DateRange.Day)?.date ?: Calendar.getInstance().time
+    val initialDate = remember(currentRange, transactionToEdit) {
+        transactionToEdit?.let {
+            try {
+                dateFormatter.parse(it.date)
+            } catch (_: Exception) {
+                null
+            }
+        } ?: (currentRange as? DateRange.Day)?.date ?: Calendar.getInstance().time
     }
     var selectedDate by remember { mutableStateOf(initialDate) }
     var showDatePicker by remember { mutableStateOf(value = false) }
-    
-    val dateFormatter = remember { SimpleDateFormat(AppConstants.DATE_FORMAT_DB, Locale.getDefault()) }
 
     if (showDatePicker) {
         AppDatePicker(
@@ -78,7 +116,7 @@ fun AddExpenseScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Expense") },
+                title = { Text(if (transactionToEdit == null) "Add Expense" else "Edit Expense") },
                 navigationIcon = {
                     TextButton(onClick = onDismiss) {
                         Text("Cancel")
@@ -195,7 +233,7 @@ fun AddExpenseScreen(
                         amountDouble
                     }
                     val transaction = Transaction(
-                        txnId = UUID.randomUUID().toString(),
+                        txnId = transactionToEdit?.txnId ?: UUID.randomUUID().toString(),
                         date = dateFormatter.format(selectedDate),
                         amount = finalAmount,
                         category = category,
@@ -203,9 +241,13 @@ fun AddExpenseScreen(
                         paymentMethod = paymentMethod,
                         description = description,
                         account = account,
-                        transferId = null,
+                        transferId = transactionToEdit?.transferId,
                     )
-                    viewModel.addTransaction(transaction, selectedDate)
+                    if (transactionToEdit == null) {
+                        viewModel.addTransaction(transaction, selectedDate)
+                    } else {
+                        viewModel.updateTransaction(transaction, selectedDate)
+                    }
                     onDismiss()
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -214,7 +256,11 @@ fun AddExpenseScreen(
                         paymentMethod.isNotBlank() &&
                         account.isNotBlank(),
             ) {
-                val buttonText = if (transactionType == TransactionType.EXPENSE) "Add Expense" else "Add Income"
+                val buttonText = if (transactionToEdit == null) {
+                    if (transactionType == TransactionType.EXPENSE) "Add Expense" else "Add Income"
+                } else {
+                    "Update"
+                }
                 Text(buttonText)
             }
         }

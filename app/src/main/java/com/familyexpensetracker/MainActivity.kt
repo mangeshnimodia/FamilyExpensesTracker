@@ -23,12 +23,14 @@ import com.familyexpensetracker.data.local.LocalAccountsDataSource
 import com.familyexpensetracker.data.local.LocalCategoriesDataSource
 import com.familyexpensetracker.data.remote.AddTransactionDataSource
 import com.familyexpensetracker.data.remote.DeleteTransactionDataSource
+import com.familyexpensetracker.data.remote.UpdateTransactionDataSource
 import com.familyexpensetracker.data.remote.FetchAccountsDataSource
 import com.familyexpensetracker.data.remote.FetchCategoriesDataSource
 import com.familyexpensetracker.data.remote.FetchTransactionsDataSource
 import com.familyexpensetracker.data.remote.GoogleSheetsServiceProvider
 import com.familyexpensetracker.data.repository.AddTransactionRepository
 import com.familyexpensetracker.data.repository.DeleteTransactionRepository
+import com.familyexpensetracker.data.repository.UpdateTransactionRepository
 import com.familyexpensetracker.data.repository.FetchAccountsRepository
 import com.familyexpensetracker.data.repository.FetchCategoriesRepository
 import com.familyexpensetracker.data.repository.FetchTransactionsRepository
@@ -170,6 +172,9 @@ class MainActivity : ComponentActivity() {
         val deleteDataSource = DeleteTransactionDataSource(sheetsService)
         val deleteRepository = DeleteTransactionRepository(deleteDataSource)
 
+        val updateDataSource = UpdateTransactionDataSource(sheetsService)
+        val updateRepository = UpdateTransactionRepository(updateDataSource)
+
         val expenseCategoriesDataSource = FetchCategoriesDataSource(sheetsService, AppConstants.RANGE_EXPENSE_CATEGORIES)
         val localExpenseCategoriesDataSource = LocalCategoriesDataSource(this, AppConstants.KEY_EXPENSE_CATEGORIES_MAP)
         val expenseCategoriesRepository = FetchCategoriesRepository(expenseCategoriesDataSource, localExpenseCategoriesDataSource)
@@ -186,6 +191,7 @@ class MainActivity : ComponentActivity() {
             fetchRepository,
             addRepository,
             deleteRepository,
+            updateRepository,
             expenseCategoriesRepository,
             incomeCategoriesRepository,
             accountsRepository,

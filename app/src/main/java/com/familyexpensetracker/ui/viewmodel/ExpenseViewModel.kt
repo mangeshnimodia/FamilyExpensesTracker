@@ -6,6 +6,7 @@ import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.repository.AddTransactionRepository
 import com.familyexpensetracker.data.repository.DeleteTransactionRepository
+import com.familyexpensetracker.data.repository.UpdateTransactionRepository
 import com.familyexpensetracker.data.repository.FetchAccountsRepository
 import com.familyexpensetracker.data.repository.FetchCategoriesRepository
 import com.familyexpensetracker.data.repository.FetchTransactionsRepository
@@ -20,6 +21,7 @@ class ExpenseViewModel(
     private val fetchRepository: FetchTransactionsRepository,
     private val addRepository: AddTransactionRepository,
     private val deleteRepository: DeleteTransactionRepository,
+    private val updateRepository: UpdateTransactionRepository,
     private val expenseCategoriesRepository: FetchCategoriesRepository,
     private val incomeCategoriesRepository: FetchCategoriesRepository,
     private val accountsRepository: FetchAccountsRepository,
@@ -94,6 +96,23 @@ class ExpenseViewModel(
             } catch (e: Exception) {
                 e.printStackTrace()
                 _errorMessage.value = "Add failed: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun updateTransaction(transaction: Transaction, transactionDate: Date) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            try {
+                updateRepository.update(transaction)
+                setSelectedDateRange(DateRange.Day(transactionDate))
+                _transactions.value = emptyList() // Clear list to force refresh
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _errorMessage.value = "Update failed: ${e.message}"
             } finally {
                 _isLoading.value = false
             }

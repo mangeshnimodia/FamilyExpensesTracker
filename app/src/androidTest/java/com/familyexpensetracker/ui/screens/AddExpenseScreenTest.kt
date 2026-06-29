@@ -89,5 +89,48 @@ class AddExpenseScreenTest {
 
         verify { viewModel.addTransaction(any(), any()) }
     }
+
+    @Test
+    fun addExpenseScreen_initialStateForEdit() {
+        val txn = com.familyexpensetracker.data.model.Transaction(
+            txnId = "edit-1",
+            date = "2026/06/28",
+            amount = -250.0,
+            category = "Daily Living",
+            subcategory = "Groceries",
+            paymentMethod = "Cash",
+            description = "Test Edit",
+            account = "Passbook"
+        )
+        composeTestRule.setContent {
+            AddExpenseScreen(viewModel = viewModel, onDismiss = {}, transactionToEdit = txn)
+        }
+
+        composeTestRule.onNodeWithText("Edit Expense").assertIsDisplayed()
+        composeTestRule.onNodeWithText("250").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Test Edit").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Update").assertIsDisplayed()
+    }
+
+    @Test
+    fun addExpenseScreen_triggersViewModelOnUpdate() {
+        val txn = com.familyexpensetracker.data.model.Transaction(
+            txnId = "edit-1",
+            date = "2026/06/28",
+            amount = -250.0,
+            category = "Daily Living",
+            subcategory = "Groceries",
+            paymentMethod = "Cash",
+            description = "Test Edit",
+            account = "Passbook"
+        )
+        composeTestRule.setContent {
+            AddExpenseScreen(viewModel = viewModel, onDismiss = {}, transactionToEdit = txn)
+        }
+
+        composeTestRule.onNodeWithText("Update").performClick()
+
+        verify { viewModel.updateTransaction(any(), any()) }
+    }
 }
 

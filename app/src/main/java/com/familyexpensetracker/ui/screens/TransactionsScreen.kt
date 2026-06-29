@@ -60,8 +60,9 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     if (showRangeSelector) {
         DateRangeSelector(
             onRangeSelected = { viewModel.setSelectedDateRange(it) },
-            onDismiss = { showRangeSelector = false }
-        )
+        ) {
+            showRangeSelector = false
+        }
     }
 
     NavHost(navController = navController, startDestination = "main_list") {
@@ -206,15 +207,20 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                         val transaction = transactions[index]
                                         TransactionItem(
                                             txn = transaction,
-                                        ) {
-                                            viewModel.deleteTransaction(transaction.txnId)
-                                        }
+                                            onDelete = {
+                                                viewModel.deleteTransaction(transaction.txnId)
+                                            },
+                                            onEdit = {
+                                                navController.navigate("edit/${it.txnId}")
+                                            }
+                                        )
                                     }
                                 }
                             } else {
                                 GroupedTransactionsView(
                                     transactions = transactions,
-                                    onDelete = { viewModel.deleteTransaction(it) }
+                                    onDelete = { viewModel.deleteTransaction(it) },
+                                    onEdit = { navController.navigate("edit/${it.txnId}") }
                                 )
                             }
                         }
@@ -237,9 +243,21 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
         composable("add") {
             AddExpenseScreen(
                 viewModel = viewModel,
-            ) {
-                navController.popBackStack()
-            }
+                onDismiss = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("edit/{txnId}") { backStackEntry ->
+            val txnId = backStackEntry.arguments?.getString("txnId")
+            val transaction = transactions.find { it.txnId == txnId }
+            AddExpenseScreen(
+                viewModel = viewModel,
+                onDismiss = {
+                    navController.popBackStack()
+                },
+                transactionToEdit = transaction
+            )
         }
     }
 }
