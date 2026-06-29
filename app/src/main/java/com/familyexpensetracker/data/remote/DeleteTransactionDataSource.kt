@@ -17,7 +17,7 @@ class DeleteTransactionDataSource(private val service: Sheets) {
         
         var rowIndex = -1
         for (i in values.indices) {
-            if (values[i].getOrNull(0)?.toString() == txnId) {
+            if (values[i].getOrNull(AppConstants.COL_TXN_ID)?.toString() == txnId) {
                 rowIndex = i
                 break
             }

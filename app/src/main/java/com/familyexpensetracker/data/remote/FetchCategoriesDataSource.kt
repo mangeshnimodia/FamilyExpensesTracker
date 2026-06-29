@@ -19,7 +19,7 @@ class FetchCategoriesDataSource(
         val values = response.getValues() ?: return@withContext emptyMap()
         
         // Skip header if exists. Headers could be "Category", "ExpenseCategories", or "IncomeCategories"
-        val dataRows = if (values.isNotEmpty() && (values[0].getOrNull(0)?.toString()?.lowercase()?.contains("category") == true)) {
+        val dataRows = if (values.isNotEmpty() && (values[0].getOrNull(AppConstants.COL_ADMIN_CATEGORY)?.toString()?.lowercase()?.contains("category") == true)) {
             values.drop(1)
         } else {
             values
@@ -28,8 +28,8 @@ class FetchCategoriesDataSource(
         val categoriesMap = mutableMapOf<String, MutableList<String>>()
         
         dataRows.forEach { row ->
-            val category = row.getOrNull(0)?.toString() ?: ""
-            val subcategory = row.getOrNull(1)?.toString() ?: ""
+            val category = row.getOrNull(AppConstants.COL_ADMIN_CATEGORY)?.toString() ?: ""
+            val subcategory = row.getOrNull(AppConstants.COL_ADMIN_SUBCATEGORY)?.toString() ?: ""
             
             if (category.isNotBlank()) {
                 categoriesMap.getOrPut(category) { mutableListOf() }.apply {

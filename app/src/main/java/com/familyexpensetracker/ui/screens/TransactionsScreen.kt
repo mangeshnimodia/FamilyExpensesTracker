@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,6 +28,7 @@ import androidx.navigation.compose.rememberNavController
 import com.familyexpensetracker.ui.components.DateRangeFormatter
 import com.familyexpensetracker.ui.components.DateRangeSelector
 import com.familyexpensetracker.ui.components.GroupedTransactionsView
+import com.familyexpensetracker.ui.components.TransactionFilterDialog
 import com.familyexpensetracker.ui.components.TransactionItem
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
 
@@ -40,12 +42,15 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val selectedDateRange by viewModel.selectedDateRange.collectAsState()
+    val selectedFilter by viewModel.selectedFilter.collectAsState()
+    val availableAccounts by viewModel.accounts.collectAsState()
     
     val totalAmount = transactions.sumOf { it.amount }
     
     val snackbarHostState = remember { SnackbarHostState() }
     val dateRangeFormatter = remember { DateRangeFormatter() }
     var showRangeSelector by remember { mutableStateOf(value = false) }
+    var showFilterDialog by remember { mutableStateOf(value = false) }
     var viewMode by remember { mutableStateOf(TransactionViewMode.Activity) }
     val listState = rememberLazyListState()
     val scrollbarColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
@@ -65,6 +70,15 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
         }
     }
 
+    if (showFilterDialog) {
+        TransactionFilterDialog(
+            currentFilter = selectedFilter,
+            availableAccounts = availableAccounts,
+            onFilterApplied = { viewModel.setSelectedFilter(it) },
+            onDismiss = { showFilterDialog = false }
+        )
+    }
+
     NavHost(navController = navController, startDestination = "main_list") {
         composable("main_list") {
             Scaffold(
@@ -78,6 +92,12 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                             )
                         },
                         actions = {
+                            IconButton(onClick = {
+                                viewModel.loadAccounts()
+                                showFilterDialog = true
+                            }) {
+                                Icon(Icons.Default.FilterList, contentDescription = "Filter Transactions")
+                            }
                             IconButton(onClick = { showRangeSelector = true }) {
                                 Icon(Icons.Default.DateRange, contentDescription = "Select Date Range")
                             }

@@ -1,6 +1,7 @@
 package com.familyexpensetracker.data.repository
 
 import com.familyexpensetracker.data.model.Transaction
+import com.familyexpensetracker.data.model.TransactionFilter
 import com.familyexpensetracker.data.remote.FetchTransactionsDataSource
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -17,11 +18,12 @@ class FetchTransactionsRepositoryTest {
     @Test
     fun `fetch delegates to dataSource`() = runBlocking {
         val transactions = listOf(mockk<Transaction>())
-        coEvery { dataSource.fetch(any()) } returns transactions
+        val filter = TransactionFilter()
+        coEvery { dataSource.fetch(any(), any()) } returns transactions
 
-        val result = repository.fetch(null)
+        val result = repository.fetch(null, filter)
 
         assertEquals(transactions, result)
-        coVerify { dataSource.fetch(null) }
+        coVerify { dataSource.fetch(null, filter) }
     }
 }

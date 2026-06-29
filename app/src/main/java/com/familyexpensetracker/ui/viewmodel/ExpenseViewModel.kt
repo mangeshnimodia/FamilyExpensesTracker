@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.Transaction
+import com.familyexpensetracker.data.model.TransactionFilter
 import com.familyexpensetracker.data.repository.AddTransactionRepository
 import com.familyexpensetracker.data.repository.DeleteTransactionRepository
 import com.familyexpensetracker.data.repository.UpdateTransactionRepository
@@ -49,6 +50,9 @@ class ExpenseViewModel(
     private val _selectedDateRange = MutableStateFlow<DateRange>(DateRange.Day(Date()))
     val selectedDateRange: StateFlow<DateRange> = _selectedDateRange.asStateFlow()
 
+    private val _selectedFilter = MutableStateFlow(TransactionFilter())
+    val selectedFilter: StateFlow<TransactionFilter> = _selectedFilter.asStateFlow()
+
     fun setSelectedDateRange(range: DateRange) {
         if (_selectedDateRange.value != range) {
             _selectedDateRange.value = range
@@ -56,11 +60,19 @@ class ExpenseViewModel(
         }
     }
 
+    fun setSelectedFilter(filter: TransactionFilter) {
+        if (_selectedFilter.value != filter) {
+            _selectedFilter.value = filter
+            _transactions.value = emptyList()
+        }
+    }
+
     fun fetchTransactions() {
         val range = _selectedDateRange.value
+        val filter = _selectedFilter.value
         fetchJob?.cancel()
         fetchJob = viewModelScope.launch {
-            performFetch(range)
+            performFetch(range, filter)
         }
     }
 
@@ -135,11 +147,11 @@ class ExpenseViewModel(
         }
     }
 
-    private suspend fun performFetch(range: DateRange) {
+    private suspend fun performFetch(range: DateRange, filter: TransactionFilter) {
         _isLoading.value = true
         _errorMessage.value = null
         try {
-            _transactions.value = fetchRepository.fetch(range)
+            _transactions.value = fetchRepository.fetch(range, filter)
         } catch (e: Exception) {
             e.printStackTrace()
             _errorMessage.value = "Fetch failed: ${e.message}"

@@ -17,14 +17,14 @@ class FetchAccountsDataSource(private val service: Sheets) {
         val values = response.getValues() ?: return@withContext emptyList()
         
         // Skip header if exists
-        val dataRows = if (values.isNotEmpty() && (values[0].getOrNull(0)?.toString()?.lowercase() == "account")) {
+        val dataRows = if (values.isNotEmpty() && (values[0].getOrNull(AppConstants.COL_ADMIN_ACCOUNT)?.toString()?.lowercase() == "account")) {
             values.drop(1)
         } else {
             values
         }
 
         dataRows.asSequence()
-            .mapNotNull { it.getOrNull(0)?.toString() }
+            .mapNotNull { it.getOrNull(AppConstants.COL_ADMIN_ACCOUNT)?.toString() }
             .filter { it.isNotBlank() }
             .distinct()
             .toList()

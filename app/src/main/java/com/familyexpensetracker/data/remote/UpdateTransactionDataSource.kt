@@ -18,7 +18,7 @@ class UpdateTransactionDataSource(private val service: Sheets) {
         
         var rowIndex = -1
         for (i in values.indices) {
-            if (values[i].getOrNull(0)?.toString() == transaction.txnId) {
+            if (values[i].getOrNull(AppConstants.COL_TXN_ID)?.toString() == transaction.txnId) {
                 rowIndex = i
                 break
             }

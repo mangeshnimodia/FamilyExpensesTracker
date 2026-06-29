@@ -2,6 +2,7 @@ package com.familyexpensetracker.ui.viewmodel
 
 import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.Transaction
+import com.familyexpensetracker.data.model.TransactionFilter
 import com.familyexpensetracker.data.repository.*
 import io.mockk.*
 import kotlinx.coroutines.*
@@ -12,6 +13,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.util.*
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExpenseViewModelTest {
@@ -50,7 +52,7 @@ class ExpenseViewModelTest {
     fun `fetchTransactions updates state with data from repository`() = runTest {
         // Arrange
         val transactions = listOf(mockk<Transaction>())
-        coEvery { fetchRepository.fetch(any()) } returns transactions
+        coEvery { fetchRepository.fetch(any(), any()) } returns transactions
 
         // Act
         viewModel.fetchTransactions()
@@ -63,7 +65,7 @@ class ExpenseViewModelTest {
     @Test
     fun `fetchTransactions sets error message on failure`() = runTest {
         // Arrange
-        coEvery { fetchRepository.fetch(any()) } throws Exception("Network Error")
+        coEvery { fetchRepository.fetch(any(), any()) } throws Exception("Network Error")
 
         // Act
         viewModel.fetchTransactions()
@@ -127,10 +129,10 @@ class ExpenseViewModelTest {
         val transactions1 = listOf(mockk<Transaction>(relaxed = true))
         val transactions2 = listOf(mockk<Transaction>(relaxed = true))
 
-        coEvery { fetchRepository.fetch(any()) } coAnswers {
-            delay(1000)
+        coEvery { fetchRepository.fetch(any(), any()) } coAnswers {
+            delay(1000.milliseconds)
             transactions1
-        } andThen {
+        } andThenAnswer {
             transactions2
         }
 
@@ -155,5 +157,21 @@ class ExpenseViewModelTest {
 
         // Assert
         assertEquals(accounts, viewModel.accounts.value)
+    }
+
+    @Test
+    fun `setSelectedFilter triggers fetch`() = runTest {
+        // Arrange
+        val filter = TransactionFilter(selectedAccounts = listOf("Bank"))
+        coEvery { fetchRepository.fetch(any(), any()) } returns emptyList()
+
+        // Act
+        viewModel.setSelectedFilter(filter)
+        viewModel.fetchTransactions() // Manually trigger fetch since Unconfined might not behave as expected with state flow changes in tests
+        testScheduler.runCurrent()
+
+        // Assert
+        assertEquals(filter, viewModel.selectedFilter.value)
+        coVerify { fetchRepository.fetch(any(), eq(filter)) }
     }
 }

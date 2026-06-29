@@ -32,4 +32,20 @@ object AppConstants {
 
     const val DATE_FORMAT_DB = "yyyy/MM/dd"
     const val DATE_FORMAT_UI = "EEE, dd MMM yyyy"
+
+    // Transaction Column Indexes
+    const val COL_TXN_ID = 0
+    const val COL_DATE = 1
+    const val COL_AMOUNT = 2
+    const val COL_CATEGORY = 3
+    const val COL_SUBCATEGORY = 4
+    const val COL_PAYMENT_METHOD = 5
+    const val COL_DESCRIPTION = 6
+    const val COL_ACCOUNT = 7
+    const val COL_TRANSFER_ID = 8
+
+    // Admin Column Indexes (Relative to their specific ranges)
+    const val COL_ADMIN_CATEGORY = 0
+    const val COL_ADMIN_SUBCATEGORY = 1
+    const val COL_ADMIN_ACCOUNT = 0
 }
