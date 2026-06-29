@@ -22,11 +22,10 @@ Completed -
    2. A year means a financial year beginning from April. So current year is FY26-27. This is how year should be displayed.
    3. The transactions should be grouped as per the GroupBy feature.
 8. Edit entry
-9. Filter transactions by Accounts and Income/Expenses/Balance (WIP)
+9. Filter transactions by Accounts and Income/Expenses/Balance
    1. Accounts filter - Provide ability to select 1 or multiple accounts. Default to 'PASSBOOK'.
    2. Transaction type filter - Income/Expense/Balance. Allow only 1 of them to be selected.
-      Exclude the 'Account Transfer' expenses category and 'Income/Account Transfer' income category/subcategory.
-   These filters work together. For ex; user may selects date/date range, account filter, and transaction type filter. Provide a 'Apply' button which applies all these filters and gets date from google sheet. NO MULTIPLE requests.
+   These filters work together. For ex; user may selects date/date range, account filter, and transaction type filter. Provide an 'Apply' button which applies all these filters and gets date from google sheet. NO MULTIPLE requests.
 
 # Architecture
 Refer [README.md](/README.md)

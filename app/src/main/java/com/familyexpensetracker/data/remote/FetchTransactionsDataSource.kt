@@ -55,9 +55,6 @@ class FetchTransactionsDataSource(private val service: Sheets) {
             // 3. Account type (income/expense)
             if (!matchesTypeFilter(row, filter)) return@filter false
 
-            // 4. Exclude 'Account Transfer'
-            if (!isNotAccountTransfer(row)) return@filter false
-
             true
         }
     }
@@ -89,14 +86,6 @@ class FetchTransactionsDataSource(private val service: Sheets) {
                 FilterType.BALANCE -> true
             }
         } ?: true
-    }
-
-    private fun isNotAccountTransfer(row: List<Any>): Boolean {
-        val category = row.getOrNull(AppConstants.COL_CATEGORY)?.toString() ?: ""
-        val subcategory = row.getOrNull(AppConstants.COL_SUBCATEGORY)?.toString() ?: ""
-        val isAccountTransfer = category == "Account Transfer" ||
-                (category == "Income" && subcategory == "Account Transfer")
-        return !isAccountTransfer
     }
 
     private fun convertToTransactions(rows: Sequence<List<Any>>): List<Transaction> {

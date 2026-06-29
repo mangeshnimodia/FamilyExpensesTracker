@@ -179,7 +179,7 @@ class FetchTransactionsDataSourceTest {
     }
 
     @Test
-    fun `fetch excludes account transfer from all types`() = runBlocking {
+    fun `fetch includes account transfer in all types`() = runBlocking {
         // Arrange
         val mockValues = listOf(
             listOf("txnId", "date", "amount", "category", "subcategory", "paymentMethod", "description", "account", "transferId"),
@@ -201,18 +201,19 @@ class FetchTransactionsDataSourceTest {
 
         // Act & Assert for BALANCE
         val resultBalance = dataSource.fetch(filter = TransactionFilter(type = FilterType.BALANCE))
-        assertEquals(2, resultBalance.size)
-        assertTrue(resultBalance.none { it.txnId == "1" || it.txnId == "2" })
+        assertEquals(4, resultBalance.size)
 
         // Act & Assert for INCOME
         val resultIncome = dataSource.fetch(filter = TransactionFilter(type = FilterType.INCOME))
-        assertEquals(1, resultIncome.size)
-        assertEquals("3", resultIncome[0].txnId)
+        assertEquals(2, resultIncome.size)
+        assertTrue(resultIncome.any { it.txnId == "1" })
+        assertTrue(resultIncome.any { it.txnId == "3" })
 
         // Act & Assert for EXPENSE
         val resultExpense = dataSource.fetch(filter = TransactionFilter(type = FilterType.EXPENSE))
-        assertEquals(1, resultExpense.size)
-        assertEquals("4", resultExpense[0].txnId)
+        assertEquals(2, resultExpense.size)
+        assertTrue(resultExpense.any { it.txnId == "2" })
+        assertTrue(resultExpense.any { it.txnId == "4" })
     }
 
     @Test
@@ -237,11 +238,11 @@ class FetchTransactionsDataSourceTest {
     }
 
     @Test
-    fun `fetch applies all four filters in sequence`() = runBlocking {
+    fun `fetch applies filters in sequence`() = runBlocking {
         // Arrange
         val mockValues = listOf(
             listOf("txnId", "date", "amount", "category", "subcategory", "paymentMethod", "description", "account", "transferId"),
-            // 1. Matches all: June 2026, Wallet, Income (positive amount), Not a transfer
+            // 1. Matches all: June 2026, Wallet, Income (positive amount)
             listOf("txn1", "2026/06/15", "100.0", "Food", "Groceries", "UPI", "Valid", "Wallet", ""),
             // 2. Fails Date Range (July instead of June)
             listOf("txn2", "2026/07/15", "100.0", "Food", "Groceries", "UPI", "Wrong Date", "Wallet", ""),
@@ -249,9 +250,9 @@ class FetchTransactionsDataSourceTest {
             listOf("txn3", "2026/06/15", "100.0", "Food", "Groceries", "UPI", "Wrong Account", "Savings", ""),
             // 4. Fails Type Filter (Negative amount for INCOME filter)
             listOf("txn4", "2026/06/15", "-50.0", "Food", "Groceries", "UPI", "Wrong Type", "Wallet", ""),
-            // 5. Fails Exclusion (Account Transfer category)
+            // 5. Matches (now included): June 2026, Wallet, Income (Account Transfer category)
             listOf("txn5", "2026/06/15", "200.0", "Account Transfer", "", "UPI", "Transfer Category", "Wallet", ""),
-            // 6. Fails Exclusion (Income/Account Transfer subcategory)
+            // 6. Matches (now included): June 2026, Wallet, Income (Income/Account Transfer subcategory)
             listOf("txn6", "2026/06/15", "200.0", "Income", "Account Transfer", "UPI", "Transfer Subcat", "Wallet", "")
         )
         val valueRange = ValueRange().setValues(mockValues)
@@ -275,10 +276,9 @@ class FetchTransactionsDataSourceTest {
         val result = dataSource.fetch(dateRange = dateRange, filter = filter)
 
         // Assert
-        assertEquals(1, result.size)
-        assertEquals("txn1", result[0].txnId)
-        assertEquals("Wallet", result[0].account)
-        assertTrue(result[0].amount > 0)
-        assertEquals("Food", result[0].category)
+        assertEquals(3, result.size)
+        assertTrue(result.any { it.txnId == "txn1" })
+        assertTrue(result.any { it.txnId == "txn5" })
+        assertTrue(result.any { it.txnId == "txn6" })
     }
 }
