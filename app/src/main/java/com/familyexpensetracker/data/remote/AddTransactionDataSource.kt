@@ -12,8 +12,8 @@ class AddTransactionDataSource(private val service: Sheets) {
     private val spreadsheetId = AppConstants.SPREADSHEET_ID
     private val range = AppConstants.RANGE_TRANSACTIONS
 
-    suspend fun add(transaction: Transaction): AppendValuesResponse = withContext(Dispatchers.IO) {
-        val values = listOf(
+    suspend fun add(vararg transactions: Transaction): AppendValuesResponse = withContext(Dispatchers.IO) {
+        val values = transactions.map { transaction ->
             listOf(
                 transaction.txnId,
                 transaction.date,
@@ -24,8 +24,8 @@ class AddTransactionDataSource(private val service: Sheets) {
                 transaction.description,
                 transaction.account,
                 transaction.transferId ?: "",
-            ),
-        )
+            )
+        }
         val body = ValueRange().setValues(values)
         service.spreadsheets().values()
             .append(spreadsheetId, range, body)

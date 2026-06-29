@@ -92,6 +92,34 @@ class ExpenseViewModelTest {
     }
 
     @Test
+    fun `addAccountTransfer creates two entries with same transferId`() = runTest {
+        // Arrange
+        val fromAccount = "Bank"
+        val toAccount = "Cash"
+        val amount = 100.0
+        val paymentMethod = "UPI"
+        val description = "Atm withdrawal"
+        val date = Date()
+
+        coEvery { addRepository.add(any(), any()) } returns mockk()
+
+        // Act
+        viewModel.addAccountTransfer(fromAccount, toAccount, amount, paymentMethod, description, date)
+
+        // Assert
+        coVerify {
+            addRepository.add(
+                match { it.amount == -100.0 && it.account == "Bank" && it.category == "Account Transfer" && it.transferId != null },
+                match { it.amount == 100.0 && it.account == "Cash" && it.category == "Income" && it.subcategory == "Account Transfer" && it.transferId != null }
+            )
+        }
+        val captured = mutableListOf<Transaction>()
+        coVerify { addRepository.add(capture(captured), capture(captured)) }
+        assertEquals(captured[0].transferId, captured[1].transferId)
+        assertTrue(viewModel.selectedDateRange.value is DateRange.Day)
+    }
+
+    @Test
     fun `updateTransaction calls repository and updates range`() = runTest {
         // Arrange
         val transaction = mockk<Transaction>()

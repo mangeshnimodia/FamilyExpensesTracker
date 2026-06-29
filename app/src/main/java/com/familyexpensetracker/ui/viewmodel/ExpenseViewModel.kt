@@ -11,11 +11,13 @@ import com.familyexpensetracker.data.repository.UpdateTransactionRepository
 import com.familyexpensetracker.data.repository.FetchAccountsRepository
 import com.familyexpensetracker.data.repository.FetchCategoriesRepository
 import com.familyexpensetracker.data.repository.FetchTransactionsRepository
+import com.familyexpensetracker.utils.AppConstants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.*
 
 class ExpenseViewModel(
@@ -108,6 +110,57 @@ class ExpenseViewModel(
             } catch (e: Exception) {
                 e.printStackTrace()
                 _errorMessage.value = "Add failed: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun addAccountTransfer(
+        fromAccount: String,
+        toAccount: String,
+        amount: Double,
+        paymentMethod: String,
+        description: String,
+        transactionDate: Date
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            try {
+                val transferId = UUID.randomUUID().toString()
+                val dateStr = SimpleDateFormat(AppConstants.DATE_FORMAT_DB, Locale.getDefault()).format(transactionDate)
+
+                val expenseEntry = Transaction(
+                    txnId = UUID.randomUUID().toString(),
+                    date = dateStr,
+                    amount = -amount,
+                    category = AppConstants.CATEGORY_ACCOUNT_TRANSFER,
+                    subcategory = "",
+                    paymentMethod = paymentMethod,
+                    description = description,
+                    account = fromAccount,
+                    transferId = transferId
+                )
+
+                val incomeEntry = Transaction(
+                    txnId = UUID.randomUUID().toString(),
+                    date = dateStr,
+                    amount = amount,
+                    category = AppConstants.DEFAULT_INCOME_CATEGORY,
+                    subcategory = AppConstants.SUBCATEGORY_ACCOUNT_TRANSFER,
+                    paymentMethod = paymentMethod,
+                    description = description,
+                    account = toAccount,
+                    transferId = transferId
+                )
+
+                addRepository.add(expenseEntry, incomeEntry)
+                setSelectedDateRange(DateRange.Day(transactionDate))
+                _transactions.value = emptyList()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _errorMessage.value = "Transfer failed: ${e.message}"
             } finally {
                 _isLoading.value = false
             }

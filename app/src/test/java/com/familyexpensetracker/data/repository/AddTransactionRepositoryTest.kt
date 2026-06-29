@@ -19,11 +19,24 @@ class AddTransactionRepositoryTest {
     fun `add delegates to dataSource`() = runBlocking {
         val transaction = mockk<Transaction>()
         val response = mockk<AppendValuesResponse>()
-        coEvery { dataSource.add(transaction) } returns response
+        coEvery { dataSource.add(any()) } returns response
 
         val result = repository.add(transaction)
 
         assertEquals(response, result)
         coVerify { dataSource.add(transaction) }
+    }
+
+    @Test
+    fun `add multiple transactions delegates to dataSource`() = runBlocking {
+        val t1 = mockk<Transaction>()
+        val t2 = mockk<Transaction>()
+        val response = mockk<AppendValuesResponse>()
+        coEvery { dataSource.add(any(), any()) } returns response
+
+        val result = repository.add(t1, t2)
+
+        assertEquals(response, result)
+        coVerify { dataSource.add(t1, t2) }
     }
 }

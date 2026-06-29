@@ -22,6 +22,8 @@ object AppConstants {
     const val DEFAULT_SUBCATEGORY = "Groceries"
     const val DEFAULT_INCOME_CATEGORY = "Income"
     const val DEFAULT_INCOME_SUBCATEGORY = "Salary"
+    const val CATEGORY_ACCOUNT_TRANSFER = "Account Transfer"
+    const val SUBCATEGORY_ACCOUNT_TRANSFER = "Account Transfer"
     const val DEFAULT_PAYMENT_METHOD = "Cash"
     const val DEFAULT_ACCOUNT = "Passbook"
     

@@ -57,6 +57,11 @@ fun AddExpenseScreen(
             value = transactionToEdit?.account ?: AppConstants.DEFAULT_ACCOUNT
         )
     }
+    var toAccount by remember {
+        mutableStateOf(
+            value = AppConstants.DEFAULT_ACCOUNT
+        )
+    }
     var description by remember {
         mutableStateOf(
             value = transactionToEdit?.description ?: ""
@@ -71,6 +76,7 @@ fun AddExpenseScreen(
     var categoryExpanded by remember { mutableStateOf(value = false) }
     var subcategoryExpanded by remember { mutableStateOf(value = false) }
     var accountExpanded by remember { mutableStateOf(value = false) }
+    var toAccountExpanded by remember { mutableStateOf(value = false) }
 
     val dateFormatter = remember { SimpleDateFormat(AppConstants.DATE_FORMAT_DB, Locale.getDefault()) }
 
@@ -134,7 +140,7 @@ fun AddExpenseScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // Transaction Type Toggle
-            val tabs = TransactionType.entries.filter { it != TransactionType.TRANSFER }
+            val tabs = TransactionType.entries
             TabRow(
                 selectedTabIndex = tabs.indexOf(transactionType),
                 containerColor = MaterialTheme.colorScheme.surface,
@@ -171,31 +177,33 @@ fun AddExpenseScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            AppDropdown(
-                label = "Category",
-                selectedValue = category,
-                options = categoriesMap.keys.toList(),
-                expanded = categoryExpanded,
-                onExpandedChange = { categoryExpanded = it },
-                onValueSelected = {
-                    category = it
-                    subcategory = ""
-                },
-                onDismiss = { categoryExpanded = false },
-                defaultValue = if (transactionType == TransactionType.EXPENSE) AppConstants.DEFAULT_CATEGORY else AppConstants.DEFAULT_INCOME_CATEGORY,
-            )
+            if (transactionType != TransactionType.TRANSFER) {
+                AppDropdown(
+                    label = "Category",
+                    selectedValue = category,
+                    options = categoriesMap.keys.toList(),
+                    expanded = categoryExpanded,
+                    onExpandedChange = { categoryExpanded = it },
+                    onValueSelected = {
+                        category = it
+                        subcategory = ""
+                    },
+                    onDismiss = { categoryExpanded = false },
+                    defaultValue = if (transactionType == TransactionType.EXPENSE) AppConstants.DEFAULT_CATEGORY else AppConstants.DEFAULT_INCOME_CATEGORY,
+                )
 
-            AppDropdown(
-                label = "Subcategory",
-                selectedValue = subcategory,
-                options = categoriesMap[category] ?: emptyList(),
-                expanded = subcategoryExpanded,
-                enabled = category.isNotBlank(),
-                onExpandedChange = { subcategoryExpanded = it },
-                onValueSelected = { subcategory = it },
-                onDismiss = { subcategoryExpanded = false },
-                defaultValue = if (transactionType == TransactionType.EXPENSE) AppConstants.DEFAULT_SUBCATEGORY else AppConstants.DEFAULT_INCOME_SUBCATEGORY,
-            )
+                AppDropdown(
+                    label = "Subcategory",
+                    selectedValue = subcategory,
+                    options = categoriesMap[category] ?: emptyList(),
+                    expanded = subcategoryExpanded,
+                    enabled = category.isNotBlank(),
+                    onExpandedChange = { subcategoryExpanded = it },
+                    onValueSelected = { subcategory = it },
+                    onDismiss = { subcategoryExpanded = false },
+                    defaultValue = if (transactionType == TransactionType.EXPENSE) AppConstants.DEFAULT_SUBCATEGORY else AppConstants.DEFAULT_INCOME_SUBCATEGORY,
+                )
+            }
 
             OutlinedTextField(
                 value = paymentMethod,
@@ -204,16 +212,40 @@ fun AddExpenseScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            AppDropdown(
-                label = "Account",
-                selectedValue = account,
-                options = accountsList,
-                expanded = accountExpanded,
-                onExpandedChange = { accountExpanded = it },
-                onValueSelected = { account = it },
-                onDismiss = { accountExpanded = false },
-                defaultValue = AppConstants.DEFAULT_ACCOUNT,
-            )
+            if (transactionType == TransactionType.TRANSFER) {
+                AppDropdown(
+                    label = "From Account",
+                    selectedValue = account,
+                    options = accountsList,
+                    expanded = accountExpanded,
+                    onExpandedChange = { accountExpanded = it },
+                    onValueSelected = { account = it },
+                    onDismiss = { accountExpanded = false },
+                    defaultValue = AppConstants.DEFAULT_ACCOUNT,
+                )
+
+                AppDropdown(
+                    label = "To Account",
+                    selectedValue = toAccount,
+                    options = accountsList,
+                    expanded = toAccountExpanded,
+                    onExpandedChange = { toAccountExpanded = it },
+                    onValueSelected = { toAccount = it },
+                    onDismiss = { toAccountExpanded = false },
+                    defaultValue = AppConstants.DEFAULT_ACCOUNT,
+                )
+            } else {
+                AppDropdown(
+                    label = "Account",
+                    selectedValue = account,
+                    options = accountsList,
+                    expanded = accountExpanded,
+                    onExpandedChange = { accountExpanded = it },
+                    onValueSelected = { account = it },
+                    onDismiss = { accountExpanded = false },
+                    defaultValue = AppConstants.DEFAULT_ACCOUNT,
+                )
+            }
 
             OutlinedTextField(
                 value = description,
@@ -227,37 +259,53 @@ fun AddExpenseScreen(
             Button(
                 onClick = {
                     val amountDouble = amount.toDoubleOrNull() ?: 0.0
-                    val finalAmount = if (transactionType == TransactionType.EXPENSE) {
-                        -amountDouble
+                    if (transactionType == TransactionType.TRANSFER) {
+                        viewModel.addAccountTransfer(
+                            fromAccount = account,
+                            toAccount = toAccount,
+                            amount = amountDouble,
+                            paymentMethod = paymentMethod,
+                            description = description,
+                            transactionDate = selectedDate
+                        )
                     } else {
-                        amountDouble
-                    }
-                    val transaction = Transaction(
-                        txnId = transactionToEdit?.txnId ?: UUID.randomUUID().toString(),
-                        date = dateFormatter.format(selectedDate),
-                        amount = finalAmount,
-                        category = category,
-                        subcategory = subcategory,
-                        paymentMethod = paymentMethod,
-                        description = description,
-                        account = account,
-                        transferId = transactionToEdit?.transferId,
-                    )
-                    if (transactionToEdit == null) {
-                        viewModel.addTransaction(transaction, selectedDate)
-                    } else {
-                        viewModel.updateTransaction(transaction, selectedDate)
+                        val finalAmount = if (transactionType == TransactionType.EXPENSE) {
+                            -amountDouble
+                        } else {
+                            amountDouble
+                        }
+                        val transaction = Transaction(
+                            txnId = transactionToEdit?.txnId ?: UUID.randomUUID().toString(),
+                            date = dateFormatter.format(selectedDate),
+                            amount = finalAmount,
+                            category = category,
+                            subcategory = subcategory,
+                            paymentMethod = paymentMethod,
+                            description = description,
+                            account = account,
+                            transferId = transactionToEdit?.transferId,
+                        )
+                        if (transactionToEdit == null) {
+                            viewModel.addTransaction(transaction, selectedDate)
+                        } else {
+                            viewModel.updateTransaction(transaction, selectedDate)
+                        }
                     }
                     onDismiss()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = (amount.toIntOrNull()?.let { it > 0 } == true) &&
-                        category.isNotBlank() &&
+                        (transactionType == TransactionType.TRANSFER || category.isNotBlank()) &&
                         paymentMethod.isNotBlank() &&
-                        account.isNotBlank(),
+                        account.isNotBlank() &&
+                        (transactionType != TransactionType.TRANSFER || toAccount.isNotBlank()),
             ) {
                 val buttonText = if (transactionToEdit == null) {
-                    if (transactionType == TransactionType.EXPENSE) "Add Expense" else "Add Income"
+                    when (transactionType) {
+                        TransactionType.EXPENSE -> "Add Expense"
+                        TransactionType.INCOME -> "Add Income"
+                        TransactionType.TRANSFER -> "Add Transfer"
+                    }
                 } else {
                     "Update"
                 }

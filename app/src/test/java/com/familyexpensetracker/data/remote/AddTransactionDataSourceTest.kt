@@ -33,7 +33,8 @@ class AddTransactionDataSourceTest {
             subcategory = "Lunch",
             paymentMethod = "Cash",
             description = "Tacos",
-            account = "Wallet"
+            account = "Wallet",
+            transferId = "trans123"
         )
 
         val spreadsheets = mockk<Sheets.Spreadsheets>()
@@ -58,7 +59,45 @@ class AddTransactionDataSourceTest {
                 any(),
                 match {
                     val row = it.getValues()[0]
-                    row[0] == "123" && row[2] == "50.0" && row[3] == "Food"
+                    row[0] == "123" && 
+                    row[2] == "50.0" && 
+                    row[3] == "Food" && 
+                    row[8] == "trans123"
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `add multiple transactions appends all rows to spreadsheet`() = runBlocking {
+        // Arrange
+        val t1 = Transaction(txnId = "1", amount = -100.0, category = "Account Transfer", account = "Bank", transferId = "uuid")
+        val t2 = Transaction(txnId = "2", amount = 100.0, category = "Income", subcategory = "Account Transfer", account = "Cash", transferId = "uuid")
+
+        val spreadsheets = mockk<Sheets.Spreadsheets>()
+        val values = mockk<Sheets.Spreadsheets.Values>()
+        val appendRequest = mockk<Sheets.Spreadsheets.Values.Append>()
+        val response = AppendValuesResponse()
+
+        every { sheetsService.spreadsheets() } returns spreadsheets
+        every { spreadsheets.values() } returns values
+        every { values.append(any(), any(), any()) } returns appendRequest
+        every { appendRequest.setValueInputOption(any()) } returns appendRequest
+        every { appendRequest.execute() } returns response
+
+        // Act
+        dataSource.add(t1, t2)
+
+        // Assert
+        verify {
+            values.append(
+                any(),
+                any(),
+                match {
+                    val rows = it.getValues()
+                    rows.size == 2 &&
+                    rows[0][0] == "1" && rows[0][8] == "uuid" &&
+                    rows[1][0] == "2" && rows[1][8] == "uuid"
                 }
             )
         }

@@ -26,6 +26,7 @@ Completed -
    1. Accounts filter - Provide ability to select 1 or multiple accounts. Default to 'PASSBOOK'.
    2. Transaction type filter - Income/Expense/Balance. Allow only 1 of them to be selected.
    These filters work together. For ex; user may selects date/date range, account filter, and transaction type filter. Provide an 'Apply' button which applies all these filters and gets date from google sheet. NO MULTIPLE requests.
+10. Support add 'Account Transfer' feature
 
 # Architecture
 Refer [README.md](/README.md)

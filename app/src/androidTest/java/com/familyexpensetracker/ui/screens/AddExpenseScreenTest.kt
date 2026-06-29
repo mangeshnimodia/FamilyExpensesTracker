@@ -132,5 +132,51 @@ class AddExpenseScreenTest {
 
         verify { viewModel.updateTransaction(any(), any()) }
     }
+
+    @Test
+    fun addExpenseScreen_transferMode_showsToFromAccounts() {
+        accountsFlow.value = listOf("Bank", "Cash")
+        composeTestRule.setContent {
+            AddExpenseScreen(viewModel = viewModel, onDismiss = {})
+        }
+
+        // Switch to Transfer tab
+        composeTestRule.onNodeWithText("Transfer").performClick()
+
+        // Check for specific labels
+        composeTestRule.onNodeWithText("From Account").assertIsDisplayed()
+        composeTestRule.onNodeWithText("To Account").assertIsDisplayed()
+        
+        // Category and Subcategory should NOT be displayed
+        composeTestRule.onNodeWithText("Category").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Subcategory").assertDoesNotExist()
+    }
+
+    @Test
+    fun addExpenseScreen_transferMode_triggersViewModel() {
+        accountsFlow.value = listOf("Bank", "Cash")
+        composeTestRule.setContent {
+            AddExpenseScreen(viewModel = viewModel, onDismiss = {})
+        }
+
+        composeTestRule.onNodeWithText("Transfer").performClick()
+        composeTestRule.onNodeWithText("Amount").performTextInput("500")
+        
+        // Use dropdown logic to select accounts if needed, but here we just verify button click
+        // Default accounts might already be set by the screen's remember state
+        
+        composeTestRule.onNode(hasText("Add Transfer") and hasClickAction()).performClick()
+
+        verify { 
+            viewModel.addAccountTransfer(
+                fromAccount = any(),
+                toAccount = any(),
+                amount = 500.0,
+                paymentMethod = any(),
+                description = any(),
+                transactionDate = any()
+            ) 
+        }
+    }
 }
 
