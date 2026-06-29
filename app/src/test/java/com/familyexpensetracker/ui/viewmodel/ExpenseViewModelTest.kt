@@ -4,8 +4,7 @@ import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.repository.*
 import io.mockk.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -102,6 +101,29 @@ class ExpenseViewModelTest {
         // Assert
         assertEquals(expenses, viewModel.expenseCategories.value)
         assertEquals(income, viewModel.incomeCategories.value)
+    }
+
+    @Test
+    fun `fetchTransactions cancels previous job if called again`() = runTest {
+        // Arrange
+        val transactions1 = listOf(mockk<Transaction>(relaxed = true))
+        val transactions2 = listOf(mockk<Transaction>(relaxed = true))
+
+        coEvery { fetchRepository.fetch(any()) } coAnswers {
+            delay(1000)
+            transactions1
+        } andThen {
+            transactions2
+        }
+
+        // Act
+        viewModel.fetchTransactions() // Start first fetch
+        advanceTimeBy(500)
+        viewModel.fetchTransactions() // Start second fetch (should cancel first)
+        advanceUntilIdle()
+
+        // Assert
+        assertEquals(transactions2, viewModel.transactions.value)
     }
 
     @Test

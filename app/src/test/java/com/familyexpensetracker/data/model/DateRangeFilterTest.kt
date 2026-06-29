@@ -39,6 +39,22 @@ class DateRangeFilterTest {
     }
 
     @Test
+    fun testMonthRangeIndexing() {
+        // January (0)
+        val janRange = DateRange.Month(2026, 0)
+        val janDate = Calendar.getInstance().apply { set(2026, Calendar.JANUARY, 15) }.time
+        assertTrue(filter.isDateInRange(janDate, janRange))
+        
+        // December (11)
+        val decRange = DateRange.Month(2026, 11)
+        val decDate = Calendar.getInstance().apply { set(2026, Calendar.DECEMBER, 31) }.time
+        assertTrue(filter.isDateInRange(decDate, decRange))
+        
+        // Cross-month check
+        assertFalse(filter.isDateInRange(janDate, decRange))
+    }
+
+    @Test
     fun testFinancialYearRangeEdgeCases() {
         val range = DateRange.FinancialYear(2025) // FY25-26: Apr 2025 - Mar 2026
         

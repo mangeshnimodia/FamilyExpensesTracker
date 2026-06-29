@@ -1,10 +1,12 @@
 package com.familyexpensetracker.data.remote
 
+import android.util.Log
 import com.familyexpensetracker.data.model.DateRange
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.ValueRange
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -19,6 +21,10 @@ class FetchTransactionsDataSourceTest {
 
     @Before
     fun setUp() {
+        mockkStatic(Log::class)
+        every { Log.d(any(), any()) } returns 0
+        every { Log.e(any(), any(), any()) } returns 0
+
         sheetsService = mockk()
         dataSource = FetchTransactionsDataSource(sheetsService)
     }

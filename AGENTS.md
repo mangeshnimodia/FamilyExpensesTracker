@@ -27,11 +27,17 @@ First implement the Year and Month and then switch to custom range.
 Refer [README.md](/README.md)
 
 # Design
+Follow TDD. Add tests → fail them → implement → tests passing
 Follow SRP strictly.
 For every functionality a new class/file exists.
 
 ## Don'ts
-No helper classes. Its violation of SRP
+No helper classes. Its violation of SRP.
+No Deprecated classes/methods/libraries
 
 ## Tests
 Have unit tests for each file with 100% code coverage.
+
+### How to run tests
+Run Unit Tests: ./gradlew :app:testDebugUnitTest
+Run UI Tests: ./gradlew :app:connectedDebugAndroidTest

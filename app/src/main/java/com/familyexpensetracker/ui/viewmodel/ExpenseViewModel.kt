@@ -12,6 +12,7 @@ import com.familyexpensetracker.data.repository.FetchTransactionsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -23,6 +24,8 @@ class ExpenseViewModel(
     private val incomeCategoriesRepository: FetchCategoriesRepository,
     private val accountsRepository: FetchAccountsRepository,
 ) : ViewModel() {
+    private var fetchJob: Job? = null
+
     private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
     val transactions: StateFlow<List<Transaction>> = _transactions.asStateFlow()
 
@@ -53,7 +56,8 @@ class ExpenseViewModel(
 
     fun fetchTransactions() {
         val range = _selectedDateRange.value
-        viewModelScope.launch {
+        fetchJob?.cancel()
+        fetchJob = viewModelScope.launch {
             performFetch(range)
         }
     }

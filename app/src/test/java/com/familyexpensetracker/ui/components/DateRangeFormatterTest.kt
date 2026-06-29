@@ -1,12 +1,33 @@
 package com.familyexpensetracker.ui.components
 
 import com.familyexpensetracker.data.model.DateRange
+import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.util.*
 
 class DateRangeFormatterTest {
     private val formatter = DateRangeFormatter()
+
+    @Test
+    fun testMonthFormatRolloverBug() {
+        // Create a calendar set to Jan 31st
+        val jan31 = Calendar.getInstance().apply {
+            set(2024, Calendar.JANUARY, 31)
+        }
+        
+        // Inject it into the formatter
+        val bugFormatter = DateRangeFormatter(calendarProvider = { jan31 })
+
+        val range = DateRange.Month(2024, Calendar.FEBRUARY)
+        val result = bugFormatter.format(range)
+        
+        // With the bug, Jan 31st + set(Month, Feb) = March 2nd (or Feb 29/Mar 1)
+        // because set(MONTH) doesn't adjust the day of month until it's too late.
+        assertEquals("February 2024", result)
+    }
 
     @Test
     fun testDayFormat() {
