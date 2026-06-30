@@ -25,6 +25,7 @@ fun AddExpenseScreen(
     viewModel: ExpenseViewModel,
     onDismiss: () -> Unit,
     transactionToEdit: Transaction? = null,
+    isCopy: Boolean = false,
 ) {
     var transactionType by remember {
         mutableStateOf(
@@ -122,7 +123,7 @@ fun AddExpenseScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (transactionToEdit == null) "Add Expense" else "Edit Expense") },
+                title = { Text(if (isCopy) "Copy Entry" else if (transactionToEdit == null) "Add Entry" else "Edit Entry") },
                 navigationIcon = {
                     TextButton(onClick = onDismiss) {
                         Text("Cancel")
@@ -275,7 +276,7 @@ fun AddExpenseScreen(
                             amountDouble
                         }
                         val transaction = Transaction(
-                            txnId = transactionToEdit?.txnId ?: UUID.randomUUID().toString(),
+                            txnId = if (isCopy) UUID.randomUUID().toString() else transactionToEdit?.txnId ?: UUID.randomUUID().toString(),
                             date = dateFormatter.format(selectedDate),
                             amount = finalAmount,
                             category = category,
@@ -283,9 +284,9 @@ fun AddExpenseScreen(
                             paymentMethod = paymentMethod,
                             description = description,
                             account = account,
-                            transferId = transactionToEdit?.transferId,
+                            transferId = if (isCopy) null else transactionToEdit?.transferId,
                         )
-                        if (transactionToEdit == null) {
+                        if (transactionToEdit == null || isCopy) {
                             viewModel.addTransaction(transaction, selectedDate)
                         } else {
                             viewModel.updateTransaction(transaction, selectedDate)
@@ -300,14 +301,14 @@ fun AddExpenseScreen(
                         account.isNotBlank() &&
                         (transactionType != TransactionType.TRANSFER || toAccount.isNotBlank()),
             ) {
-                val buttonText = if (transactionToEdit == null) {
-                    when (transactionType) {
+                val buttonText = when {
+                    isCopy -> "Copy"
+                    transactionToEdit == null -> when (transactionType) {
                         TransactionType.EXPENSE -> "Add Expense"
                         TransactionType.INCOME -> "Add Income"
                         TransactionType.TRANSFER -> "Add Transfer"
                     }
-                } else {
-                    "Update"
+                    else -> "Update"
                 }
                 Text(buttonText)
             }

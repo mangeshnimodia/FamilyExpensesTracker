@@ -106,7 +106,7 @@ class AddExpenseScreenTest {
             AddExpenseScreen(viewModel = viewModel, onDismiss = {}, transactionToEdit = txn)
         }
 
-        composeTestRule.onNodeWithText("Edit Expense").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Edit Entry").assertIsDisplayed()
         composeTestRule.onNodeWithText("250").assertIsDisplayed()
         composeTestRule.onNodeWithText("Test Edit").assertIsDisplayed()
         composeTestRule.onNodeWithText("Update").assertIsDisplayed()
@@ -178,5 +178,45 @@ class AddExpenseScreenTest {
             ) 
         }
     }
-}
 
+    @Test
+    fun addExpenseScreen_copyMode_showsCopyButtonAndTitle() {
+        val txn = com.familyexpensetracker.data.model.Transaction(
+            txnId = "copy-src",
+            date = "2026/06/28",
+            amount = -300.0,
+            category = "Daily Living",
+            subcategory = "Groceries",
+            paymentMethod = "Cash",
+            description = "Monthly groceries",
+            account = "Passbook"
+        )
+        composeTestRule.setContent {
+            AddExpenseScreen(viewModel = viewModel, onDismiss = {}, transactionToEdit = txn, isCopy = true)
+        }
+
+        composeTestRule.onNodeWithText("Copy Entry").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Copy").assertIsDisplayed()
+    }
+
+    @Test
+    fun addExpenseScreen_copyMode_triggersAddNotUpdate() {
+        val txn = com.familyexpensetracker.data.model.Transaction(
+            txnId = "copy-src",
+            date = "2026/06/28",
+            amount = -300.0,
+            category = "Daily Living",
+            subcategory = "Groceries",
+            paymentMethod = "Cash",
+            description = "Monthly groceries",
+            account = "Passbook"
+        )
+        composeTestRule.setContent {
+            AddExpenseScreen(viewModel = viewModel, onDismiss = {}, transactionToEdit = txn, isCopy = true)
+        }
+
+        composeTestRule.onNodeWithText("Copy").performClick()
+
+        verify { viewModel.addTransaction(any(), any()) }
+    }
+}

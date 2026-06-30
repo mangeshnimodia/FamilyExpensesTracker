@@ -64,6 +64,7 @@ fun SubcategoryDetailScreen(
                     group = subcategories[index],
                     onDelete = { txnId -> viewModel.deleteTransaction(txnId) },
                     onEdit = { txn -> navController.navigate("edit/${txn.txnId}") },
+                    onCopy = { txn -> navController.navigate("copy/${txn.txnId}") },
                 )
                 HorizontalDivider()
             }
@@ -76,6 +77,7 @@ private fun SubcategoryGroupRow(
     group: SubcategoryGroup,
     onDelete: (String) -> Unit,
     onEdit: (com.familyexpensetracker.data.model.Transaction) -> Unit,
+    onCopy: (com.familyexpensetracker.data.model.Transaction) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val amountColor = if (group.totalAmount < 0) Color(0xFFE53935) else Color(0xFF43A047)
@@ -116,6 +118,7 @@ private fun SubcategoryGroupRow(
                     txn = txn,
                     onDelete = { onDelete(txn.txnId) },
                     onEdit = { onEdit(txn) },
+                    onCopy = { onCopy(txn) },
                 )
                 HorizontalDivider()
             }

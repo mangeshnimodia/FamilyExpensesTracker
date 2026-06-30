@@ -30,7 +30,7 @@ class TransactionItemTest {
 
         composeTestRule.onNodeWithText("Transport/Fuel").assertIsDisplayed()
         composeTestRule.onNodeWithText("Petrol for car").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Amount: ₹150.5 | Account: Bank").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹150.50").assertIsDisplayed()
     }
 
     @Test
@@ -77,5 +77,28 @@ class TransactionItemTest {
         composeTestRule.onNodeWithContentDescription("Edit").performClick()
         
         assert(editedTxn == txn)
+    }
+
+    @Test
+    fun transactionItem_onCopyTriggered() {
+        var copiedTxn: Transaction? = null
+        val txn = Transaction(
+            txnId = "1",
+            date = "2026/06/28",
+            amount = -150.5,
+            category = "Transport",
+            subcategory = "",
+            paymentMethod = "Card",
+            description = "",
+            account = "Bank"
+        )
+
+        composeTestRule.setContent {
+            TransactionItem(txn = txn, onCopy = { copiedTxn = it })
+        }
+
+        composeTestRule.onNodeWithContentDescription("Copy").performClick()
+
+        assert(copiedTxn == txn)
     }
 }

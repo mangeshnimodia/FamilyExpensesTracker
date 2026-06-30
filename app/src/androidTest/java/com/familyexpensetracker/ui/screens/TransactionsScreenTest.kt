@@ -164,15 +164,6 @@ class TransactionsScreenTest {
     }
 
     @Test
-    fun transactionsScreen_topBar_showsTitle() {
-        composeTestRule.setContent {
-            TransactionsScreen(viewModel)
-        }
-
-        composeTestRule.onNodeWithText("Family Expenses").assertIsDisplayed()
-    }
-
-    @Test
     fun transactionsScreen_yearlyTab_showsViewToggle() {
         selectedPeriodTabFlow.value = PeriodTab.Yearly
         transactionsFlow.value = listOf(

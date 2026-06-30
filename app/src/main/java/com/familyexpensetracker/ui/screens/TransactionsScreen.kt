@@ -76,7 +76,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                 snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                 topBar = {
                     TopAppBar(
-                        title = { Text("Family Expenses", style = MaterialTheme.typography.titleMedium) },
+                        title = {},
                         actions = {
                             AccountDropdown(
                                 accounts = availableAccounts,
@@ -206,6 +206,11 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
             val txnId = backStackEntry.arguments?.getString("txnId")
             val transaction = transactions.find { it.txnId == txnId }
             AddExpenseScreen(viewModel = viewModel, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction)
+        }
+        composable("copy/{txnId}") { backStackEntry ->
+            val txnId = backStackEntry.arguments?.getString("txnId")
+            val transaction = transactions.find { it.txnId == txnId }
+            AddExpenseScreen(viewModel = viewModel, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction, isCopy = true)
         }
         composable("subcategory/{category}") { backStackEntry ->
             val category = backStackEntry.arguments?.getString("category") ?: ""
