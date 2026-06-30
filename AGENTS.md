@@ -27,9 +27,15 @@ Completed -
    2. Transaction type filter - Income/Expense/Balance. Allow only 1 of them to be selected.
    These filters work together. For ex; user may selects date/date range, account filter, and transaction type filter. Provide an 'Apply' button which applies all these filters and gets date from google sheet. NO MULTIPLE requests.
 10. Support add 'Account Transfer' feature
+11. Enhanced UI as per UI requirements
+
+# Requirements
+
+- [Requirements.md](Requirements.md) — full functional and non-functional requirements, data model, and architecture overview.
+- [UIRequirements.md](UIRequirements.md) — detailed UI specification: every screen, component, interaction, colour convention, and navigation structure.
 
 # Architecture
-Refer [README.md](/README.md)
+Refer [README.md](/README.md) and [TECHSTACK.md](/TECHSTACK.md)
 
 # Design
 Follow TDD. Add tests → fail them → implement → tests passing

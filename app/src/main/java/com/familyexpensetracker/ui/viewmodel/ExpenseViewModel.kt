@@ -2,9 +2,13 @@ package com.familyexpensetracker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.familyexpensetracker.data.model.CategorySummary
 import com.familyexpensetracker.data.model.DateRange
+import com.familyexpensetracker.data.model.MonthSummary
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.model.TransactionFilter
+import com.familyexpensetracker.ui.screens.PeriodTab
+import com.familyexpensetracker.ui.screens.TransactionSummaryCalculator
 import com.familyexpensetracker.data.repository.AddTransactionRepository
 import com.familyexpensetracker.data.repository.DeleteTransactionRepository
 import com.familyexpensetracker.data.repository.UpdateTransactionRepository
@@ -28,6 +32,7 @@ class ExpenseViewModel(
     private val expenseCategoriesRepository: FetchCategoriesRepository,
     private val incomeCategoriesRepository: FetchCategoriesRepository,
     private val accountsRepository: FetchAccountsRepository,
+    private val summaryCalculator: TransactionSummaryCalculator = TransactionSummaryCalculator(),
 ) : ViewModel() {
     private var fetchJob: Job? = null
 
@@ -52,8 +57,23 @@ class ExpenseViewModel(
     private val _selectedDateRange = MutableStateFlow<DateRange>(DateRange.Day(Date()))
     val selectedDateRange: StateFlow<DateRange> = _selectedDateRange.asStateFlow()
 
-    private val _selectedFilter = MutableStateFlow(TransactionFilter())
+    private val _selectedFilter = MutableStateFlow(TransactionFilter(selectedAccounts = listOf(AppConstants.DEFAULT_ACCOUNT)))
     val selectedFilter: StateFlow<TransactionFilter> = _selectedFilter.asStateFlow()
+
+    private val _selectedPeriodTab = MutableStateFlow(PeriodTab.Daily)
+    val selectedPeriodTab: StateFlow<PeriodTab> = _selectedPeriodTab.asStateFlow()
+
+    private val _selectedAccount = MutableStateFlow<String?>(AppConstants.DEFAULT_ACCOUNT)
+    val selectedAccount: StateFlow<String?> = _selectedAccount.asStateFlow()
+
+    private val _categorySummaries = MutableStateFlow<List<CategorySummary>>(emptyList())
+    val categorySummaries: StateFlow<List<CategorySummary>> = _categorySummaries.asStateFlow()
+
+    private val _monthSummaries = MutableStateFlow<List<MonthSummary>>(emptyList())
+    val monthSummaries: StateFlow<List<MonthSummary>> = _monthSummaries.asStateFlow()
+
+    private val _expenseTotal = MutableStateFlow(0.0)
+    val expenseTotal: StateFlow<Double> = _expenseTotal.asStateFlow()
 
     fun setSelectedDateRange(range: DateRange) {
         if (_selectedDateRange.value != range) {
@@ -65,6 +85,19 @@ class ExpenseViewModel(
     fun setSelectedFilter(filter: TransactionFilter) {
         if (_selectedFilter.value != filter) {
             _selectedFilter.value = filter
+            _transactions.value = emptyList()
+        }
+    }
+
+    fun setSelectedPeriodTab(tab: PeriodTab) {
+        if (_selectedPeriodTab.value != tab) {
+            _selectedPeriodTab.value = tab
+        }
+    }
+
+    fun setSelectedAccount(account: String?) {
+        if (_selectedAccount.value != account) {
+            _selectedAccount.value = account
             _transactions.value = emptyList()
         }
     }
@@ -204,7 +237,14 @@ class ExpenseViewModel(
         _isLoading.value = true
         _errorMessage.value = null
         try {
-            _transactions.value = fetchRepository.fetch(range, filter)
+            val fetched = fetchRepository.fetch(range, filter)
+            _transactions.value = fetched
+            _expenseTotal.value = fetched.filter { it.amount < 0 }.sumOf { -it.amount }
+            _categorySummaries.value = summaryCalculator.calculateCategorySummaries(fetched)
+            _monthSummaries.value = when (range) {
+                is DateRange.FinancialYear -> summaryCalculator.calculateFYMonthSummaries(fetched, range.startYear)
+                else -> summaryCalculator.calculateMonthSummaries(fetched)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             _errorMessage.value = "Fetch failed: ${e.message}"

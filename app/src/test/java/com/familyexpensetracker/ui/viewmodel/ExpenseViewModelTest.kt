@@ -4,11 +4,14 @@ import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.model.TransactionFilter
 import com.familyexpensetracker.data.repository.*
+import com.familyexpensetracker.ui.screens.PeriodTab
+import com.familyexpensetracker.ui.screens.TransactionSummaryCalculator
 import io.mockk.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -25,6 +28,7 @@ class ExpenseViewModelTest {
     private val expenseCategoriesRepository = mockk<FetchCategoriesRepository>()
     private val incomeCategoriesRepository = mockk<FetchCategoriesRepository>()
     private val accountsRepository = mockk<FetchAccountsRepository>()
+    private val summaryCalculator = TransactionSummaryCalculator()
 
     private lateinit var viewModel: ExpenseViewModel
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -39,7 +43,8 @@ class ExpenseViewModelTest {
             updateRepository,
             expenseCategoriesRepository,
             incomeCategoriesRepository,
-            accountsRepository
+            accountsRepository,
+            summaryCalculator
         )
     }
 
@@ -201,5 +206,107 @@ class ExpenseViewModelTest {
         // Assert
         assertEquals(filter, viewModel.selectedFilter.value)
         coVerify { fetchRepository.fetch(any(), eq(filter)) }
+    }
+
+    // --- Task 5: new state ---
+
+    @Test
+    fun `selectedPeriodTab defaults to Daily`() {
+        assertEquals(PeriodTab.Daily, viewModel.selectedPeriodTab.value)
+    }
+
+    @Test
+    fun `setSelectedPeriodTab updates tab`() {
+        viewModel.setSelectedPeriodTab(PeriodTab.Monthly)
+        assertEquals(PeriodTab.Monthly, viewModel.selectedPeriodTab.value)
+    }
+
+    @Test
+    fun `setSelectedPeriodTab is idempotent`() {
+        viewModel.setSelectedPeriodTab(PeriodTab.Yearly)
+        viewModel.setSelectedPeriodTab(PeriodTab.Yearly)
+        assertEquals(PeriodTab.Yearly, viewModel.selectedPeriodTab.value)
+    }
+
+    @Test
+    fun `selectedAccount defaults to Passbook`() {
+        assertEquals("Passbook", viewModel.selectedAccount.value)
+    }
+
+    @Test
+    fun `setSelectedAccount updates account and clears transactions`() {
+        viewModel.setSelectedAccount("Bank")
+        assertEquals("Bank", viewModel.selectedAccount.value)
+        assertEquals(emptyList<Transaction>(), viewModel.transactions.value)
+    }
+
+    @Test
+    fun `setSelectedAccount to null clears account`() {
+        viewModel.setSelectedAccount("Bank")
+        viewModel.setSelectedAccount(null)
+        assertNull(viewModel.selectedAccount.value)
+    }
+
+    @Test
+    fun `fetchTransactions populates categorySummaries`() = runTest {
+        val txn = Transaction(txnId = "1", date = "2026/06/15", amount = -500.0, category = "Food", subcategory = "Groceries")
+        coEvery { fetchRepository.fetch(any(), any()) } returns listOf(txn)
+
+        viewModel.fetchTransactions()
+
+        assertEquals(1, viewModel.categorySummaries.value.size)
+        assertEquals("Food", viewModel.categorySummaries.value[0].category)
+    }
+
+    @Test
+    fun `fetchTransactions populates monthSummaries`() = runTest {
+        val txn = Transaction(txnId = "1", date = "2026/06/15", amount = -500.0, category = "Food", subcategory = "Groceries")
+        coEvery { fetchRepository.fetch(any(), any()) } returns listOf(txn)
+
+        viewModel.fetchTransactions()
+
+        assertEquals(1, viewModel.monthSummaries.value.size)
+        assertEquals(2026, viewModel.monthSummaries.value[0].year)
+    }
+
+    @Test
+    fun `fetchTransactions clears summaries on empty result`() = runTest {
+        coEvery { fetchRepository.fetch(any(), any()) } returns emptyList()
+
+        viewModel.fetchTransactions()
+
+        assertTrue(viewModel.categorySummaries.value.isEmpty())
+        assertTrue(viewModel.monthSummaries.value.isEmpty())
+    }
+
+    @Test
+    fun `expenseTotal defaults to 0`() {
+        assertEquals(0.0, viewModel.expenseTotal.value, 0.001)
+    }
+
+    @Test
+    fun `fetchTransactions sets expenseTotal to sum of negative amounts`() = runTest {
+        val txns = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = -500.0, category = "Food", subcategory = ""),
+            Transaction(txnId = "2", date = "2026/06/15", amount = -200.0, category = "Transport", subcategory = ""),
+            Transaction(txnId = "3", date = "2026/06/15", amount = 1000.0, category = "Income", subcategory = ""),
+        )
+        coEvery { fetchRepository.fetch(any(), any()) } returns txns
+
+        viewModel.fetchTransactions()
+
+        assertEquals(700.0, viewModel.expenseTotal.value, 0.001)
+    }
+
+    @Test
+    fun `fetchTransactions sets expenseTotal to 0 when no expenses`() = runTest {
+        val txns = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = 1000.0, category = "Income", subcategory = ""),
+        )
+        coEvery { fetchRepository.fetch(any(), any()) } returns txns
+
+        viewModel.fetchTransactions()
+
+        assertEquals(0.0, viewModel.expenseTotal.value, 0.001)
     }
 }

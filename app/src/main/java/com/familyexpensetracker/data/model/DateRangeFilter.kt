@@ -10,6 +10,7 @@ class DateRangeFilter {
         val txnDay = cal.get(Calendar.DAY_OF_MONTH)
 
         return when (dateRange) {
+            is DateRange.All -> true
             is DateRange.Day -> {
                 val rangeCal = Calendar.getInstance().apply { time = dateRange.date }
                 txnYear == rangeCal.get(Calendar.YEAR) &&

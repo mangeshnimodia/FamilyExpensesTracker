@@ -29,6 +29,7 @@ class DateRangeFormatter(private val calendarProvider: () -> Calendar = { Calend
             is DateRange.Custom -> {
                 "${dayFormat.format(dateRange.startDate)} - ${dayFormat.format(dateRange.endDate)}"
             }
+            is DateRange.All -> "All Time"
         }
     }
 }

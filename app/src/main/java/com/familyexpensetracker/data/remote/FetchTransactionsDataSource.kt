@@ -60,7 +60,7 @@ class FetchTransactionsDataSource(private val service: Sheets) {
     }
 
     private fun matchesDateRange(row: List<Any>, dateRange: DateRange?): Boolean {
-        if (dateRange == null) return true
+        if (dateRange == null || dateRange is DateRange.All) return true
         val dateStr = row.getOrNull(AppConstants.COL_DATE)?.toString() ?: ""
         return try {
             val txnDate = dateFormat.parse(dateStr) ?: return false
