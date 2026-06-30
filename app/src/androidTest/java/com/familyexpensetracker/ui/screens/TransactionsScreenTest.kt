@@ -146,6 +146,51 @@ class TransactionsScreenTest {
     }
 
     @Test
+    fun transactionsScreen_expandCategory_showsTransactionList() {
+        val summary = CategorySummary(
+            category = "Food",
+            totalAmount = -500.0,
+            transactionCount = 1,
+            subcategories = emptyList()
+        )
+        categorySummariesFlow.value = listOf(summary)
+        transactionsFlow.value = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = -500.0, category = "Food", subcategory = "Groceries")
+        )
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("Food").performClick()
+        composeTestRule.onNodeWithContentDescription("Back").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Food/Groceries").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_backFromExpandedCategory_returnsToCategoryList() {
+        val summary = CategorySummary(
+            category = "Food",
+            totalAmount = -500.0,
+            transactionCount = 1,
+            subcategories = emptyList()
+        )
+        categorySummariesFlow.value = listOf(summary)
+        transactionsFlow.value = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = -500.0, category = "Food", subcategory = "")
+        )
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("Food").performClick()
+        composeTestRule.onNodeWithContentDescription("Back").performClick()
+        composeTestRule.onNodeWithText("3 transactions").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Food").assertIsDisplayed()
+    }
+
+    @Test
     fun transactionsScreen_addFab_visible() {
         composeTestRule.setContent {
             TransactionsScreen(viewModel)

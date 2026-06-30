@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -45,6 +46,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     val dateRangeFormatter = remember { DateRangeFormatter() }
     val periodNavigator = remember { PeriodNavigator() }
     var yearlyViewMode by remember { mutableStateOf(YearlyViewMode.Category) }
+    var expandedCategory by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
@@ -77,7 +79,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                 topBar = {
                     TopAppBar(
                         title = {},
-                        actions = {
+                        navigationIcon = {
                             AccountDropdown(
                                 accounts = availableAccounts,
                                 selectedAccount = selectedAccount,
@@ -90,6 +92,8 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                     )
                                 }
                             )
+                        },
+                        actions = {
                             IconButton(onClick = { (context as? Activity)?.finish() }) {
                                 Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Exit")
                             }
@@ -178,13 +182,41 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                         viewModel.setSelectedDateRange(monthRange)
                                     }
                                 )
-                            else ->
-                                CategorySummaryList(
-                                    summaries = categorySummaries,
-                                    onCategoryClick = { summary ->
-                                        navController.navigate("subcategory/${summary.category}")
+                            else -> {
+                                val cat = expandedCategory
+                                if (cat == null) {
+                                    CategorySummaryList(
+                                        summaries = categorySummaries,
+                                        onCategoryClick = { summary ->
+                                            expandedCategory = summary.category
+                                        }
+                                    )
+                                } else {
+                                    Column(modifier = Modifier.fillMaxSize()) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 4.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            IconButton(onClick = { expandedCategory = null }) {
+                                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                                            }
+                                            Text(
+                                                text = cat,
+                                                style = MaterialTheme.typography.titleMedium,
+                                            )
+                                        }
+                                        HorizontalDivider()
+                                        TransactionList(
+                                            transactions = transactions.filter { it.category == cat },
+                                            onEdit = { txn -> navController.navigate("edit/${txn.txnId}") },
+                                            onCopy = { txn -> navController.navigate("copy/${txn.txnId}") },
+                                            onDelete = { txn -> viewModel.deleteTransaction(txn.txnId) },
+                                        )
                                     }
-                                )
+                                }
+                            }
                         }
 
                         FloatingActionButton(
