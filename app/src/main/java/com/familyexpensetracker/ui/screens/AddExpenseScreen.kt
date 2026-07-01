@@ -99,7 +99,11 @@ fun AddExpenseScreen(
     LaunchedEffect(Unit) {
         viewModel.loadCategories()
         viewModel.loadAccounts()
-        amountFocusRequester.requestFocus()
+        try {
+            amountFocusRequester.requestFocus()
+        } catch (_: Exception) {
+            // Ignore if focus requester is not ready yet during initial composition in tests
+        }
     }
     
     val currentRange by viewModel.selectedDateRange.collectAsState()

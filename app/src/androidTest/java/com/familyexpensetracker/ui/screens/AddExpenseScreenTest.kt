@@ -47,7 +47,7 @@ class AddExpenseScreenTest {
         composeTestRule.onNodeWithText("Amount").assertIsDisplayed()
         // The title is in the TopAppBar, the button is at the bottom.
         // Button usually has a click action and is focusable.
-        composeTestRule.onAllNodesWithText("Add Expense").filterToOne(hasClickAction()).assertExists()
+        composeTestRule.onNode(hasText("Add Expense") and hasClickAction()).assertExists()
     }
 
     @Test
@@ -56,8 +56,8 @@ class AddExpenseScreenTest {
             AddExpenseScreen(viewModel = viewModel, onDismiss = {})
         }
 
-        // Tab "Income" - use filterToOne to avoid ambiguity with the button that will soon have this text
-        composeTestRule.onAllNodesWithText("Income").filterToOne(hasClickAction()).performClick()
+        // Tab "Income" - use specific matcher to avoid ambiguity with the button
+        composeTestRule.onNode(hasText("Income") and hasClickAction() and !hasText("Add Income")).performClick()
         // Button text should change to "Add Income"
         composeTestRule.onNode(hasText("Add Income") and hasClickAction()).assertIsDisplayed()
     }
@@ -69,13 +69,13 @@ class AddExpenseScreenTest {
         }
 
         // Add button should be disabled initially (amount is empty)
-        composeTestRule.onAllNodesWithText("Add Expense").filterToOne(hasClickAction()).assertIsNotEnabled()
+        composeTestRule.onNode(hasText("Add Expense") and hasClickAction()).assertIsNotEnabled()
 
         // Enter amount
         composeTestRule.onNodeWithText("Amount").performTextInput("50")
         
         // Should now be enabled
-        composeTestRule.onAllNodesWithText("Add Expense").filterToOne(hasClickAction()).assertIsEnabled()
+        composeTestRule.onNode(hasText("Add Expense") and hasClickAction()).assertIsEnabled()
     }
 
     @Test
@@ -85,7 +85,7 @@ class AddExpenseScreenTest {
         }
 
         composeTestRule.onNodeWithText("Amount").performTextInput("100")
-        composeTestRule.onAllNodesWithText("Add Expense").filterToOne(hasClickAction()).performClick()
+        composeTestRule.onNode(hasText("Add Expense") and hasClickAction()).performClick()
 
         verify { viewModel.addTransaction(any(), any()) }
     }

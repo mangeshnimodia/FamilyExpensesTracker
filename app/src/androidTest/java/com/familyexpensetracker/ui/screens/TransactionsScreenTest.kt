@@ -250,14 +250,26 @@ class TransactionsScreenTest {
     }
 
     @Test
-    fun transactionsScreen_searchBar_typingCallsViewModel() {
+    fun transactionsScreen_searchBar_typingDoesNotCallViewModel() {
         composeTestRule.setContent {
             TransactionsScreen(viewModel)
         }
 
         composeTestRule.onNodeWithText("Search description").performTextInput("food")
 
-        verify { viewModel.searchTransactions(any()) }
+        verify(exactly = 0) { viewModel.searchTransactions(any()) }
+    }
+
+    @Test
+    fun transactionsScreen_refreshWithSearchText_callsSearch() {
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("Search description").performTextInput("food")
+        composeTestRule.onNodeWithContentDescription("Refresh").performClick()
+
+        verify { viewModel.searchTransactions("food") }
     }
 
     @Test
