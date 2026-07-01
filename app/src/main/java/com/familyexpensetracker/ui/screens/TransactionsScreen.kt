@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -40,6 +41,9 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     val categorySummaries by viewModel.categorySummaries.collectAsState()
     val monthSummaries by viewModel.monthSummaries.collectAsState()
     val expenseTotal by viewModel.expenseTotal.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsState()
+    val isSearching by viewModel.isSearching.collectAsState()
 
     val totalAmount = transactions.sumOf { it.amount }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -47,6 +51,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     val periodNavigator = remember { PeriodNavigator() }
     var yearlyViewMode by remember { mutableStateOf(YearlyViewMode.Category) }
     var expandedCategory by remember { mutableStateOf<String?>(null) }
+    var searchText by remember { mutableStateOf("") }
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
@@ -111,6 +116,26 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         .fillMaxSize()
                         .padding(padding)
                 ) {
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        label = { Text("Search description") },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        trailingIcon = {
+                            if (searchText.isNotBlank()) {
+                                IconButton(onClick = {
+                                    searchText = ""
+                                    viewModel.searchTransactions("")
+                                }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear search")
+                                }
+                            }
+                        },
+                    )
+
                     PeriodTabBar(
                         selectedTab = selectedPeriodTab,
                         onTabSelected = { tab ->
@@ -165,62 +190,85 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                     }
 
                     Box(modifier = Modifier.fillMaxSize()) {
-                        when {
-                            isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                            transactions.isEmpty() -> Column(
-                                modifier = Modifier.align(Alignment.Center),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                            ) {
-                                Text("No transactions loaded", style = MaterialTheme.typography.bodyLarge)
-                                Text("Tap refresh to fetch", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
-                            }
-                            selectedPeriodTab == PeriodTab.Yearly && yearlyViewMode == YearlyViewMode.Date ->
-                                MonthlyBreakdownList(
-                                    summaries = monthSummaries,
-                                    onMonthClick = { monthRange ->
-                                        viewModel.setSelectedPeriodTab(PeriodTab.Monthly)
-                                        viewModel.setSelectedDateRange(monthRange)
-                                    }
+                        if (searchQuery.isNotBlank()) {
+                            when {
+                                isSearching -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                                searchResults.isEmpty() -> Text(
+                                    "No results for \"$searchQuery\"",
+                                    modifier = Modifier.align(Alignment.Center),
+                                    style = MaterialTheme.typography.bodyLarge,
                                 )
-                            else -> {
-                                val cat = expandedCategory
-                                if (cat == null) {
-                                    CategorySummaryList(
-                                        summaries = categorySummaries,
-                                        onCategoryClick = { summary ->
-                                            expandedCategory = summary.category
+                                else -> TransactionList(
+                                    transactions = searchResults,
+                                    onEdit = { txn -> navController.navigate("edit/${txn.txnId}") },
+                                    onCopy = { txn -> navController.navigate("copy/${txn.txnId}") },
+                                    onDelete = { txn -> viewModel.deleteTransaction(txn.txnId) },
+                                )
+                            }
+                        } else {
+                            when {
+                                isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                                transactions.isEmpty() -> Column(
+                                    modifier = Modifier.align(Alignment.Center),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    Text("No transactions loaded", style = MaterialTheme.typography.bodyLarge)
+                                    Text("Tap refresh to fetch", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                                }
+                                selectedPeriodTab == PeriodTab.Yearly && yearlyViewMode == YearlyViewMode.Date ->
+                                    MonthlyBreakdownList(
+                                        summaries = monthSummaries,
+                                        onMonthClick = { monthRange ->
+                                            viewModel.setSelectedPeriodTab(PeriodTab.Monthly)
+                                            viewModel.setSelectedDateRange(monthRange)
                                         }
                                     )
-                                } else {
-                                    Column(modifier = Modifier.fillMaxSize()) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 4.dp, vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                        ) {
-                                            IconButton(onClick = { expandedCategory = null }) {
-                                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                                else -> {
+                                    val cat = expandedCategory
+                                    if (cat == null) {
+                                        CategorySummaryList(
+                                            summaries = categorySummaries,
+                                            onCategoryClick = { summary ->
+                                                expandedCategory = summary.category
                                             }
-                                            Text(
-                                                text = cat,
-                                                style = MaterialTheme.typography.titleMedium,
+                                        )
+                                    } else {
+                                        Column(modifier = Modifier.fillMaxSize()) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                IconButton(onClick = { expandedCategory = null }) {
+                                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                                                }
+                                                Text(
+                                                    text = cat,
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                )
+                                            }
+                                            HorizontalDivider()
+                                            TransactionList(
+                                                transactions = transactions.filter { it.category == cat },
+                                                onEdit = { txn -> navController.navigate("edit/${txn.txnId}") },
+                                                onCopy = { txn -> navController.navigate("copy/${txn.txnId}") },
+                                                onDelete = { txn -> viewModel.deleteTransaction(txn.txnId) },
                                             )
                                         }
-                                        HorizontalDivider()
-                                        TransactionList(
-                                            transactions = transactions.filter { it.category == cat },
-                                            onEdit = { txn -> navController.navigate("edit/${txn.txnId}") },
-                                            onCopy = { txn -> navController.navigate("copy/${txn.txnId}") },
-                                            onDelete = { txn -> viewModel.deleteTransaction(txn.txnId) },
-                                        )
                                     }
                                 }
                             }
                         }
 
                         FloatingActionButton(
-                            onClick = { viewModel.fetchTransactions() },
+                            onClick = {
+                                if (searchText.isNotBlank()) {
+                                    viewModel.searchTransactions(searchText)
+                                } else {
+                                    viewModel.fetchTransactions()
+                                }
+                            },
                             modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,

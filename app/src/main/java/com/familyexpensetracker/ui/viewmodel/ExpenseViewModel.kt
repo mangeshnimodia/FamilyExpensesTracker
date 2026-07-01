@@ -15,6 +15,7 @@ import com.familyexpensetracker.data.repository.UpdateTransactionRepository
 import com.familyexpensetracker.data.repository.FetchAccountsRepository
 import com.familyexpensetracker.data.repository.FetchCategoriesRepository
 import com.familyexpensetracker.data.repository.FetchTransactionsRepository
+import com.familyexpensetracker.data.repository.SearchTransactionsRepository
 import com.familyexpensetracker.utils.AppConstants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,9 +33,11 @@ class ExpenseViewModel(
     private val expenseCategoriesRepository: FetchCategoriesRepository,
     private val incomeCategoriesRepository: FetchCategoriesRepository,
     private val accountsRepository: FetchAccountsRepository,
+    private val searchRepository: SearchTransactionsRepository,
     private val summaryCalculator: TransactionSummaryCalculator = TransactionSummaryCalculator(),
 ) : ViewModel() {
     private var fetchJob: Job? = null
+    private var searchJob: Job? = null
 
     private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
     val transactions: StateFlow<List<Transaction>> = _transactions.asStateFlow()
@@ -74,6 +77,15 @@ class ExpenseViewModel(
 
     private val _expenseTotal = MutableStateFlow(0.0)
     val expenseTotal: StateFlow<Double> = _expenseTotal.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _searchResults = MutableStateFlow<List<Transaction>>(emptyList())
+    val searchResults: StateFlow<List<Transaction>> = _searchResults.asStateFlow()
+
+    private val _isSearching = MutableStateFlow(false)
+    val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
 
     fun setSelectedDateRange(range: DateRange) {
         if (_selectedDateRange.value != range) {
@@ -250,6 +262,29 @@ class ExpenseViewModel(
             _errorMessage.value = "Fetch failed: ${e.message}"
         } finally {
             _isLoading.value = false
+        }
+    }
+
+    fun searchTransactions(query: String) {
+        searchJob?.cancel()
+        if (query.isBlank()) {
+            _searchQuery.value = ""
+            _searchResults.value = emptyList()
+            _isSearching.value = false
+            return
+        }
+        _searchQuery.value = query
+        searchJob = viewModelScope.launch {
+            _isSearching.value = true
+            _errorMessage.value = null
+            try {
+                _searchResults.value = searchRepository.search(query)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _errorMessage.value = "Search failed: ${e.message}"
+            } finally {
+                _isSearching.value = false
+            }
         }
     }
 

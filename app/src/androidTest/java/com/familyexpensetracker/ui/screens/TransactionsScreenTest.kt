@@ -37,6 +37,9 @@ class TransactionsScreenTest {
     private val categorySummariesFlow = MutableStateFlow<List<CategorySummary>>(emptyList())
     private val monthSummariesFlow = MutableStateFlow<List<MonthSummary>>(emptyList())
     private val expenseTotalFlow = MutableStateFlow(0.0)
+    private val searchQueryFlow = MutableStateFlow("")
+    private val searchResultsFlow = MutableStateFlow<List<Transaction>>(emptyList())
+    private val isSearchingFlow = MutableStateFlow(false)
 
     @Before
     fun setUp() {
@@ -51,6 +54,9 @@ class TransactionsScreenTest {
         every { viewModel.categorySummaries } returns categorySummariesFlow
         every { viewModel.monthSummaries } returns monthSummariesFlow
         every { viewModel.expenseTotal } returns expenseTotalFlow
+        every { viewModel.searchQuery } returns searchQueryFlow
+        every { viewModel.searchResults } returns searchResultsFlow
+        every { viewModel.isSearching } returns isSearchingFlow
         every { viewModel.expenseCategories } returns MutableStateFlow(emptyMap())
         every { viewModel.incomeCategories } returns MutableStateFlow(emptyMap())
     }
@@ -232,6 +238,65 @@ class TransactionsScreenTest {
         composeTestRule.waitForIdle()
 
         verify { viewModel.loadAccounts() }
+    }
+
+    @Test
+    fun transactionsScreen_searchBar_isVisible() {
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("Search description").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_searchBar_typingCallsViewModel() {
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("Search description").performTextInput("food")
+
+        verify { viewModel.searchTransactions(any()) }
+    }
+
+    @Test
+    fun transactionsScreen_searchResults_shown() {
+        searchQueryFlow.value = "food"
+        searchResultsFlow.value = listOf(
+            Transaction(txnId = "s1", date = "2026/06/01", amount = -200.0, category = "Food", subcategory = "Groceries", description = "food market")
+        )
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("Food/Groceries").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_searchLoading_showsIndicator() {
+        searchQueryFlow.value = "food"
+        isSearchingFlow.value = true
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNode(hasProgressBar()).assertExists()
+    }
+
+    @Test
+    fun transactionsScreen_searchEmpty_showsNoResults() {
+        searchQueryFlow.value = "xyz123"
+        searchResultsFlow.value = emptyList()
+        isSearchingFlow.value = false
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("No results for \"xyz123\"").assertIsDisplayed()
     }
 
     private fun hasProgressBar(): SemanticsMatcher = SemanticsMatcher.expectValue(

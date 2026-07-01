@@ -27,6 +27,7 @@ import com.familyexpensetracker.data.remote.UpdateTransactionDataSource
 import com.familyexpensetracker.data.remote.FetchAccountsDataSource
 import com.familyexpensetracker.data.remote.FetchCategoriesDataSource
 import com.familyexpensetracker.data.remote.FetchTransactionsDataSource
+import com.familyexpensetracker.data.remote.SearchTransactionsDataSource
 import com.familyexpensetracker.data.remote.GoogleSheetsServiceProvider
 import com.familyexpensetracker.data.repository.AddTransactionRepository
 import com.familyexpensetracker.data.repository.DeleteTransactionRepository
@@ -34,6 +35,7 @@ import com.familyexpensetracker.data.repository.UpdateTransactionRepository
 import com.familyexpensetracker.data.repository.FetchAccountsRepository
 import com.familyexpensetracker.data.repository.FetchCategoriesRepository
 import com.familyexpensetracker.data.repository.FetchTransactionsRepository
+import com.familyexpensetracker.data.repository.SearchTransactionsRepository
 import com.familyexpensetracker.ui.screens.TransactionsScreen
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
 import com.familyexpensetracker.utils.AppConstants
@@ -162,7 +164,6 @@ class MainActivity : ComponentActivity() {
     private fun initializeSheets(email: String) {
         val serviceProvider = GoogleSheetsServiceProvider(this)
         val sheetsService = serviceProvider.getSheetsService(email)
-        
         val fetchDataSource = FetchTransactionsDataSource(sheetsService)
         val fetchRepository = FetchTransactionsRepository(fetchDataSource)
         
@@ -187,6 +188,9 @@ class MainActivity : ComponentActivity() {
         val localAccountsDataSource = LocalAccountsDataSource(this)
         val accountsRepository = FetchAccountsRepository(accountsDataSource, localAccountsDataSource)
         
+        val searchDataSource = SearchTransactionsDataSource(sheetsService)
+        val searchRepository = SearchTransactionsRepository(searchDataSource)
+
         viewModel = ExpenseViewModel(
             fetchRepository,
             addRepository,
@@ -195,6 +199,7 @@ class MainActivity : ComponentActivity() {
             expenseCategoriesRepository,
             incomeCategoriesRepository,
             accountsRepository,
+            searchRepository,
         )
     }
 }

@@ -4,6 +4,7 @@ import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.model.TransactionFilter
 import com.familyexpensetracker.data.repository.*
+import com.familyexpensetracker.data.repository.SearchTransactionsRepository
 import com.familyexpensetracker.ui.screens.PeriodTab
 import com.familyexpensetracker.ui.screens.TransactionSummaryCalculator
 import io.mockk.*
@@ -28,6 +29,7 @@ class ExpenseViewModelTest {
     private val expenseCategoriesRepository = mockk<FetchCategoriesRepository>()
     private val incomeCategoriesRepository = mockk<FetchCategoriesRepository>()
     private val accountsRepository = mockk<FetchAccountsRepository>()
+    private val searchRepository = mockk<SearchTransactionsRepository>()
     private val summaryCalculator = TransactionSummaryCalculator()
 
     private lateinit var viewModel: ExpenseViewModel
@@ -44,6 +46,7 @@ class ExpenseViewModelTest {
             expenseCategoriesRepository,
             incomeCategoriesRepository,
             accountsRepository,
+            searchRepository,
             summaryCalculator
         )
     }
