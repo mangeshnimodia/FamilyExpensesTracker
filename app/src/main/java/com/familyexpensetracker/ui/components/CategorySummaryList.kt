@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -24,7 +25,7 @@ fun CategorySummaryList(
     summaries: List<CategorySummary>,
     onCategoryClick: (CategorySummary) -> Unit,
 ) {
-    LazyColumn {
+    LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
         items(summaries.size) { index ->
             val summary = summaries[index]
             CategorySummaryRow(summary = summary, onClick = { onCategoryClick(summary) })

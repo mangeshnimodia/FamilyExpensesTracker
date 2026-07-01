@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +29,7 @@ fun MonthlyBreakdownList(
     onMonthClick: (DateRange.Month) -> Unit,
 ) {
     val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
-    LazyColumn {
+    LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
         items(summaries.size) { index ->
             val summary = summaries[index]
             val label = monthFormat.format(

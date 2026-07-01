@@ -1,6 +1,8 @@
 package com.familyexpensetracker.ui.components
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import com.familyexpensetracker.data.model.Transaction
@@ -12,7 +14,7 @@ fun TransactionList(
     onCopy: (Transaction) -> Unit,
     onDelete: (Transaction) -> Unit,
 ) {
-    LazyColumn {
+    LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
         items(transactions.size) { index ->
             val txn = transactions[index]
             TransactionItem(

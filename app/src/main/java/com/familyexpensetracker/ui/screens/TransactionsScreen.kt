@@ -64,6 +64,10 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
         viewModel.loadAccounts()
     }
 
+    LaunchedEffect(selectedPeriodTab, selectedFilter) {
+        expandedCategory = null
+    }
+
     fun defaultDateRangeForTab(tab: PeriodTab): DateRange {
         val now = Calendar.getInstance()
         return when (tab) {
@@ -152,6 +156,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         }
                         val navBarColor = when (selectedFilter.type) {
                             FilterType.INCOME -> Color(0xFF4CAF50)
+                            FilterType.EXPENSE -> MaterialTheme.colorScheme.error
                             else -> if (navBarTotal < 0) MaterialTheme.colorScheme.error else Color(0xFF4CAF50)
                         }
                         PeriodNavBar(
@@ -285,11 +290,13 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
         composable("edit/{txnId}") { backStackEntry ->
             val txnId = backStackEntry.arguments?.getString("txnId")
             val transaction = transactions.find { it.txnId == txnId }
+                ?: searchResults.find { it.txnId == txnId }
             AddExpenseScreen(viewModel = viewModel, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction)
         }
         composable("copy/{txnId}") { backStackEntry ->
             val txnId = backStackEntry.arguments?.getString("txnId")
             val transaction = transactions.find { it.txnId == txnId }
+                ?: searchResults.find { it.txnId == txnId }
             AddExpenseScreen(viewModel = viewModel, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction, isCopy = true)
         }
         composable("subcategory/{category}") { backStackEntry ->

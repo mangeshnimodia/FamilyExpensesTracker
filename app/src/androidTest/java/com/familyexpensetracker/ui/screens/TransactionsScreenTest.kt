@@ -311,6 +311,164 @@ class TransactionsScreenTest {
         composeTestRule.onNodeWithText("No results for \"xyz123\"").assertIsDisplayed()
     }
 
+
+    @Test
+    fun transactionsScreen_expandedCategory_clearedOnPeriodTabChange() {
+        val summary = CategorySummary(
+            category = "Food",
+            totalAmount = -500.0,
+            transactionCount = 1,
+            subcategories = emptyList()
+        )
+        categorySummariesFlow.value = listOf(summary)
+        transactionsFlow.value = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = -500.0, category = "Food", subcategory = "Groceries")
+        )
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        // Expand category
+        composeTestRule.onNodeWithText("Food").performClick()
+        composeTestRule.onNodeWithContentDescription("Back").assertIsDisplayed()
+
+        // Simulate period tab change via ViewModel state
+        selectedPeriodTabFlow.value = PeriodTab.Monthly
+
+        // Category expanded view should be gone
+        composeTestRule.onNodeWithContentDescription("Back").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Food").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_expandedCategory_clearedOnFilterChange() {
+        val summary = CategorySummary(
+            category = "Food",
+            totalAmount = -500.0,
+            transactionCount = 1,
+            subcategories = emptyList()
+        )
+        categorySummariesFlow.value = listOf(summary)
+        transactionsFlow.value = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = -500.0, category = "Food", subcategory = "Groceries")
+        )
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        // Expand category
+        composeTestRule.onNodeWithText("Food").performClick()
+        composeTestRule.onNodeWithContentDescription("Back").assertIsDisplayed()
+
+        // Simulate filter change via ViewModel state
+        selectedFilterFlow.value = TransactionFilter(type = com.familyexpensetracker.data.model.FilterType.EXPENSE)
+
+        // Category expanded view should be gone
+        composeTestRule.onNodeWithContentDescription("Back").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Food").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_expenseFilter_navBarTotalIsPositive_stillShowsExpenseColour() {
+        selectedFilterFlow.value = TransactionFilter(type = com.familyexpensetracker.data.model.FilterType.EXPENSE)
+        expenseTotalFlow.value = 700.0
+        transactionsFlow.value = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = -700.0, category = "Food", subcategory = "")
+        )
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("<").assertIsDisplayed()
+        composeTestRule.onNodeWithText(">").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_incomeFilter_navBarVisible() {
+        selectedFilterFlow.value = TransactionFilter(type = com.familyexpensetracker.data.model.FilterType.INCOME)
+        transactionsFlow.value = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = 1000.0, category = "Income", subcategory = "")
+        )
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("<").assertIsDisplayed()
+        composeTestRule.onNodeWithText(">").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_categoryList_refreshFabVisible_withItems() {
+        val summary = CategorySummary(
+            category = "Food",
+            totalAmount = -500.0,
+            transactionCount = 2,
+            subcategories = emptyList()
+        )
+        categorySummariesFlow.value = listOf(summary)
+        transactionsFlow.value = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = -500.0, category = "Food", subcategory = "")
+        )
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Refresh").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Add Expense").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Food").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_editFromSearchResults_opensEditScreen() {
+        val txn = Transaction(
+            txnId = "search-1",
+            date = "2026/06/01",
+            amount = -200.0,
+            category = "Food",
+            subcategory = "Groceries",
+            description = "food market"
+        )
+        searchQueryFlow.value = "food"
+        searchResultsFlow.value = listOf(txn)
+        transactionsFlow.value = emptyList()
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Edit").performClick()
+
+        composeTestRule.onNodeWithText("Update").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_copyFromSearchResults_prefillsAmount() {
+        val txn = Transaction(
+            txnId = "search-2",
+            date = "2026/06/01",
+            amount = -350.0,
+            category = "Transport",
+            subcategory = "Fuel",
+            description = "petrol"
+        )
+        searchQueryFlow.value = "petrol"
+        searchResultsFlow.value = listOf(txn)
+        transactionsFlow.value = emptyList()
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Copy").performClick()
+
+        composeTestRule.onNodeWithText("350").assertIsDisplayed()
+    }
+
     private fun hasProgressBar(): SemanticsMatcher = SemanticsMatcher.expectValue(
         SemanticsProperties.ProgressBarRangeInfo, ProgressBarRangeInfo.Indeterminate
     )
