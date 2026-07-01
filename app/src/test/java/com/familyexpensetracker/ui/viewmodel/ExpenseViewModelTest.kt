@@ -312,4 +312,46 @@ class ExpenseViewModelTest {
 
         assertEquals(0.0, viewModel.expenseTotal.value, 0.001)
     }
+
+    @Test
+    fun `setSelectedDateRange clears expenseTotal`() = runTest {
+        val txns = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = -500.0, category = "Food", subcategory = "")
+        )
+        coEvery { fetchRepository.fetch(any(), any()) } returns txns
+        viewModel.fetchTransactions()
+        assertEquals(500.0, viewModel.expenseTotal.value, 0.001)
+
+        viewModel.setSelectedDateRange(DateRange.Month(2026, 5))
+
+        assertEquals(0.0, viewModel.expenseTotal.value, 0.001)
+    }
+
+    @Test
+    fun `setSelectedFilter clears expenseTotal`() = runTest {
+        val txns = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = -500.0, category = "Food", subcategory = "")
+        )
+        coEvery { fetchRepository.fetch(any(), any()) } returns txns
+        viewModel.fetchTransactions()
+        assertEquals(500.0, viewModel.expenseTotal.value, 0.001)
+
+        viewModel.setSelectedFilter(TransactionFilter(selectedAccounts = listOf("Bank")))
+
+        assertEquals(0.0, viewModel.expenseTotal.value, 0.001)
+    }
+
+    @Test
+    fun `setSelectedAccount clears expenseTotal`() = runTest {
+        val txns = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = -500.0, category = "Food", subcategory = "")
+        )
+        coEvery { fetchRepository.fetch(any(), any()) } returns txns
+        viewModel.fetchTransactions()
+        assertEquals(500.0, viewModel.expenseTotal.value, 0.001)
+
+        viewModel.setSelectedAccount("Bank")
+
+        assertEquals(0.0, viewModel.expenseTotal.value, 0.001)
+    }
 }

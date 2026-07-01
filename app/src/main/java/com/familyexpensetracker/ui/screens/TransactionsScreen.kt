@@ -148,25 +148,30 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         }
                     )
 
+                    val periodTotal = when (selectedFilter.type) {
+                        FilterType.EXPENSE -> expenseTotal
+                        FilterType.INCOME -> transactions.filter { it.amount > 0 }.sumOf { it.amount }
+                        FilterType.BALANCE -> totalAmount
+                    }
+                    val periodColor = when (selectedFilter.type) {
+                        FilterType.INCOME -> Color(0xFF4CAF50)
+                        FilterType.EXPENSE -> MaterialTheme.colorScheme.error
+                        else -> if (periodTotal < 0) MaterialTheme.colorScheme.error else Color(0xFF4CAF50)
+                    }
                     if (selectedPeriodTab != PeriodTab.All) {
-                        val navBarTotal = when (selectedFilter.type) {
-                            FilterType.EXPENSE -> expenseTotal
-                            FilterType.INCOME -> transactions.filter { it.amount > 0 }.sumOf { it.amount }
-                            FilterType.BALANCE -> totalAmount
-                        }
-                        val navBarColor = when (selectedFilter.type) {
-                            FilterType.INCOME -> Color(0xFF4CAF50)
-                            FilterType.EXPENSE -> MaterialTheme.colorScheme.error
-                            else -> if (navBarTotal < 0) MaterialTheme.colorScheme.error else Color(0xFF4CAF50)
-                        }
                         PeriodNavBar(
                             dateRange = selectedDateRange,
                             label = dateRangeFormatter.format(selectedDateRange),
                             onPrevious = { viewModel.setSelectedDateRange(periodNavigator.previous(selectedDateRange)) },
                             onNext = { viewModel.setSelectedDateRange(periodNavigator.next(selectedDateRange)) },
                             navigator = periodNavigator,
-                            expenseTotal = navBarTotal,
-                            totalColor = navBarColor,
+                            expenseTotal = periodTotal,
+                            totalColor = periodColor,
+                        )
+                    } else {
+                        TotalBanner(
+                            total = periodTotal,
+                            totalColor = periodColor,
                         )
                     }
 

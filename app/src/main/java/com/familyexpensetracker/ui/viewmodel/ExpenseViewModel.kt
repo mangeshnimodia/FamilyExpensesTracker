@@ -90,7 +90,8 @@ class ExpenseViewModel(
     fun setSelectedDateRange(range: DateRange) {
         if (_selectedDateRange.value != range) {
             _selectedDateRange.value = range
-            _transactions.value = emptyList() // Clear stale data for old range
+            _transactions.value = emptyList()
+            _expenseTotal.value = 0.0
         }
     }
 
@@ -98,6 +99,7 @@ class ExpenseViewModel(
         if (_selectedFilter.value != filter) {
             _selectedFilter.value = filter
             _transactions.value = emptyList()
+            _expenseTotal.value = 0.0
         }
     }
 
@@ -111,6 +113,7 @@ class ExpenseViewModel(
         if (_selectedAccount.value != account) {
             _selectedAccount.value = account
             _transactions.value = emptyList()
+            _expenseTotal.value = 0.0
         }
     }
 

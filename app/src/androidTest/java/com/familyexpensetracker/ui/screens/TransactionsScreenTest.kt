@@ -469,6 +469,53 @@ class TransactionsScreenTest {
         composeTestRule.onNodeWithText("350").assertIsDisplayed()
     }
 
+
+    @Test
+    fun transactionsScreen_allTab_showsTotalBanner_noNavArrows() {
+        selectedPeriodTabFlow.value = PeriodTab.All
+        expenseTotalFlow.value = 1200.0
+        transactionsFlow.value = listOf(
+            Transaction(txnId = "1", date = "2026/06/15", amount = -1200.0, category = "Food", subcategory = "")
+        )
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        // Nav arrows must not exist on All tab
+        composeTestRule.onNodeWithText("<").assertDoesNotExist()
+        composeTestRule.onNodeWithText(">").assertDoesNotExist()
+        // Total banner must show the formatted amount
+        composeTestRule.onNodeWithText("\u20b91200.00").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_allTab_expenseFilter_totalBannerVisible() {
+        selectedPeriodTabFlow.value = PeriodTab.All
+        selectedFilterFlow.value = TransactionFilter(type = com.familyexpensetracker.data.model.FilterType.EXPENSE)
+        expenseTotalFlow.value = 750.0
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("\u20b9750.00").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_dailyTab_showsNavArrows_notTotalBannerOnly() {
+        selectedPeriodTabFlow.value = PeriodTab.Daily
+        expenseTotalFlow.value = 500.0
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        // Daily tab must still show nav arrows (PeriodNavBar, not TotalBanner)
+        composeTestRule.onNodeWithText("<").assertIsDisplayed()
+        composeTestRule.onNodeWithText(">").assertIsDisplayed()
+    }
+
     private fun hasProgressBar(): SemanticsMatcher = SemanticsMatcher.expectValue(
         SemanticsProperties.ProgressBarRangeInfo, ProgressBarRangeInfo.Indeterminate
     )
