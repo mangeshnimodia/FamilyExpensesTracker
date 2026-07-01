@@ -44,6 +44,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
+    val accountBalance by viewModel.accountBalance.collectAsState()
 
     val totalAmount = transactions.sumOf { it.amount }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -87,7 +88,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                 snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                 topBar = {
                     TopAppBar(
-                        title = {},
+                        title = { AccountBalanceText(balance = accountBalance) },
                         navigationIcon = {
                             AccountDropdown(
                                 accounts = availableAccounts,
@@ -99,6 +100,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                             selectedAccounts = if (account != null) listOf(account) else emptyList()
                                         )
                                     )
+                                    viewModel.fetchAccountBalance()
                                 }
                             )
                         },
@@ -278,6 +280,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                 } else {
                                     viewModel.fetchTransactions()
                                 }
+                                viewModel.fetchAccountBalance()
                             },
                             modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,

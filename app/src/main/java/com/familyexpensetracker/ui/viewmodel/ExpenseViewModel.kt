@@ -15,6 +15,7 @@ import com.familyexpensetracker.data.repository.UpdateTransactionRepository
 import com.familyexpensetracker.data.repository.FetchAccountsRepository
 import com.familyexpensetracker.data.repository.FetchCategoriesRepository
 import com.familyexpensetracker.data.repository.FetchTransactionsRepository
+import com.familyexpensetracker.data.repository.FetchAccountBalanceRepository
 import com.familyexpensetracker.data.repository.SearchTransactionsRepository
 import com.familyexpensetracker.utils.AppConstants
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +35,7 @@ class ExpenseViewModel(
     private val incomeCategoriesRepository: FetchCategoriesRepository,
     private val accountsRepository: FetchAccountsRepository,
     private val searchRepository: SearchTransactionsRepository,
+    private val accountBalanceRepository: FetchAccountBalanceRepository,
     private val summaryCalculator: TransactionSummaryCalculator = TransactionSummaryCalculator(),
 ) : ViewModel() {
     private var fetchJob: Job? = null
@@ -87,6 +89,9 @@ class ExpenseViewModel(
     private val _isSearching = MutableStateFlow(false)
     val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
 
+    private val _accountBalance = MutableStateFlow<Double?>(null)
+    val accountBalance: StateFlow<Double?> = _accountBalance.asStateFlow()
+
     fun setSelectedDateRange(range: DateRange) {
         if (_selectedDateRange.value != range) {
             _selectedDateRange.value = range
@@ -114,6 +119,7 @@ class ExpenseViewModel(
             _selectedAccount.value = account
             _transactions.value = emptyList()
             _expenseTotal.value = 0.0
+            _accountBalance.value = null
         }
     }
 
@@ -123,6 +129,16 @@ class ExpenseViewModel(
         fetchJob?.cancel()
         fetchJob = viewModelScope.launch {
             performFetch(range, filter)
+        }
+    }
+
+    fun fetchAccountBalance() {
+        viewModelScope.launch {
+            try {
+                _accountBalance.value = accountBalanceRepository.fetchBalance(_selectedAccount.value)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 

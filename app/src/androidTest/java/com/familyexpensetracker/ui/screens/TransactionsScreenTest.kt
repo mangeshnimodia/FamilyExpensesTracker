@@ -40,6 +40,7 @@ class TransactionsScreenTest {
     private val searchQueryFlow = MutableStateFlow("")
     private val searchResultsFlow = MutableStateFlow<List<Transaction>>(emptyList())
     private val isSearchingFlow = MutableStateFlow(false)
+    private val accountBalanceFlow = MutableStateFlow<Double?>(null)
 
     @Before
     fun setUp() {
@@ -59,6 +60,7 @@ class TransactionsScreenTest {
         every { viewModel.isSearching } returns isSearchingFlow
         every { viewModel.expenseCategories } returns MutableStateFlow(emptyMap())
         every { viewModel.incomeCategories } returns MutableStateFlow(emptyMap())
+        every { viewModel.accountBalance } returns accountBalanceFlow
     }
 
     @Test
@@ -516,7 +518,51 @@ class TransactionsScreenTest {
         composeTestRule.onNodeWithText(">").assertIsDisplayed()
     }
 
-    private fun hasProgressBar(): SemanticsMatcher = SemanticsMatcher.expectValue(
+    @Test
+    fun transactionsScreen_accountBalance_displayedWhenAvailable() {
+        accountBalanceFlow.value = 1500.75
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("\u20b91500.75").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_accountBalance_negativeBalance_showsAbsoluteValue() {
+        accountBalanceFlow.value = -320.50
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("\u20b9320.50").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_accountBalance_nullBalance_labelNotDisplayed() {
+        accountBalanceFlow.value = null
+
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithText("Balance").assertDoesNotExist()
+    }
+
+    @Test
+    fun transactionsScreen_refreshFab_callsFetchAccountBalance() {
+        composeTestRule.setContent {
+            TransactionsScreen(viewModel)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Refresh").performClick()
+
+        verify { viewModel.fetchAccountBalance() }
+    }
+
+        private fun hasProgressBar(): SemanticsMatcher = SemanticsMatcher.expectValue(
         SemanticsProperties.ProgressBarRangeInfo, ProgressBarRangeInfo.Indeterminate
     )
 }

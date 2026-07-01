@@ -35,6 +35,7 @@ import com.familyexpensetracker.data.repository.UpdateTransactionRepository
 import com.familyexpensetracker.data.repository.FetchAccountsRepository
 import com.familyexpensetracker.data.repository.FetchCategoriesRepository
 import com.familyexpensetracker.data.repository.FetchTransactionsRepository
+import com.familyexpensetracker.data.repository.FetchAccountBalanceRepository
 import com.familyexpensetracker.data.repository.SearchTransactionsRepository
 import com.familyexpensetracker.ui.screens.TransactionsScreen
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
@@ -191,6 +192,8 @@ class MainActivity : ComponentActivity() {
         val searchDataSource = SearchTransactionsDataSource(sheetsService)
         val searchRepository = SearchTransactionsRepository(searchDataSource)
 
+        val accountBalanceRepository = FetchAccountBalanceRepository(fetchDataSource)
+
         viewModel = ExpenseViewModel(
             fetchRepository,
             addRepository,
@@ -200,6 +203,7 @@ class MainActivity : ComponentActivity() {
             incomeCategoriesRepository,
             accountsRepository,
             searchRepository,
+            accountBalanceRepository,
         )
     }
 }

@@ -4,6 +4,7 @@ import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.model.TransactionFilter
 import com.familyexpensetracker.data.repository.*
+import com.familyexpensetracker.data.repository.FetchAccountBalanceRepository
 import com.familyexpensetracker.data.repository.SearchTransactionsRepository
 import com.familyexpensetracker.ui.screens.PeriodTab
 import com.familyexpensetracker.ui.screens.TransactionSummaryCalculator
@@ -30,6 +31,7 @@ class ExpenseViewModelTest {
     private val incomeCategoriesRepository = mockk<FetchCategoriesRepository>()
     private val accountsRepository = mockk<FetchAccountsRepository>()
     private val searchRepository = mockk<SearchTransactionsRepository>()
+    private val accountBalanceRepository = mockk<FetchAccountBalanceRepository>()
     private val summaryCalculator = TransactionSummaryCalculator()
 
     private lateinit var viewModel: ExpenseViewModel
@@ -47,6 +49,7 @@ class ExpenseViewModelTest {
             incomeCategoriesRepository,
             accountsRepository,
             searchRepository,
+            accountBalanceRepository,
             summaryCalculator
         )
     }
@@ -353,5 +356,42 @@ class ExpenseViewModelTest {
         viewModel.setSelectedAccount("Bank")
 
         assertEquals(0.0, viewModel.expenseTotal.value, 0.001)
+    }
+
+    @Test
+    fun `accountBalance defaults to null`() {
+        assertNull(viewModel.accountBalance.value)
+    }
+
+    @Test
+    fun `fetchAccountBalance sets accountBalance from repository`() = runTest {
+        coEvery { accountBalanceRepository.fetchBalance(any()) } returns 1234.50
+        viewModel.fetchAccountBalance()
+        assertEquals(1234.50, viewModel.accountBalance.value!!, 0.001)
+    }
+
+    @Test
+    fun `fetchAccountBalance uses current selectedAccount`() = runTest {
+        coEvery { accountBalanceRepository.fetchBalance("Passbook") } returns 500.0
+        viewModel.fetchAccountBalance()
+        coVerify { accountBalanceRepository.fetchBalance("Passbook") }
+    }
+
+    @Test
+    fun `setSelectedAccount clears accountBalance to null`() = runTest {
+        coEvery { accountBalanceRepository.fetchBalance(any()) } returns 500.0
+        viewModel.fetchAccountBalance()
+        assertEquals(500.0, viewModel.accountBalance.value!!, 0.001)
+
+        viewModel.setSelectedAccount("Bank")
+
+        assertNull(viewModel.accountBalance.value)
+    }
+
+    @Test
+    fun `fetchAccountBalance on error leaves balance as null`() = runTest {
+        coEvery { accountBalanceRepository.fetchBalance(any()) } throws Exception("Network failure")
+        viewModel.fetchAccountBalance()
+        assertNull(viewModel.accountBalance.value)
     }
 }
