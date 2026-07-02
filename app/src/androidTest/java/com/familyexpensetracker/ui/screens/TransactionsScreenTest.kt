@@ -541,14 +541,14 @@ class TransactionsScreenTest {
     }
 
     @Test
-    fun transactionsScreen_accountBalance_nullBalance_labelNotDisplayed() {
+    fun transactionsScreen_accountBalance_nullBalance_showsZero() {
         accountBalanceFlow.value = null
 
         composeTestRule.setContent {
             TransactionsScreen(viewModel)
         }
 
-        composeTestRule.onNodeWithText("Balance").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("accountBalanceText").assertIsDisplayed()
     }
 
     @Test
