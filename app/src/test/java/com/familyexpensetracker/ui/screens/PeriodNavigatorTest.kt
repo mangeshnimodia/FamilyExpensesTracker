@@ -166,4 +166,37 @@ class PeriodNavigatorTest {
         val end = Calendar.getInstance().time
         assertFalse(navigator.isNavigable(DateRange.Custom(start, end)))
     }
+
+    // --- defaultRangeFor ---
+
+    @Test
+    fun `defaultRangeFor Daily returns DateRange Day`() {
+        val fixedCal = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }
+        val nav = PeriodNavigator { fixedCal }
+        val result = nav.defaultRangeFor(PeriodTab.Daily)
+        assertTrue(result is DateRange.Day)
+    }
+
+    @Test
+    fun `defaultRangeFor Monthly returns DateRange Month with current year and month`() {
+        val fixedCal = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }
+        val nav = PeriodNavigator { fixedCal }
+        val result = nav.defaultRangeFor(PeriodTab.Monthly) as DateRange.Month
+        assertEquals(2026, result.year)
+        assertEquals(Calendar.JUNE, result.month)
+    }
+
+    @Test
+    fun `defaultRangeFor Yearly returns FinancialYear starting current year when month is April or later`() {
+        val fixedCal = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }
+        val nav = PeriodNavigator { fixedCal }
+        val result = nav.defaultRangeFor(PeriodTab.Yearly) as DateRange.FinancialYear
+        assertEquals(2026, result.startYear)
+    }
+
+    @Test
+    fun `defaultRangeFor All returns DateRange All`() {
+        val nav = PeriodNavigator()
+        assertEquals(DateRange.All, nav.defaultRangeFor(PeriodTab.All))
+    }
 }

@@ -49,4 +49,17 @@ class PeriodNavigator(private val calendarProvider: () -> Calendar = { Calendar.
         is DateRange.All, is DateRange.Custom -> false
         else -> true
     }
+
+    fun defaultRangeFor(tab: PeriodTab): DateRange {
+        val now = calendarProvider()
+        return when (tab) {
+            PeriodTab.Daily   -> DateRange.Day(now.time)
+            PeriodTab.Monthly -> DateRange.Month(now.get(Calendar.YEAR), now.get(Calendar.MONTH))
+            PeriodTab.Yearly  -> {
+                val fyStart = if (now.get(Calendar.MONTH) >= Calendar.APRIL) now.get(Calendar.YEAR) else now.get(Calendar.YEAR) - 1
+                DateRange.FinancialYear(fyStart)
+            }
+            PeriodTab.All -> DateRange.All
+        }
+    }
 }

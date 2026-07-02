@@ -9,14 +9,8 @@ class FetchAccountsRepository(
     private val remoteDataSource: FetchAccountsDataSource,
     private val localDataSource: LocalAccountsDataSource,
 ) {
-    companion object {
-        private var cachedAccounts: List<String>? = null
-        private val mutex = Mutex()
-
-        fun clearCache() {
-            cachedAccounts = null
-        }
-    }
+    private var cachedAccounts: List<String>? = null
+    private val mutex = Mutex()
 
     suspend fun fetch(): List<String> {
         cachedAccounts?.let { return it }

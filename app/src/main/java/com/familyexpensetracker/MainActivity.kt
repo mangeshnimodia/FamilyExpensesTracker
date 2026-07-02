@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
                     if (email != null) {
                         initializeSheets(email)
                     } else {
-                        val accounts = AccountManager.get(this).getAccountsByType("com.google")
+                        val accounts = AccountManager.get(this).getAccountsByType(AppConstants.GOOGLE_ACCOUNT_TYPE)
                         if (accounts.isNotEmpty()) {
                             initializeSheets(accounts[0].name)
                         }
@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val accounts = AccountManager.get(this).getAccountsByType("com.google")
+        val accounts = AccountManager.get(this).getAccountsByType(AppConstants.GOOGLE_ACCOUNT_TYPE)
         if (accounts.isNotEmpty()) {
             checkExistingAuthorization(accounts[0].name)
         }
@@ -111,7 +111,7 @@ class MainActivity : ComponentActivity() {
         val requestedScopes = AppConstants.SCOPES.map { Scope(it) }
         val authorizationRequest = AuthorizationRequest.builder()
             .setRequestedScopes(requestedScopes)
-            .setAccount(Account(email, "com.google"))
+            .setAccount(Account(email, AppConstants.GOOGLE_ACCOUNT_TYPE))
             .build()
 
         Identity.getAuthorizationClient(this)
@@ -129,7 +129,7 @@ class MainActivity : ComponentActivity() {
         val intent = AccountManager.newChooseAccountIntent(
             null,
             null,
-            arrayOf("com.google"),
+            arrayOf(AppConstants.GOOGLE_ACCOUNT_TYPE),
             null,
             null,
             null,
@@ -142,7 +142,7 @@ class MainActivity : ComponentActivity() {
         val requestedScopes = AppConstants.SCOPES.map { Scope(it) }
         val authorizationRequest = AuthorizationRequest.builder()
             .setRequestedScopes(requestedScopes)
-            .setAccount(Account(email, "com.google"))
+            .setAccount(Account(email, AppConstants.GOOGLE_ACCOUNT_TYPE))
             .build()
 
         Identity.getAuthorizationClient(this)

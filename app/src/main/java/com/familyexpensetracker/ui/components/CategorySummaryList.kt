@@ -14,7 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import com.familyexpensetracker.ui.theme.AppColors
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.CategorySummary
@@ -58,7 +58,7 @@ private fun CategorySummaryRow(
                 color = MaterialTheme.colorScheme.outline,
             )
         }
-        val amountColor = if (summary.totalAmount < 0) Color(0xFFE53935) else Color(0xFF43A047)
+        val amountColor = if (summary.totalAmount < 0) AppColors.expenseRed else AppColors.summaryGreen
         Text(
             text = "%.2f".format(abs(summary.totalAmount)),
             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),

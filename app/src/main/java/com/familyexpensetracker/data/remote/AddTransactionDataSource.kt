@@ -29,7 +29,7 @@ class AddTransactionDataSource(private val service: Sheets) {
         val body = ValueRange().setValues(values)
         service.spreadsheets().values()
             .append(spreadsheetId, range, body)
-            .setValueInputOption("USER_ENTERED")
+            .setValueInputOption(AppConstants.SHEETS_VALUE_INPUT_OPTION)
             .execute()
     }
 }

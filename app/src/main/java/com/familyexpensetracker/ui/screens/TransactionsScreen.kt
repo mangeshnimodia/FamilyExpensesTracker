@@ -12,17 +12,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import com.familyexpensetracker.ui.theme.AppColors
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.FilterType
 import com.familyexpensetracker.ui.components.*
 import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
-import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,21 +67,9 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
         expandedCategory = null
     }
 
-    fun defaultDateRangeForTab(tab: PeriodTab): DateRange {
-        val now = Calendar.getInstance()
-        return when (tab) {
-            PeriodTab.Daily -> DateRange.Day(now.time)
-            PeriodTab.Monthly -> DateRange.Month(now.get(Calendar.YEAR), now.get(Calendar.MONTH))
-            PeriodTab.Yearly -> {
-                val fyStart = if (now.get(Calendar.MONTH) >= Calendar.APRIL) now.get(Calendar.YEAR) else now.get(Calendar.YEAR) - 1
-                DateRange.FinancialYear(fyStart)
-            }
-            PeriodTab.All -> DateRange.All
-        }
-    }
 
-    NavHost(navController = navController, startDestination = "main_list") {
-        composable("main_list") {
+    NavHost(navController = navController, startDestination = NavRoutes.MAIN_LIST) {
+        composable(NavRoutes.MAIN_LIST) {
             Scaffold(
                 snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                 topBar = {
@@ -112,7 +98,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                     )
                 },
                 floatingActionButton = {
-                    FloatingActionButton(onClick = { navController.navigate("add") }) {
+                    FloatingActionButton(onClick = { navController.navigate(NavRoutes.ADD) }) {
                         Icon(Icons.Default.Add, contentDescription = "Add Expense")
                     }
                 }
@@ -146,7 +132,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         selectedTab = selectedPeriodTab,
                         onTabSelected = { tab ->
                             viewModel.setSelectedPeriodTab(tab)
-                            viewModel.setSelectedDateRange(defaultDateRangeForTab(tab))
+                            viewModel.setSelectedDateRange(periodNavigator.defaultRangeFor(tab))
                         }
                     )
 
@@ -156,9 +142,9 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         FilterType.BALANCE -> totalAmount
                     }
                     val periodColor = when (selectedFilter.type) {
-                        FilterType.INCOME -> Color(0xFF4CAF50)
+                        FilterType.INCOME -> AppColors.incomeGreen
                         FilterType.EXPENSE -> MaterialTheme.colorScheme.error
-                        else -> if (periodTotal < 0) MaterialTheme.colorScheme.error else Color(0xFF4CAF50)
+                        else -> if (periodTotal < 0) MaterialTheme.colorScheme.error else AppColors.incomeGreen
                     }
                     if (selectedPeriodTab != PeriodTab.All) {
                         PeriodNavBar(
@@ -212,8 +198,8 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                 )
                                 else -> TransactionList(
                                     transactions = searchResults,
-                                    onEdit = { txn -> navController.navigate("edit/${txn.txnId}") },
-                                    onCopy = { txn -> navController.navigate("copy/${txn.txnId}") },
+                                    onEdit = { txn -> navController.navigate(NavRoutes.edit(txn.txnId)) },
+                                    onCopy = { txn -> navController.navigate(NavRoutes.copy(txn.txnId)) },
                                     onDelete = { txn -> viewModel.deleteTransaction(txn.txnId) },
                                 )
                             }
@@ -236,8 +222,8 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                         }
                                     )
                                 else -> {
-                                    val cat = expandedCategory
-                                    if (cat == null) {
+                                    val selectedCategoryName = expandedCategory
+                                    if (selectedCategoryName == null) {
                                         CategorySummaryList(
                                             summaries = categorySummaries,
                                             onCategoryClick = { summary ->
@@ -256,15 +242,15 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                                                 }
                                                 Text(
-                                                    text = cat,
+                                                    text = selectedCategoryName,
                                                     style = MaterialTheme.typography.titleMedium,
                                                 )
                                             }
                                             HorizontalDivider()
                                             TransactionList(
-                                                transactions = transactions.filter { it.category == cat },
-                                                onEdit = { txn -> navController.navigate("edit/${txn.txnId}") },
-                                                onCopy = { txn -> navController.navigate("copy/${txn.txnId}") },
+                                                transactions = transactions.filter { it.category == selectedCategoryName },
+                                                onEdit = { txn -> navController.navigate(NavRoutes.edit(txn.txnId)) },
+                                                onCopy = { txn -> navController.navigate(NavRoutes.copy(txn.txnId)) },
                                                 onDelete = { txn -> viewModel.deleteTransaction(txn.txnId) },
                                             )
                                         }
@@ -292,22 +278,22 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                 }
             }
         }
-        composable("add") {
+        composable(NavRoutes.ADD) {
             AddExpenseScreen(viewModel = viewModel, onDismiss = { navController.popBackStack() })
         }
-        composable("edit/{txnId}") { backStackEntry ->
+        composable(NavRoutes.EDIT) { backStackEntry ->
             val txnId = backStackEntry.arguments?.getString("txnId")
             val transaction = transactions.find { it.txnId == txnId }
                 ?: searchResults.find { it.txnId == txnId }
             AddExpenseScreen(viewModel = viewModel, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction)
         }
-        composable("copy/{txnId}") { backStackEntry ->
+        composable(NavRoutes.COPY) { backStackEntry ->
             val txnId = backStackEntry.arguments?.getString("txnId")
             val transaction = transactions.find { it.txnId == txnId }
                 ?: searchResults.find { it.txnId == txnId }
             AddExpenseScreen(viewModel = viewModel, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction, isCopy = true)
         }
-        composable("subcategory/{category}") { backStackEntry ->
+        composable(NavRoutes.SUBCATEGORY) { backStackEntry ->
             val category = backStackEntry.arguments?.getString("category") ?: ""
             SubcategoryDetailScreen(viewModel = viewModel, category = category, navController = navController)
         }

@@ -2,6 +2,7 @@ package com.familyexpensetracker.ui.components
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import com.familyexpensetracker.utils.AppConstants
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -22,7 +23,7 @@ fun AppDatePicker(
                 onClick = {
                     datePickerState.selectedDateMillis?.let { utcMillis ->
                         // Convert UTC millis to Local date to avoid "past date" issues
-                        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                        val calendar = Calendar.getInstance(TimeZone.getTimeZone(AppConstants.TIMEZONE_UTC))
                         calendar.timeInMillis = utcMillis
                         val localCalendar = Calendar.getInstance()
                         localCalendar.set(

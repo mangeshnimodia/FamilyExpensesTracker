@@ -9,7 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import com.familyexpensetracker.ui.theme.AppColors
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.Transaction
@@ -22,7 +22,7 @@ fun TransactionItem(
     onEdit: (Transaction) -> Unit = {},
     onCopy: (Transaction) -> Unit = {},
 ) {
-    val amountColor = if (txn.amount < 0) MaterialTheme.colorScheme.error else Color(0xFF4CAF50)
+    val amountColor = if (txn.amount < 0) MaterialTheme.colorScheme.error else AppColors.incomeGreen
     val categoryText = if (txn.subcategory.isNotBlank()) "${txn.category}/${txn.subcategory}" else txn.category
 
     Card(

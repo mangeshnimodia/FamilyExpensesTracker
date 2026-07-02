@@ -46,6 +46,14 @@ object AppConstants {
     const val COL_ACCOUNT = 7
     const val COL_TRANSFER_ID = 8
 
+    const val CURRENCY_SYMBOL           = "₹"
+    const val FAB_CLEARANCE_DP          = 88
+    const val DATE_FORMAT_MONTH         = "MMMM yyyy"
+    const val DATE_FORMAT_FY            = "FY%02d-%02d"
+    const val TIMEZONE_UTC              = "UTC"
+    const val SHEETS_VALUE_INPUT_OPTION = "USER_ENTERED"
+    const val GOOGLE_ACCOUNT_TYPE       = "com.google"
+
     // Admin Column Indexes (Relative to their specific ranges)
     const val COL_ADMIN_CATEGORY = 0
     const val COL_ADMIN_SUBCATEGORY = 1

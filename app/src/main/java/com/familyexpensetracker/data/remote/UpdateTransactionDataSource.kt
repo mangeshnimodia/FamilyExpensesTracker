@@ -48,7 +48,7 @@ class UpdateTransactionDataSource(private val service: Sheets) {
             
             service.spreadsheets().values()
                 .update(spreadsheetId, range, body)
-                .setValueInputOption("USER_ENTERED")
+                .setValueInputOption(AppConstants.SHEETS_VALUE_INPUT_OPTION)
                 .execute()
         }
     }

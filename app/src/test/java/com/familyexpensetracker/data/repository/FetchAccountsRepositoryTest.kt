@@ -20,7 +20,6 @@ class FetchAccountsRepositoryTest {
 
     @Before
     fun setUp() {
-        FetchAccountsRepository.clearCache()
         repository = FetchAccountsRepository(remoteDataSource, localDataSource)
     }
 
