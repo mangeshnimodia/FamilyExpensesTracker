@@ -3,7 +3,9 @@ package com.familyexpensetracker.ui.screens
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.familyexpensetracker.data.model.DateRange
-import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
+import com.familyexpensetracker.ui.viewmodel.AccountViewModel
+import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
+import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -18,8 +20,10 @@ class AddExpenseScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val viewModel = mockk<ExpenseViewModel>(relaxed = true)
-    
+    private val transactionVM = mockk<TransactionViewModel>(relaxed = true)
+    private val categoryVM = mockk<CategoryViewModel>(relaxed = true)
+    private val accountVM = mockk<AccountViewModel>(relaxed = true)
+
     private val expenseCategoriesFlow = MutableStateFlow<Map<String, List<String>>>(emptyMap())
     private val incomeCategoriesFlow = MutableStateFlow<Map<String, List<String>>>(emptyMap())
     private val accountsFlow = MutableStateFlow<List<String>>(emptyList())
@@ -27,10 +31,10 @@ class AddExpenseScreenTest {
 
     @Before
     fun setUp() {
-        every { viewModel.expenseCategories } returns expenseCategoriesFlow
-        every { viewModel.incomeCategories } returns incomeCategoriesFlow
-        every { viewModel.accounts } returns accountsFlow
-        every { viewModel.selectedDateRange } returns selectedDateRangeFlow
+        every { categoryVM.expenseCategories } returns expenseCategoriesFlow
+        every { categoryVM.incomeCategories } returns incomeCategoriesFlow
+        every { accountVM.accounts } returns accountsFlow
+        every { transactionVM.selectedDateRange } returns selectedDateRangeFlow
         
         // Provide some default data so that dropdowns have options if needed
         expenseCategoriesFlow.value = mapOf("Daily Living" to listOf("Groceries"))
@@ -41,7 +45,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_initialState() {
         composeTestRule.setContent {
-            AddExpenseScreen(viewModel = viewModel, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
         }
 
         composeTestRule.onNodeWithText("Amount").assertIsDisplayed()
@@ -53,7 +57,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_canSwitchToIncome() {
         composeTestRule.setContent {
-            AddExpenseScreen(viewModel = viewModel, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
         }
 
         // Tab "Income" - use specific matcher to avoid ambiguity with the button
@@ -65,7 +69,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_validatesInputBeforeAdding() {
         composeTestRule.setContent {
-            AddExpenseScreen(viewModel = viewModel, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
         }
 
         // Add button should be disabled initially (amount is empty)
@@ -81,13 +85,13 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_triggersViewModelOnAdd() {
         composeTestRule.setContent {
-            AddExpenseScreen(viewModel = viewModel, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
         }
 
         composeTestRule.onNodeWithText("Amount").performTextInput("100")
         composeTestRule.onNode(hasText("Add Expense") and hasClickAction()).performClick()
 
-        verify { viewModel.addTransaction(any(), any()) }
+        verify { transactionVM.addTransaction(any(), any()) }
     }
 
     @Test
@@ -103,7 +107,7 @@ class AddExpenseScreenTest {
             account = "Passbook"
         )
         composeTestRule.setContent {
-            AddExpenseScreen(viewModel = viewModel, onDismiss = {}, transactionToEdit = txn)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {}, transactionToEdit = txn)
         }
 
         composeTestRule.onNodeWithText("Edit Entry").assertIsDisplayed()
@@ -125,19 +129,19 @@ class AddExpenseScreenTest {
             account = "Passbook"
         )
         composeTestRule.setContent {
-            AddExpenseScreen(viewModel = viewModel, onDismiss = {}, transactionToEdit = txn)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {}, transactionToEdit = txn)
         }
 
         composeTestRule.onNodeWithText("Update").performClick()
 
-        verify { viewModel.updateTransaction(any(), any()) }
+        verify { transactionVM.updateTransaction(any(), any()) }
     }
 
     @Test
     fun addExpenseScreen_transferMode_showsToFromAccounts() {
         accountsFlow.value = listOf("Bank", "Cash")
         composeTestRule.setContent {
-            AddExpenseScreen(viewModel = viewModel, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
         }
 
         // Switch to Transfer tab
@@ -156,7 +160,7 @@ class AddExpenseScreenTest {
     fun addExpenseScreen_transferMode_triggersViewModel() {
         accountsFlow.value = listOf("Bank", "Cash")
         composeTestRule.setContent {
-            AddExpenseScreen(viewModel = viewModel, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
         }
 
         composeTestRule.onNodeWithText("Transfer").performClick()
@@ -168,7 +172,7 @@ class AddExpenseScreenTest {
         composeTestRule.onNode(hasText("Add Transfer") and hasClickAction()).performClick()
 
         verify { 
-            viewModel.addAccountTransfer(
+            transactionVM.addAccountTransfer(
                 fromAccount = any(),
                 toAccount = any(),
                 amount = 500.0,
@@ -192,7 +196,7 @@ class AddExpenseScreenTest {
             account = "Passbook"
         )
         composeTestRule.setContent {
-            AddExpenseScreen(viewModel = viewModel, onDismiss = {}, transactionToEdit = txn, isCopy = true)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {}, transactionToEdit = txn, isCopy = true)
         }
 
         composeTestRule.onNodeWithText("Copy Entry").assertIsDisplayed()
@@ -212,11 +216,11 @@ class AddExpenseScreenTest {
             account = "Passbook"
         )
         composeTestRule.setContent {
-            AddExpenseScreen(viewModel = viewModel, onDismiss = {}, transactionToEdit = txn, isCopy = true)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {}, transactionToEdit = txn, isCopy = true)
         }
 
         composeTestRule.onNodeWithText("Copy").performClick()
 
-        verify { viewModel.addTransaction(any(), any()) }
+        verify { transactionVM.addTransaction(any(), any()) }
     }
 }

@@ -9,7 +9,10 @@ import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.MonthSummary
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.model.TransactionFilter
-import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
+import com.familyexpensetracker.ui.viewmodel.AccountViewModel
+import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
+import com.familyexpensetracker.ui.viewmodel.SearchViewModel
+import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 import io.mockk.every
 import io.mockk.verify
 import io.mockk.mockk
@@ -24,7 +27,10 @@ class TransactionsScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val viewModel = mockk<ExpenseViewModel>(relaxed = true)
+    private val transactionVM = mockk<TransactionViewModel>(relaxed = true)
+    private val categoryVM = mockk<CategoryViewModel>(relaxed = true)
+    private val accountVM = mockk<AccountViewModel>(relaxed = true)
+    private val searchVM = mockk<SearchViewModel>(relaxed = true)
 
     private val transactionsFlow = MutableStateFlow<List<Transaction>>(emptyList())
     private val isLoadingFlow = MutableStateFlow(false)
@@ -44,29 +50,29 @@ class TransactionsScreenTest {
 
     @Before
     fun setUp() {
-        every { viewModel.transactions } returns transactionsFlow
-        every { viewModel.isLoading } returns isLoadingFlow
-        every { viewModel.errorMessage } returns errorMessageFlow
-        every { viewModel.selectedDateRange } returns selectedDateRangeFlow
-        every { viewModel.selectedFilter } returns selectedFilterFlow
-        every { viewModel.accounts } returns accountsFlow
-        every { viewModel.selectedPeriodTab } returns selectedPeriodTabFlow
-        every { viewModel.selectedAccount } returns selectedAccountFlow
-        every { viewModel.categorySummaries } returns categorySummariesFlow
-        every { viewModel.monthSummaries } returns monthSummariesFlow
-        every { viewModel.expenseTotal } returns expenseTotalFlow
-        every { viewModel.searchQuery } returns searchQueryFlow
-        every { viewModel.searchResults } returns searchResultsFlow
-        every { viewModel.isSearching } returns isSearchingFlow
-        every { viewModel.expenseCategories } returns MutableStateFlow(emptyMap())
-        every { viewModel.incomeCategories } returns MutableStateFlow(emptyMap())
-        every { viewModel.accountBalance } returns accountBalanceFlow
+        every { transactionVM.transactions } returns transactionsFlow
+        every { transactionVM.isLoading } returns isLoadingFlow
+        every { transactionVM.errorMessage } returns errorMessageFlow
+        every { transactionVM.selectedDateRange } returns selectedDateRangeFlow
+        every { transactionVM.selectedFilter } returns selectedFilterFlow
+        every { accountVM.accounts } returns accountsFlow
+        every { transactionVM.selectedPeriodTab } returns selectedPeriodTabFlow
+        every { transactionVM.selectedAccount } returns selectedAccountFlow
+        every { transactionVM.categorySummaries } returns categorySummariesFlow
+        every { transactionVM.monthSummaries } returns monthSummariesFlow
+        every { transactionVM.expenseTotal } returns expenseTotalFlow
+        every { searchVM.searchQuery } returns searchQueryFlow
+        every { searchVM.searchResults } returns searchResultsFlow
+        every { searchVM.isSearching } returns isSearchingFlow
+        every { categoryVM.expenseCategories } returns MutableStateFlow(emptyMap())
+        every { categoryVM.incomeCategories } returns MutableStateFlow(emptyMap())
+        every { transactionVM.accountBalance } returns accountBalanceFlow
     }
 
     @Test
     fun transactionsScreen_showsEmptyState() {
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("No transactions loaded").assertIsDisplayed()
@@ -78,7 +84,7 @@ class TransactionsScreenTest {
         isLoadingFlow.value = true
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNode(hasProgressBar()).assertExists()
@@ -87,7 +93,7 @@ class TransactionsScreenTest {
     @Test
     fun transactionsScreen_showsAllFilterChips() {
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("Expense").assertIsDisplayed()
@@ -98,7 +104,7 @@ class TransactionsScreenTest {
     @Test
     fun transactionsScreen_showsAllPeriodTabs() {
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("Daily").assertIsDisplayed()
@@ -112,7 +118,7 @@ class TransactionsScreenTest {
         selectedPeriodTabFlow.value = PeriodTab.Daily
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         // PeriodNavBar shows < and > navigation buttons
@@ -125,7 +131,7 @@ class TransactionsScreenTest {
         selectedPeriodTabFlow.value = PeriodTab.All
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("<").assertDoesNotExist()
@@ -146,7 +152,7 @@ class TransactionsScreenTest {
         )
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("Food").assertIsDisplayed()
@@ -167,7 +173,7 @@ class TransactionsScreenTest {
         )
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("Food").performClick()
@@ -189,7 +195,7 @@ class TransactionsScreenTest {
         )
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("Food").performClick()
@@ -201,7 +207,7 @@ class TransactionsScreenTest {
     @Test
     fun transactionsScreen_addFab_visible() {
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithContentDescription("Add Expense").assertIsDisplayed()
@@ -210,7 +216,7 @@ class TransactionsScreenTest {
     @Test
     fun transactionsScreen_refreshFab_visible() {
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithContentDescription("Refresh").assertIsDisplayed()
@@ -224,7 +230,7 @@ class TransactionsScreenTest {
         )
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("Category").assertIsDisplayed()
@@ -234,18 +240,18 @@ class TransactionsScreenTest {
     @Test
     fun transactionsScreen_callsLoadAccountsOnComposition() {
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.waitForIdle()
 
-        verify { viewModel.loadAccounts() }
+        verify { accountVM.loadAccounts() }
     }
 
     @Test
     fun transactionsScreen_searchBar_isVisible() {
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("Search description").assertIsDisplayed()
@@ -254,24 +260,24 @@ class TransactionsScreenTest {
     @Test
     fun transactionsScreen_searchBar_typingDoesNotCallViewModel() {
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("Search description").performTextInput("food")
 
-        verify(exactly = 0) { viewModel.searchTransactions(any()) }
+        verify(exactly = 0) { searchVM.searchTransactions(any()) }
     }
 
     @Test
     fun transactionsScreen_refreshWithSearchText_callsSearch() {
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("Search description").performTextInput("food")
         composeTestRule.onNodeWithContentDescription("Refresh").performClick()
 
-        verify { viewModel.searchTransactions("food") }
+        verify { searchVM.searchTransactions("food") }
     }
 
     @Test
@@ -282,7 +288,7 @@ class TransactionsScreenTest {
         )
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("Food/Groceries").assertIsDisplayed()
@@ -294,7 +300,7 @@ class TransactionsScreenTest {
         isSearchingFlow.value = true
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNode(hasProgressBar()).assertExists()
@@ -307,7 +313,7 @@ class TransactionsScreenTest {
         isSearchingFlow.value = false
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("No results for \"xyz123\"").assertIsDisplayed()
@@ -328,7 +334,7 @@ class TransactionsScreenTest {
         )
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         // Expand category
@@ -357,7 +363,7 @@ class TransactionsScreenTest {
         )
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         // Expand category
@@ -381,7 +387,7 @@ class TransactionsScreenTest {
         )
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("<").assertIsDisplayed()
@@ -396,7 +402,7 @@ class TransactionsScreenTest {
         )
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("<").assertIsDisplayed()
@@ -417,7 +423,7 @@ class TransactionsScreenTest {
         )
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithContentDescription("Refresh").assertIsDisplayed()
@@ -440,7 +446,7 @@ class TransactionsScreenTest {
         transactionsFlow.value = emptyList()
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithContentDescription("Edit").performClick()
@@ -463,7 +469,7 @@ class TransactionsScreenTest {
         transactionsFlow.value = emptyList()
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithContentDescription("Copy").performClick()
@@ -481,7 +487,7 @@ class TransactionsScreenTest {
         )
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         // Nav arrows must not exist on All tab
@@ -498,7 +504,7 @@ class TransactionsScreenTest {
         expenseTotalFlow.value = 750.0
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("\u20b9750.00").assertIsDisplayed()
@@ -510,7 +516,7 @@ class TransactionsScreenTest {
         expenseTotalFlow.value = 500.0
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         // Daily tab must still show nav arrows (PeriodNavBar, not TotalBanner)
@@ -523,7 +529,7 @@ class TransactionsScreenTest {
         accountBalanceFlow.value = 1500.75
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("\u20b91500.75").assertIsDisplayed()
@@ -534,7 +540,7 @@ class TransactionsScreenTest {
         accountBalanceFlow.value = -320.50
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithText("\u20b9320.50").assertIsDisplayed()
@@ -545,7 +551,7 @@ class TransactionsScreenTest {
         accountBalanceFlow.value = null
 
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithTag("accountBalanceText").assertIsDisplayed()
@@ -554,12 +560,12 @@ class TransactionsScreenTest {
     @Test
     fun transactionsScreen_refreshFab_callsFetchAccountBalance() {
         composeTestRule.setContent {
-            TransactionsScreen(viewModel)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
         }
 
         composeTestRule.onNodeWithContentDescription("Refresh").performClick()
 
-        verify { viewModel.fetchAccountBalance() }
+        verify { transactionVM.fetchAccountBalance() }
     }
 
         private fun hasProgressBar(): SemanticsMatcher = SemanticsMatcher.expectValue(

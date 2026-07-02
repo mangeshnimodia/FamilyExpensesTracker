@@ -20,29 +20,37 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.familyexpensetracker.data.model.FilterType
 import com.familyexpensetracker.ui.components.*
-import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
+import com.familyexpensetracker.ui.viewmodel.AccountViewModel
+import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
+import com.familyexpensetracker.ui.viewmodel.SearchViewModel
+import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransactionsScreen(viewModel: ExpenseViewModel) {
+fun TransactionsScreen(
+    transactionVM: TransactionViewModel,
+    categoryVM: CategoryViewModel,
+    accountVM: AccountViewModel,
+    searchVM: SearchViewModel,
+) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    val transactions by viewModel.transactions.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
-    val selectedDateRange by viewModel.selectedDateRange.collectAsState()
-    val selectedFilter by viewModel.selectedFilter.collectAsState()
-    val availableAccounts by viewModel.accounts.collectAsState()
-    val selectedPeriodTab by viewModel.selectedPeriodTab.collectAsState()
-    val selectedAccount by viewModel.selectedAccount.collectAsState()
-    val categorySummaries by viewModel.categorySummaries.collectAsState()
-    val monthSummaries by viewModel.monthSummaries.collectAsState()
-    val expenseTotal by viewModel.expenseTotal.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val searchResults by viewModel.searchResults.collectAsState()
-    val isSearching by viewModel.isSearching.collectAsState()
-    val accountBalance by viewModel.accountBalance.collectAsState()
+    val transactions by transactionVM.transactions.collectAsState()
+    val isLoading by transactionVM.isLoading.collectAsState()
+    val errorMessage by transactionVM.errorMessage.collectAsState()
+    val selectedDateRange by transactionVM.selectedDateRange.collectAsState()
+    val selectedFilter by transactionVM.selectedFilter.collectAsState()
+    val availableAccounts by accountVM.accounts.collectAsState()
+    val selectedPeriodTab by transactionVM.selectedPeriodTab.collectAsState()
+    val selectedAccount by transactionVM.selectedAccount.collectAsState()
+    val categorySummaries by transactionVM.categorySummaries.collectAsState()
+    val monthSummaries by transactionVM.monthSummaries.collectAsState()
+    val expenseTotal by transactionVM.expenseTotal.collectAsState()
+    val searchQuery by searchVM.searchQuery.collectAsState()
+    val searchResults by searchVM.searchResults.collectAsState()
+    val isSearching by searchVM.isSearching.collectAsState()
+    val accountBalance by transactionVM.accountBalance.collectAsState()
 
     val totalAmount = transactions.sumOf { it.amount }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -55,12 +63,12 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.clearError()
+            transactionVM.clearError()
         }
     }
 
     LaunchedEffect(Unit) {
-        viewModel.loadAccounts()
+        accountVM.loadAccounts()
     }
 
     LaunchedEffect(selectedPeriodTab, selectedFilter) {
@@ -80,13 +88,13 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                 accounts = availableAccounts,
                                 selectedAccount = selectedAccount,
                                 onAccountSelected = { account ->
-                                    viewModel.setSelectedAccount(account)
-                                    viewModel.setSelectedFilter(
+                                    transactionVM.setSelectedAccount(account)
+                                    transactionVM.setSelectedFilter(
                                         selectedFilter.copy(
                                             selectedAccounts = if (account != null) listOf(account) else emptyList()
                                         )
                                     )
-                                    viewModel.fetchAccountBalance()
+                                    transactionVM.fetchAccountBalance()
                                 }
                             )
                         },
@@ -120,7 +128,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                             if (searchText.isNotBlank()) {
                                 IconButton(onClick = {
                                     searchText = ""
-                                    viewModel.searchTransactions("")
+                                    searchVM.searchTransactions("")
                                 }) {
                                     Icon(Icons.Default.Close, contentDescription = "Clear search")
                                 }
@@ -131,8 +139,8 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                     PeriodTabBar(
                         selectedTab = selectedPeriodTab,
                         onTabSelected = { tab ->
-                            viewModel.setSelectedPeriodTab(tab)
-                            viewModel.setSelectedDateRange(periodNavigator.defaultRangeFor(tab))
+                            transactionVM.setSelectedPeriodTab(tab)
+                            transactionVM.setSelectedDateRange(periodNavigator.defaultRangeFor(tab))
                         }
                     )
 
@@ -150,8 +158,8 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         PeriodNavBar(
                             dateRange = selectedDateRange,
                             label = dateRangeFormatter.format(selectedDateRange),
-                            onPrevious = { viewModel.setSelectedDateRange(periodNavigator.previous(selectedDateRange)) },
-                            onNext = { viewModel.setSelectedDateRange(periodNavigator.next(selectedDateRange)) },
+                            onPrevious = { transactionVM.setSelectedDateRange(periodNavigator.previous(selectedDateRange)) },
+                            onNext = { transactionVM.setSelectedDateRange(periodNavigator.next(selectedDateRange)) },
                             navigator = periodNavigator,
                             expenseTotal = periodTotal,
                             totalColor = periodColor,
@@ -176,7 +184,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         ).forEach { (label, type) ->
                             FilterChip(
                                 selected = selectedFilter.type == type,
-                                onClick = { viewModel.setSelectedFilter(selectedFilter.copy(type = type)) },
+                                onClick = { transactionVM.setSelectedFilter(selectedFilter.copy(type = type)) },
                                 label = { Text(label, style = MaterialTheme.typography.labelMedium) },
                                 modifier = Modifier.weight(1f),
                             )
@@ -200,7 +208,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                     transactions = searchResults,
                                     onEdit = { txn -> navController.navigate(NavRoutes.edit(txn.txnId)) },
                                     onCopy = { txn -> navController.navigate(NavRoutes.copy(txn.txnId)) },
-                                    onDelete = { txn -> viewModel.deleteTransaction(txn.txnId) },
+                                    onDelete = { txn -> transactionVM.deleteTransaction(txn.txnId) },
                                 )
                             }
                         } else {
@@ -217,8 +225,8 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                     MonthlyBreakdownList(
                                         summaries = monthSummaries,
                                         onMonthClick = { monthRange ->
-                                            viewModel.setSelectedPeriodTab(PeriodTab.Monthly)
-                                            viewModel.setSelectedDateRange(monthRange)
+                                            transactionVM.setSelectedPeriodTab(PeriodTab.Monthly)
+                                            transactionVM.setSelectedDateRange(monthRange)
                                         }
                                     )
                                 else -> {
@@ -251,7 +259,7 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                                                 transactions = transactions.filter { it.category == selectedCategoryName },
                                                 onEdit = { txn -> navController.navigate(NavRoutes.edit(txn.txnId)) },
                                                 onCopy = { txn -> navController.navigate(NavRoutes.copy(txn.txnId)) },
-                                                onDelete = { txn -> viewModel.deleteTransaction(txn.txnId) },
+                                                onDelete = { txn -> transactionVM.deleteTransaction(txn.txnId) },
                                             )
                                         }
                                     }
@@ -262,11 +270,11 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
                         FloatingActionButton(
                             onClick = {
                                 if (searchText.isNotBlank()) {
-                                    viewModel.searchTransactions(searchText)
+                                    searchVM.searchTransactions(searchText)
                                 } else {
-                                    viewModel.fetchTransactions()
+                                    transactionVM.fetchTransactions()
                                 }
-                                viewModel.fetchAccountBalance()
+                                transactionVM.fetchAccountBalance()
                             },
                             modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -279,23 +287,23 @@ fun TransactionsScreen(viewModel: ExpenseViewModel) {
             }
         }
         composable(NavRoutes.ADD) {
-            AddExpenseScreen(viewModel = viewModel, onDismiss = { navController.popBackStack() })
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = { navController.popBackStack() })
         }
         composable(NavRoutes.EDIT) { backStackEntry ->
             val txnId = backStackEntry.arguments?.getString("txnId")
             val transaction = transactions.find { it.txnId == txnId }
                 ?: searchResults.find { it.txnId == txnId }
-            AddExpenseScreen(viewModel = viewModel, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction)
         }
         composable(NavRoutes.COPY) { backStackEntry ->
             val txnId = backStackEntry.arguments?.getString("txnId")
             val transaction = transactions.find { it.txnId == txnId }
                 ?: searchResults.find { it.txnId == txnId }
-            AddExpenseScreen(viewModel = viewModel, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction, isCopy = true)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction, isCopy = true)
         }
         composable(NavRoutes.SUBCATEGORY) { backStackEntry ->
             val category = backStackEntry.arguments?.getString("category") ?: ""
-            SubcategoryDetailScreen(viewModel = viewModel, category = category, navController = navController)
+            SubcategoryDetailScreen(transactionVM = transactionVM, category = category, navController = navController)
         }
     }
 }

@@ -33,17 +33,17 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.familyexpensetracker.data.model.SubcategoryGroup
 import com.familyexpensetracker.ui.components.TransactionItem
-import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
+import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubcategoryDetailScreen(
-    viewModel: ExpenseViewModel,
+    transactionVM: TransactionViewModel,
     category: String,
     navController: NavController,
 ) {
-    val categorySummaries by viewModel.categorySummaries.collectAsState()
+    val categorySummaries by transactionVM.categorySummaries.collectAsState()
     val subcategories = categorySummaries.find { it.category == category }?.subcategories ?: emptyList()
 
     Scaffold(
@@ -62,7 +62,7 @@ fun SubcategoryDetailScreen(
             items(subcategories.size) { index ->
                 SubcategoryGroupRow(
                     group = subcategories[index],
-                    onDelete = { txnId -> viewModel.deleteTransaction(txnId) },
+                    onDelete = { txnId -> transactionVM.deleteTransaction(txnId) },
                     onEdit = { txn -> navController.navigate("edit/${txn.txnId}") },
                     onCopy = { txn -> navController.navigate("copy/${txn.txnId}") },
                 )

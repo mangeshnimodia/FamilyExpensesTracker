@@ -16,14 +16,18 @@ import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.model.TransactionType
 import com.familyexpensetracker.ui.components.AppDatePicker
 import com.familyexpensetracker.ui.components.AppDropdown
-import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
+import com.familyexpensetracker.ui.viewmodel.AccountViewModel
+import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
+import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 import com.familyexpensetracker.utils.AppConstants
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseScreen(
-    viewModel: ExpenseViewModel,
+    transactionVM: TransactionViewModel,
+    categoryVM: CategoryViewModel,
+    accountVM: AccountViewModel,
     onDismiss: () -> Unit,
     transactionToEdit: Transaction? = null,
     isCopy: Boolean = false,
@@ -31,12 +35,12 @@ fun AddExpenseScreen(
     val amountFocusRequester = remember { FocusRequester() }
     val formState = remember(transactionToEdit, isCopy) { AddExpenseFormState(transactionToEdit, isCopy) }
 
-    val expenseCategories by viewModel.expenseCategories.collectAsState()
-    val incomeCategories by viewModel.incomeCategories.collectAsState()
+    val expenseCategories by categoryVM.expenseCategories.collectAsState()
+    val incomeCategories by categoryVM.incomeCategories.collectAsState()
     val categoriesMap = if (formState.transactionType == TransactionType.EXPENSE) expenseCategories else incomeCategories
-    val accountsList by viewModel.accounts.collectAsState()
+    val accountsList by accountVM.accounts.collectAsState()
 
-    val currentRange by viewModel.selectedDateRange.collectAsState()
+    val currentRange by transactionVM.selectedDateRange.collectAsState()
     val initialDate = remember(currentRange, transactionToEdit) {
         transactionToEdit?.let {
             try { formState.dateFormatter.parse(it.date) } catch (_: Exception) { null }
@@ -48,8 +52,8 @@ fun AddExpenseScreen(
     LaunchedEffect(formState.transactionType) { formState.resetCategoryForType() }
 
     LaunchedEffect(Unit) {
-        viewModel.loadCategories()
-        viewModel.loadAccounts()
+        categoryVM.loadCategories()
+        accountVM.loadAccounts()
         try { amountFocusRequester.requestFocus() } catch (_: Exception) { }
     }
 
@@ -135,7 +139,7 @@ fun AddExpenseScreen(
                 onClick = {
                     if (formState.transactionType == TransactionType.TRANSFER) {
                         val p = formState.buildTransferParams()
-                        viewModel.addAccountTransfer(
+                        transactionVM.addAccountTransfer(
                             fromAccount = p.fromAccount,
                             toAccount = p.toAccount,
                             amount = p.amount,
@@ -146,9 +150,9 @@ fun AddExpenseScreen(
                     } else {
                         val transaction = formState.buildTransaction()
                         if (transactionToEdit == null || isCopy) {
-                            viewModel.addTransaction(transaction, formState.selectedDate)
+                            transactionVM.addTransaction(transaction, formState.selectedDate)
                         } else {
-                            viewModel.updateTransaction(transaction, formState.selectedDate)
+                            transactionVM.updateTransaction(transaction, formState.selectedDate)
                         }
                     }
                     onDismiss()

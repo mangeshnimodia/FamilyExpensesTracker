@@ -38,14 +38,20 @@ import com.familyexpensetracker.data.repository.FetchTransactionsRepository
 import com.familyexpensetracker.data.repository.FetchAccountBalanceRepository
 import com.familyexpensetracker.data.repository.SearchTransactionsRepository
 import com.familyexpensetracker.ui.screens.TransactionsScreen
-import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
+import com.familyexpensetracker.ui.viewmodel.AccountViewModel
+import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
+import com.familyexpensetracker.ui.viewmodel.SearchViewModel
+import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 import com.familyexpensetracker.utils.AppConstants
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
 
 class MainActivity : ComponentActivity() {
-    private var viewModel: ExpenseViewModel? by mutableStateOf(null)
+    private var transactionVM: TransactionViewModel? by mutableStateOf(null)
+    private var categoryVM: CategoryViewModel? by mutableStateOf(null)
+    private var accountVM: AccountViewModel? by mutableStateOf(null)
+    private var searchVM: SearchViewModel? by mutableStateOf(null)
 
     private val accountPickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
@@ -92,9 +98,12 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    val currentViewModel = viewModel
-                    if (currentViewModel != null) {
-                        TransactionsScreen(currentViewModel)
+                    val txVM = transactionVM
+                    val catVM = categoryVM
+                    val accVM = accountVM
+                    val srchVM = searchVM
+                    if (txVM != null && catVM != null && accVM != null && srchVM != null) {
+                        TransactionsScreen(txVM, catVM, accVM, srchVM)
                     } else {
                         Box(contentAlignment = Alignment.Center) {
                             Button(onClick = { startSignIn() }) {
@@ -194,16 +203,15 @@ class MainActivity : ComponentActivity() {
 
         val accountBalanceRepository = FetchAccountBalanceRepository(fetchDataSource)
 
-        viewModel = ExpenseViewModel(
+        transactionVM = TransactionViewModel(
             fetchRepository,
             addRepository,
             deleteRepository,
             updateRepository,
-            expenseCategoriesRepository,
-            incomeCategoriesRepository,
-            accountsRepository,
-            searchRepository,
             accountBalanceRepository,
         )
+        categoryVM = CategoryViewModel(expenseCategoriesRepository, incomeCategoriesRepository)
+        accountVM = AccountViewModel(accountsRepository)
+        searchVM = SearchViewModel(searchRepository)
     }
 }

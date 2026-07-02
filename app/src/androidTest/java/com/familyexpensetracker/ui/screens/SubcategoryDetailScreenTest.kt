@@ -4,11 +4,9 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.NavController
 import com.familyexpensetracker.data.model.CategorySummary
-import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.SubcategoryGroup
 import com.familyexpensetracker.data.model.Transaction
-import com.familyexpensetracker.data.model.TransactionFilter
-import com.familyexpensetracker.ui.viewmodel.ExpenseViewModel
+import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -16,14 +14,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.util.Date
 
 class SubcategoryDetailScreenTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val viewModel = mockk<ExpenseViewModel>(relaxed = true)
+    private val transactionVM = mockk<TransactionViewModel>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
 
     private val txn1 = Transaction(
@@ -66,26 +63,14 @@ class SubcategoryDetailScreenTest {
 
     @Before
     fun setUp() {
-        every { viewModel.transactions } returns MutableStateFlow(emptyList())
-        every { viewModel.isLoading } returns MutableStateFlow(false)
-        every { viewModel.errorMessage } returns MutableStateFlow(null)
-        every { viewModel.selectedDateRange } returns MutableStateFlow(DateRange.Day(Date()))
-        every { viewModel.selectedFilter } returns MutableStateFlow(TransactionFilter())
-        every { viewModel.accounts } returns MutableStateFlow(emptyList())
-        every { viewModel.selectedPeriodTab } returns MutableStateFlow(PeriodTab.Daily)
-        every { viewModel.selectedAccount } returns MutableStateFlow(null)
-        every { viewModel.categorySummaries } returns MutableStateFlow(listOf(categorySummary))
-        every { viewModel.monthSummaries } returns MutableStateFlow(emptyList())
-        every { viewModel.expenseTotal } returns MutableStateFlow(0.0)
-        every { viewModel.expenseCategories } returns MutableStateFlow(emptyMap())
-        every { viewModel.incomeCategories } returns MutableStateFlow(emptyMap())
+        every { transactionVM.categorySummaries } returns MutableStateFlow(listOf(categorySummary))
     }
 
     @Test
     fun subcategoryDetailScreen_showsCategoryInTopBar() {
         composeTestRule.setContent {
             SubcategoryDetailScreen(
-                viewModel = viewModel,
+                transactionVM = transactionVM,
                 category = "Food",
                 navController = navController,
             )
@@ -98,7 +83,7 @@ class SubcategoryDetailScreenTest {
     fun subcategoryDetailScreen_showsSubcategoryRow() {
         composeTestRule.setContent {
             SubcategoryDetailScreen(
-                viewModel = viewModel,
+                transactionVM = transactionVM,
                 category = "Food",
                 navController = navController,
             )
@@ -111,7 +96,7 @@ class SubcategoryDetailScreenTest {
     fun subcategoryDetailScreen_showsBlankSubcategoryAsNone() {
         composeTestRule.setContent {
             SubcategoryDetailScreen(
-                viewModel = viewModel,
+                transactionVM = transactionVM,
                 category = "Food",
                 navController = navController,
             )
@@ -124,7 +109,7 @@ class SubcategoryDetailScreenTest {
     fun subcategoryDetailScreen_showsTransactionCountForSubcategory() {
         composeTestRule.setContent {
             SubcategoryDetailScreen(
-                viewModel = viewModel,
+                transactionVM = transactionVM,
                 category = "Food",
                 navController = navController,
             )
@@ -137,7 +122,7 @@ class SubcategoryDetailScreenTest {
     fun subcategoryDetailScreen_expandingSubcategoryShowsTransactions() {
         composeTestRule.setContent {
             SubcategoryDetailScreen(
-                viewModel = viewModel,
+                transactionVM = transactionVM,
                 category = "Food",
                 navController = navController,
             )
@@ -152,7 +137,7 @@ class SubcategoryDetailScreenTest {
     fun subcategoryDetailScreen_backButtonNavigatesBack() {
         composeTestRule.setContent {
             SubcategoryDetailScreen(
-                viewModel = viewModel,
+                transactionVM = transactionVM,
                 category = "Food",
                 navController = navController,
             )
@@ -167,7 +152,7 @@ class SubcategoryDetailScreenTest {
     fun subcategoryDetailScreen_showsSubcategoryAmount() {
         composeTestRule.setContent {
             SubcategoryDetailScreen(
-                viewModel = viewModel,
+                transactionVM = transactionVM,
                 category = "Food",
                 navController = navController,
             )
