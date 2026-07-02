@@ -91,7 +91,7 @@ class TransactionsScreenTest {
         }
 
         composeTestRule.onNodeWithText("Expense").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Balance").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Balance").filterToOne(hasClickAction()).assertIsDisplayed()
         composeTestRule.onNodeWithText("Income").assertIsDisplayed()
     }
 
