@@ -229,23 +229,16 @@ class AddExpenseScreenTest {
     }
     @Test
     fun addExpenseScreen_dateButton_showsUiFormat() {
+        val fixedDate = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }.time
+        selectedDateRangeFlow.value = DateRange.Day(fixedDate)
+        val expectedLabel = "Date: " + SimpleDateFormat(AppConstants.DATE_FORMAT_UI, Locale.getDefault()).format(fixedDate)
+
         composeTestRule.setContent {
             AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
         }
         composeTestRule.waitForIdle()
 
-        // The date button must show a human-readable label starting with "Date: "
-        // and must NOT contain a slash (which would indicate DB format yyyy/MM/dd)
-        val dateNode = composeTestRule.onNode(hasText("Date:", substring = true))
-        dateNode.assertExists()
-        val labelText = dateNode.fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.Text]
-            .firstOrNull()?.text ?: ""
-        assert(!labelText.contains("/")) {
-            "Date button must not show DB format (contains '/'). Actual: $labelText"
-        }
-        assert(labelText.startsWith("Date: ")) {
-            "Date button must start with 'Date: '. Actual: $labelText"
-        }
+        composeTestRule.onNodeWithText(expectedLabel).assertIsDisplayed()
     }
 
     @Test

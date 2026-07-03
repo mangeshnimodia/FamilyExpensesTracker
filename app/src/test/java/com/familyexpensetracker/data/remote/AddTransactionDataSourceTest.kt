@@ -69,6 +69,31 @@ class AddTransactionDataSourceTest {
     }
 
     @Test
+    fun `add transaction with null transferId writes empty string`() = runBlocking {
+        val transaction = Transaction(
+            txnId = "1", date = "2026/06/01", amount = -50.0,
+            category = "Food", subcategory = "", paymentMethod = "Cash",
+            description = "lunch", account = "Wallet", transferId = null
+        )
+        val spreadsheets = mockk<Sheets.Spreadsheets>()
+        val values = mockk<Sheets.Spreadsheets.Values>()
+        val appendRequest = mockk<Sheets.Spreadsheets.Values.Append>()
+        every { sheetsService.spreadsheets() } returns spreadsheets
+        every { spreadsheets.values() } returns values
+        every { values.append(any(), any(), any()) } returns appendRequest
+        every { appendRequest.setValueInputOption(any()) } returns appendRequest
+        every { appendRequest.execute() } returns AppendValuesResponse()
+
+        dataSource.add(transaction)
+
+        verify {
+            values.append(any(), any(), match {
+                it.getValues()[0][8] == ""
+            })
+        }
+    }
+
+    @Test
     fun `add multiple transactions appends all rows to spreadsheet`() = runBlocking {
         // Arrange
         val t1 = Transaction(txnId = "1", amount = -100.0, category = "Account Transfer", account = "Bank", transferId = "uuid")

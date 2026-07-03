@@ -283,6 +283,25 @@ class FetchTransactionsDataSourceTest {
     }
 
     @Test
+    fun `fetch rethrows exception on network failure`() = runBlocking {
+        val spreadsheets = mockk<Sheets.Spreadsheets>()
+        val values = mockk<Sheets.Spreadsheets.Values>()
+        val getRequest = mockk<Sheets.Spreadsheets.Values.Get>()
+        every { sheetsService.spreadsheets() } returns spreadsheets
+        every { spreadsheets.values() } returns values
+        every { values.get(any(), any()) } returns getRequest
+        every { getRequest.execute() } throws RuntimeException("network error")
+
+        var threw = false
+        try {
+            dataSource.fetch()
+        } catch (e: RuntimeException) {
+            threw = true
+        }
+        assertTrue(threw)
+    }
+
+    @Test
     fun `fetchTransactions_handlesRowWithMissingColumns`() = runBlocking {
         val mockValues = listOf(
             listOf("txnId", "date", "amount", "category", "subcategory", "paymentMethod", "description", "account", "transferId"),

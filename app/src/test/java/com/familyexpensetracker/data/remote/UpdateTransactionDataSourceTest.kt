@@ -72,6 +72,26 @@ class UpdateTransactionDataSourceTest {
     }
 
     @Test
+    fun `update does nothing when values are null`() = runBlocking {
+        val transaction = Transaction(
+            txnId = "any", date = "2023/10/27", amount = -100.0,
+            category = "Food", subcategory = "", paymentMethod = "Card",
+            description = "Pizza", account = "Bank", transferId = null
+        )
+        val spreadsheets = mockk<Sheets.Spreadsheets>()
+        val values = mockk<Sheets.Spreadsheets.Values>()
+        val getRequest = mockk<Sheets.Spreadsheets.Values.Get>()
+        every { sheetsService.spreadsheets() } returns spreadsheets
+        every { spreadsheets.values() } returns values
+        every { values.get(any(), any()) } returns getRequest
+        every { getRequest.execute() } returns ValueRange().setValues(null)
+
+        dataSource.update(transaction)
+
+        verify(exactly = 0) { values.update(any(), any(), any()) }
+    }
+
+    @Test
     fun `update does nothing when txnId not found`() = runBlocking {
         // Arrange
         val transaction = Transaction(

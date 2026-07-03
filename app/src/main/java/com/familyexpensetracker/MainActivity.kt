@@ -22,6 +22,7 @@ import com.familyexpensetracker.ui.viewmodel.SearchViewModel
 import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 
 class MainActivity : ComponentActivity() {
+
     private var transactionVM: TransactionViewModel? by mutableStateOf(null)
     private var categoryVM: CategoryViewModel? by mutableStateOf(null)
     private var accountVM: AccountViewModel? by mutableStateOf(null)
@@ -62,8 +63,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun initializeSheets(email: String) {
-        val sheetsService = GoogleSheetsServiceProvider(this).getSheetsService(email)
-        val deps = AppDependencies(this, sheetsService)
+        val deps = AppDependencies(this, GoogleSheetsServiceProvider(this).getSheetsService(email))
         transactionVM = deps.transactionViewModel
         categoryVM = deps.categoryViewModel
         accountVM = deps.accountViewModel

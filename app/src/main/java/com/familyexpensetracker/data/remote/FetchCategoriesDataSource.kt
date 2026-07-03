@@ -19,7 +19,7 @@ class FetchCategoriesDataSource(
         val values = response.getValues() ?: return@withContext emptyMap()
         
         // Skip header if exists. Headers could be "Category", "ExpenseCategories", or "IncomeCategories"
-        val dataRows = if (values.isNotEmpty() && (values[0].getOrNull(AppConstants.COL_ADMIN_CATEGORY)?.toString()?.lowercase()?.contains("category") == true)) {
+        val dataRows = if (values.isNotEmpty() && (values[0].getOrNull(AppConstants.COL_ADMIN_CATEGORY)?.toString()?.lowercase()?.contains("categor") == true)) {
             values.drop(1)
         } else {
             values
