@@ -62,4 +62,13 @@ class AccountViewModelTest {
 
         assertEquals(accounts, viewModel.accounts.value)
     }
+
+    @Test
+    @org.junit.Ignore("Un-ignore in Step 3")
+    // Un-ignore in Step 3: assert viewModel.errorMessage.value is non-null after datasource throws
+    fun `loadAccounts_setsErrorMessage_onDatasourceException`() = runTest {
+        coEvery { accountsRepository.fetch() } throws Exception("Network failure")
+        viewModel.loadAccounts()
+    }
+
 }

@@ -16,6 +16,7 @@ class AddExpenseFormState(
     val transactionToEdit: Transaction? = null,
     val isCopy: Boolean = false,
     val dateFormatter: SimpleDateFormat = SimpleDateFormat(AppConstants.DATE_FORMAT_DB, Locale.getDefault()),
+    val displayDateFormatter: SimpleDateFormat = SimpleDateFormat(AppConstants.DATE_FORMAT_UI, Locale.getDefault()),
 ) {
     var transactionType by mutableStateOf(
         transactionToEdit?.let { if (it.amount < 0) TransactionType.EXPENSE else TransactionType.INCOME }

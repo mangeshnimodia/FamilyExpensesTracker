@@ -75,4 +75,14 @@ class CategoryViewModelTest {
         assertEquals(expenses, viewModel.expenseCategories.value)
         assertEquals(income, viewModel.incomeCategories.value)
     }
+
+    @Test
+    @org.junit.Ignore("Un-ignore in Step 3")
+    // Un-ignore in Step 3: assert viewModel.errorMessage.value is non-null after datasource throws
+    fun `loadCategories_setsErrorMessage_onDatasourceException`() = runTest {
+        coEvery { expenseCategoriesRepository.fetch() } throws Exception("Network failure")
+        coEvery { incomeCategoriesRepository.fetch() } returns emptyMap()
+        viewModel.loadCategories()
+    }
+
 }

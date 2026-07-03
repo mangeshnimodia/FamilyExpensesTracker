@@ -281,4 +281,30 @@ class FetchTransactionsDataSourceTest {
         assertTrue(result.any { it.txnId == "txn5" })
         assertTrue(result.any { it.txnId == "txn6" })
     }
+
+    @Test
+    fun `fetchTransactions_handlesRowWithMissingColumns`() = runBlocking {
+        val mockValues = listOf(
+            listOf("txnId", "date", "amount", "category", "subcategory", "paymentMethod", "description", "account", "transferId"),
+            listOf("short-row", "2026/06/28", "50.0"),
+        )
+        val valueRange = ValueRange().setValues(mockValues)
+
+        val spreadsheets = mockk<Sheets.Spreadsheets>()
+        val values = mockk<Sheets.Spreadsheets.Values>()
+        val getRequest = mockk<Sheets.Spreadsheets.Values.Get>()
+
+        every { sheetsService.spreadsheets() } returns spreadsheets
+        every { spreadsheets.values() } returns values
+        every { values.get(any(), any()) } returns getRequest
+        every { getRequest.execute() } returns valueRange
+
+        val result = dataSource.fetch()
+
+        assertEquals(1, result.size)
+        assertEquals("short-row", result[0].txnId)
+        assertEquals(50.0, result[0].amount, 0.0)
+        assertEquals("", result[0].category)
+        assertEquals("", result[0].account)
+    }
 }

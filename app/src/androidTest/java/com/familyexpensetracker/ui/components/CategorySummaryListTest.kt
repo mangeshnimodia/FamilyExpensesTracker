@@ -104,4 +104,17 @@ class CategorySummaryListTest {
 
         composeTestRule.onNodeWithText("1 transactions").assertIsDisplayed()
     }
+
+    @Test
+    @org.junit.Ignore("Un-ignore in Step 10")
+    fun categorySummaryRow_displaysRupeePrefix() {
+        composeTestRule.setContent {
+            CategorySummaryList(
+                summaries = listOf(makeSummary("Food", -500.0, 3)),
+                onCategoryClick = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("\u20B9500.00").assertIsDisplayed()
+    }
 }

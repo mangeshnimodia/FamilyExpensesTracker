@@ -13,7 +13,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import com.familyexpensetracker.utils.AppConstants
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 
 class AddExpenseScreenTest {
 
@@ -223,4 +227,39 @@ class AddExpenseScreenTest {
 
         verify { transactionVM.addTransaction(any(), any()) }
     }
+    @Test
+    fun addExpenseScreen_dateButton_showsUiFormat() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+        composeTestRule.waitForIdle()
+
+        // The date button must show a human-readable label starting with "Date: "
+        // and must NOT contain a slash (which would indicate DB format yyyy/MM/dd)
+        val dateNode = composeTestRule.onNode(hasText("Date:", substring = true))
+        dateNode.assertExists()
+        val labelText = dateNode.fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.Text]
+            .firstOrNull()?.text ?: ""
+        assert(!labelText.contains("/")) {
+            "Date button must not show DB format (contains '/'). Actual: $labelText"
+        }
+        assert(labelText.startsWith("Date: ")) {
+            "Date button must start with 'Date: '. Actual: $labelText"
+        }
+    }
+
+    @Test
+    fun addExpenseScreen_dateButton_doesNotShowDbFormat() {
+        val fixedDate = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }.time
+        selectedDateRangeFlow.value = DateRange.Day(fixedDate)
+
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+        composeTestRule.waitForIdle()
+
+        // DB format "Date: 2026/06/15" must never appear on screen
+        composeTestRule.onNodeWithText("Date: 2026/06/15").assertDoesNotExist()
+    }
+
 }

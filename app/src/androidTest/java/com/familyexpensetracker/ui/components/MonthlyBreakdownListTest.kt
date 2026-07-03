@@ -98,4 +98,17 @@ class MonthlyBreakdownListTest {
 
         composeTestRule.onNodeWithText("2500.00").assertIsDisplayed()
     }
+
+    @Test
+    @org.junit.Ignore("Un-ignore in Step 10")
+    fun monthlySummaryRow_displaysRupeePrefix() {
+        composeTestRule.setContent {
+            MonthlyBreakdownList(
+                summaries = listOf(makeSummary(2026, Calendar.JUNE, -500.0)),
+                onMonthClick = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText("\u20B9500.00").assertIsDisplayed()
+    }
 }

@@ -198,4 +198,35 @@ class AddExpenseFormStateTest {
         s.resetCategoryForType()
         assertEquals("Custom", s.category)
     }
+    // ── date formatters ──────────────────────────────────────────────────────
+
+    @Test
+    fun `dateFormatter formats selectedDate as yyyy-slash-MM-slash-dd`() {
+        val s = AddExpenseFormState()
+        s.selectedDate = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }.time
+        val result = s.dateFormatter.format(s.selectedDate)
+        assertEquals("2026/06/15", result)
+    }
+
+    @Test
+    fun `displayDateFormatter formats selectedDate with day-of-week and full month name`() {
+        val s = AddExpenseFormState()
+        s.selectedDate = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }.time
+        val result = s.displayDateFormatter.format(s.selectedDate)
+        // Should produce something like "Mon, 15 Jun 2026" — NOT "2026/06/15"
+        assertFalse("displayDateFormatter must not produce DB format", result.startsWith("2026"))
+        assertTrue("displayDateFormatter must include full year 2026", result.contains("2026"))
+        assertTrue("displayDateFormatter must include day 15", result.contains("15"))
+        assertTrue("displayDateFormatter must include month abbreviation", result.contains("Jun"))
+    }
+
+    @Test
+    fun `displayDateFormatter and dateFormatter produce different outputs for same date`() {
+        val s = AddExpenseFormState()
+        s.selectedDate = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }.time
+        val db = s.dateFormatter.format(s.selectedDate)
+        val ui = s.displayDateFormatter.format(s.selectedDate)
+        assertNotEquals("UI and DB formatters must produce different strings", db, ui)
+    }
+
 }

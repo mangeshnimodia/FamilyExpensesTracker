@@ -87,4 +87,13 @@ class SearchViewModelTest {
         assertTrue(viewModel.searchResults.value.isEmpty())
         assertEquals("", viewModel.searchQuery.value)
     }
+
+    @Test
+    @org.junit.Ignore("Un-ignore in Step 3")
+    // Un-ignore in Step 3: assert viewModel.errorMessage.value is non-null after repository throws
+    fun `searchTransactions_setsErrorMessage_onDatasourceException`() = runTest {
+        coEvery { searchRepository.search(any()) } throws Exception("Search failure")
+        viewModel.searchTransactions("food")
+    }
+
 }

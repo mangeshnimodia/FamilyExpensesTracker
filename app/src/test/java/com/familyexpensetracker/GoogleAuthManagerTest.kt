@@ -1,42 +1,68 @@
 package com.familyexpensetracker
 
+import android.accounts.Account
+import android.content.Context
+import androidx.activity.ComponentActivity
 import io.mockk.mockk
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GoogleAuthManagerTest {
 
-    // Tests the account-selection logic that GoogleAuthManager uses internally:
-    // given a list of account names, pick the first one if non-empty.
-    private fun selectFirstEmail(emails: List<String>): String? =
-        if (emails.isNotEmpty()) emails[0] else null
-
     @Test
-    fun selectFirstEmail_returnsEmail_whenOneEmailExists() {
-        val result = selectFirstEmail(listOf("test@gmail.com"))
-        assertEquals("test@gmail.com", result)
+    fun googleAuthManager_constructsWithoutThrowing() {
+        val activity = mockk<ComponentActivity>(relaxed = true)
+        var emailReadyCalled = false
+        GoogleAuthManager(activity = activity, onEmailReady = { emailReadyCalled = true })
+        assertFalse(emailReadyCalled)
     }
 
     @Test
-    fun selectFirstEmail_returnsNull_whenNoEmails() {
-        val result = selectFirstEmail(emptyList())
-        assertNull(result)
+    fun checkExisting_invokesGetGoogleAccounts() {
+        val activity = mockk<ComponentActivity>(relaxed = true)
+        val context = mockk<Context>()
+        var lambdaInvoked = false
+        val manager = GoogleAuthManager(
+            activity = activity,
+            onEmailReady = {},
+            getGoogleAccounts = { lambdaInvoked = true; emptyArray() },
+        )
+        manager.checkExisting(context)
+        assertTrue(lambdaInvoked)
     }
 
     @Test
-    fun selectFirstEmail_returnsFirst_whenMultipleExist() {
-        val result = selectFirstEmail(listOf("first@gmail.com", "second@gmail.com"))
-        assertEquals("first@gmail.com", result)
+    fun checkExisting_doesNotCallOnEmailReady_whenNoAccounts() {
+        val activity = mockk<ComponentActivity>(relaxed = true)
+        val context = mockk<Context>()
+        var emailReadyCalled = false
+        val manager = GoogleAuthManager(
+            activity = activity,
+            onEmailReady = { emailReadyCalled = true },
+            getGoogleAccounts = { emptyArray() },
+        )
+        manager.checkExisting(context)
+        assertFalse(emailReadyCalled)
     }
 
     @Test
-    fun googleAuthManager_constructsWithInjectedLookup() {
-        val activity = mockk<androidx.activity.ComponentActivity>(relaxed = true)
-        var lookupInvoked = false
-
-        // Verify the manager constructs without throwing
-        // (full auth flow requires real Activity + Google Identity — covered by UI tests)
-        assertEquals(false, lookupInvoked)
+    fun checkExisting_invokesGetGoogleAccounts_whenMultipleExist() {
+        val activity = mockk<ComponentActivity>(relaxed = true)
+        val context = mockk<Context>()
+        var invoked = false
+        // Supply two real Account objects — production code selects accounts[0] internally
+        val accounts = arrayOf(
+            Account("first@gmail.com", "com.google"),
+            Account("second@gmail.com", "com.google"),
+        )
+        val manager = GoogleAuthManager(
+            activity = activity,
+            onEmailReady = {},
+            getGoogleAccounts = { invoked = true; accounts },
+        )
+        // checkExistingAuthorization requires Google Identity — catch the runtime error.
+        try { manager.checkExisting(context) } catch (_: Exception) {}
+        assertTrue("getGoogleAccounts lambda must be invoked", invoked)
     }
 }
