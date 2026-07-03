@@ -302,7 +302,7 @@ class FetchTransactionsDataSourceTest {
     }
 
     @Test
-    fun `fetchTransactions_handlesRowWithMissingColumns`() = runBlocking {
+    fun fetchTransactions_handlesRowWithMissingColumns() = runBlocking {
         val mockValues = listOf(
             listOf("txnId", "date", "amount", "category", "subcategory", "paymentMethod", "description", "account", "transferId"),
             listOf("short-row", "2026/06/28", "50.0"),
