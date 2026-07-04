@@ -104,7 +104,7 @@ fun AddExpenseScreen(
                 onClick = { formState.showDatePicker = true },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Date: ${formState.displayDateFormatter.format(formState.selectedDate)}")
+                Text(formState.displayDateFormatter.format(formState.selectedDate))
             }
 
             OutlinedTextField(

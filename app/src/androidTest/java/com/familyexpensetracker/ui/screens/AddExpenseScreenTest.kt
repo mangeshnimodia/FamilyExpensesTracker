@@ -231,7 +231,7 @@ class AddExpenseScreenTest {
     fun addExpenseScreen_dateButton_showsUiFormat() {
         val fixedDate = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }.time
         selectedDateRangeFlow.value = DateRange.Day(fixedDate)
-        val expectedLabel = "Date: " + SimpleDateFormat(AppConstants.DATE_FORMAT_UI, Locale.getDefault()).format(fixedDate)
+        val expectedLabel = SimpleDateFormat(AppConstants.DATE_FORMAT_UI, Locale.getDefault()).format(fixedDate)
 
         composeTestRule.setContent {
             AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
@@ -251,8 +251,8 @@ class AddExpenseScreenTest {
         }
         composeTestRule.waitForIdle()
 
-        // DB format "Date: 2026/06/15" must never appear on screen
-        composeTestRule.onNodeWithText("Date: 2026/06/15").assertDoesNotExist()
+        // DB format "2026/06/15" must never appear on screen
+        composeTestRule.onNodeWithText("2026/06/15").assertDoesNotExist()
     }
 
 }

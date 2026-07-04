@@ -64,8 +64,7 @@ Transactions are always fetched and displayed for a selected date range:
 ### FR8 — Account Filter
 
 - A filter chip in the top bar lets the user restrict the view to one specific account.
-- Default state is **All Accounts** (no account restriction).
-- Selecting an account immediately re-applies the filter.
+- Default state is **Passbook**.
 
 ### FR9 — Transaction Type Filter
 
@@ -85,7 +84,7 @@ Default: **Balance**.
 - Each category row shows: name, transaction count, total amount.
 - Tapping a category opens a **subcategory detail screen** showing subcategory groups.
 - Each subcategory group can be expanded to show individual transaction cards.
-- Individual cards have Edit and Delete actions.
+- Individual cards have Edit, Copy and Delete actions.
 
 ### FR11 — Yearly Date Breakdown
 
@@ -139,6 +138,24 @@ Derived from filtered transactions:
 - `year`, `month` (0-indexed Calendar month).
 - `totalAmount`, `transactionCount`.
 - For Financial Year view: all 12 months in FY order (Apr–Mar) are always present, even if count = 0.
+
+### Features to be implemented
+
+1. Format amount with commas for ex; 1,10,00,000.00 (1 crore)
+2. Remove 'Date' string from Date on add screen as its clear from the Date format
+3. Payment method dropdown. Dropdown values to be fetched from 'admin' sheets "PaymentMethod" table with "Cash" as default.
+4. Multiple add support on Add screen with two options - "Add" and "Add more". "Add more" should add existing entry to sheet and clear of the fields to defaults to allow another add.
+5. Advanced Search - Provide filters like Accounts, Amount, Categories, SubCategories, PaymentMethod, ExactMatch.
+The filters should be applied alongwith the search when user hits refresh button. Not after user hits the refresh button.
+
+#### Nice to have
+
+1. Give a nice app icon
+2. Split sheet by year into multiple sheets
+3. App options to move all hardcodes including Google sheet id
+4. App options to add accounts, categories, subcategories
+5. Search results in descending order. Search should group the results based on Accounts which can be then expanded to categories and so on like already supported
+
 
 ---
 
