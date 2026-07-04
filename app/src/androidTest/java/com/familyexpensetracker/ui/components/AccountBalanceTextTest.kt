@@ -35,7 +35,7 @@ class AccountBalanceTextTest {
             AccountBalanceText(balance = 1500.75)
         }
 
-        composeTestRule.onNodeWithText("₹1500.75").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹1,500.75").assertIsDisplayed()
     }
 
     @Test

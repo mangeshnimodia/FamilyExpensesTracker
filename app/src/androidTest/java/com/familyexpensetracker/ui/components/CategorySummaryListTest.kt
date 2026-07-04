@@ -57,7 +57,7 @@ class CategorySummaryListTest {
             )
         }
 
-        composeTestRule.onNodeWithText("500.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹500.00").assertIsDisplayed()
     }
 
     @Test
@@ -106,7 +106,6 @@ class CategorySummaryListTest {
     }
 
     @Test
-    @org.junit.Ignore("Un-ignore in Step 10")
     fun categorySummaryRow_displaysRupeePrefix() {
         composeTestRule.setContent {
             CategorySummaryList(

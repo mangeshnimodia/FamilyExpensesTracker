@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.ui.screens.PeriodNavigator
+import com.familyexpensetracker.utils.IndianNumberFormatter
 
 @Composable
 fun PeriodNavBar(
@@ -42,7 +43,7 @@ fun PeriodNavBar(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(text = label, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = "₹${"%.2f".format(kotlin.math.abs(expenseTotal))}",
+                    text = IndianNumberFormatter.formatAmount(expenseTotal),
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = totalColor,
                 )

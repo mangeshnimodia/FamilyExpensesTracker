@@ -17,7 +17,7 @@ class TotalBannerTest {
             TotalBanner(total = 1200.0, totalColor = Color.Green)
         }
 
-        composeTestRule.onNodeWithText("₹1200.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹1,200.00").assertIsDisplayed()
     }
 
     @Test

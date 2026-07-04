@@ -40,7 +40,7 @@ class MonthlyBreakdownListTest {
             )
         }
 
-        composeTestRule.onNodeWithText("500.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹500.00").assertIsDisplayed()
     }
 
     @Test
@@ -96,11 +96,10 @@ class MonthlyBreakdownListTest {
             )
         }
 
-        composeTestRule.onNodeWithText("2500.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("\u20B92,500.00").assertIsDisplayed()
     }
 
     @Test
-    @org.junit.Ignore("Un-ignore in Step 10")
     fun monthlySummaryRow_displaysRupeePrefix() {
         composeTestRule.setContent {
             MonthlyBreakdownList(

@@ -13,7 +13,7 @@ import com.familyexpensetracker.ui.theme.AppColors
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.Transaction
-import kotlin.math.abs
+import com.familyexpensetracker.utils.IndianNumberFormatter
 
 @Composable
 fun TransactionItem(
@@ -55,7 +55,7 @@ fun TransactionItem(
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
                 Text(
-                    text = "\u20B9${"%.2f".format(abs(txn.amount))}",
+                    text = IndianNumberFormatter.formatAmount(txn.amount),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = amountColor,

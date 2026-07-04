@@ -34,7 +34,7 @@ import androidx.navigation.NavController
 import com.familyexpensetracker.data.model.SubcategoryGroup
 import com.familyexpensetracker.ui.components.TransactionItem
 import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
-import kotlin.math.abs
+import com.familyexpensetracker.utils.IndianNumberFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,7 +103,7 @@ private fun SubcategoryGroupRow(
                 )
             }
             Text(
-                text = "%.2f".format(abs(group.totalAmount)),
+                text = IndianNumberFormatter.formatAmount(group.totalAmount),
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                 color = amountColor,
             )

@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.familyexpensetracker.ui.theme.AppColors
 import androidx.compose.ui.platform.testTag
+import com.familyexpensetracker.utils.IndianNumberFormatter
 import androidx.compose.ui.text.font.FontWeight
 
 @Composable
@@ -20,7 +21,7 @@ fun AccountBalanceText(balance: Double?) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
-            text = "\u20b9${"%.2f".format(kotlin.math.abs(amount))}",
+            text = IndianNumberFormatter.formatAmount(amount),
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
             color = color,
         )

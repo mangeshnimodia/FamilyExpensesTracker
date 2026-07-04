@@ -40,7 +40,7 @@ class PeriodNavBarTest {
             )
         }
 
-        composeTestRule.onNodeWithText("₹1234.50").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹1,234.50").assertIsDisplayed()
     }
 
     @Test

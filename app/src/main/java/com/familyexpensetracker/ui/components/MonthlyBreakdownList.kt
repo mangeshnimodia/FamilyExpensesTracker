@@ -18,11 +18,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.MonthSummary
+import com.familyexpensetracker.utils.IndianNumberFormatter
 import java.text.SimpleDateFormat
+
 import java.util.Calendar
 import java.util.Locale
-import kotlin.math.abs
-
 @Composable
 fun MonthlyBreakdownList(
     summaries: List<MonthSummary>,
@@ -70,7 +70,7 @@ private fun MonthSummaryRow(
         )
         val amountColor = if (summary.totalAmount < 0) AppColors.expenseRed else AppColors.summaryGreen
         Text(
-            text = "%.2f".format(abs(summary.totalAmount)),
+            text = IndianNumberFormatter.formatAmount(summary.totalAmount),
             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
             color = amountColor,
         )

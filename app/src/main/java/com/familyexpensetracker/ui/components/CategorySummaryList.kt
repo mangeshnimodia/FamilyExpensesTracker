@@ -18,7 +18,7 @@ import com.familyexpensetracker.ui.theme.AppColors
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.CategorySummary
-import kotlin.math.abs
+import com.familyexpensetracker.utils.IndianNumberFormatter
 
 @Composable
 fun CategorySummaryList(
@@ -60,7 +60,7 @@ private fun CategorySummaryRow(
         }
         val amountColor = if (summary.totalAmount < 0) AppColors.expenseRed else AppColors.summaryGreen
         Text(
-            text = "%.2f".format(abs(summary.totalAmount)),
+            text = IndianNumberFormatter.formatAmount(summary.totalAmount),
             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
             color = amountColor,
         )

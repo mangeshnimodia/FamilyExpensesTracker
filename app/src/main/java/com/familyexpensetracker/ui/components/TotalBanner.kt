@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.familyexpensetracker.utils.IndianNumberFormatter
 
 @Composable
 fun TotalBanner(
@@ -31,7 +32,7 @@ fun TotalBanner(
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
-                text = "\u20b9${"%.2f".format(kotlin.math.abs(total))}",
+                text = IndianNumberFormatter.formatAmount(total),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = totalColor,
             )
