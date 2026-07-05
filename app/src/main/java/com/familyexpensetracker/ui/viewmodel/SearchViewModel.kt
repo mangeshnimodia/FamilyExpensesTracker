@@ -2,6 +2,7 @@ package com.familyexpensetracker.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.familyexpensetracker.data.model.SearchFilter
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.repository.SearchTransactionsRepository
 import kotlinx.coroutines.Job
@@ -25,9 +26,16 @@ class SearchViewModel(
     private val _isSearching = MutableStateFlow(false)
     val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
 
-    fun searchTransactions(query: String) {
+    private val _searchFilter = MutableStateFlow(SearchFilter())
+    val searchFilter: StateFlow<SearchFilter> = _searchFilter.asStateFlow()
+
+    fun updateSearchFilter(filter: SearchFilter) {
+        _searchFilter.value = filter
+    }
+
+    fun searchTransactions(query: String, filter: SearchFilter = _searchFilter.value) {
         searchJob?.cancel()
-        if (query.isBlank()) {
+        if (query.isBlank() && filter.isEmpty()) {
             _searchQuery.value = ""
             _searchResults.value = emptyList()
             _isSearching.value = false
@@ -37,7 +45,7 @@ class SearchViewModel(
         searchJob = viewModelScope.launch {
             _isSearching.value = true
             try {
-                _searchResults.value = searchRepository.search(query)
+                _searchResults.value = searchRepository.search(query, filter)
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {

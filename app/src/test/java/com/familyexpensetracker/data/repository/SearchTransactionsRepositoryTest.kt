@@ -1,5 +1,6 @@
 package com.familyexpensetracker.data.repository
 
+import com.familyexpensetracker.data.model.SearchFilter
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.remote.SearchTransactionsDataSource
 import io.mockk.coEvery
@@ -15,12 +16,22 @@ class SearchTransactionsRepositoryTest {
     private val repository = SearchTransactionsRepository(dataSource)
 
     @Test
-    fun `search delegates to dataSource`() = runBlocking {
-        coEvery { dataSource.search("food") } returns emptyList()
+    fun `search delegates to dataSource with default filter`() = runBlocking {
+        coEvery { dataSource.search("food", SearchFilter()) } returns emptyList()
 
         repository.search("food")
 
-        coVerify { dataSource.search("food") }
+        coVerify { dataSource.search("food", SearchFilter()) }
+    }
+
+    @Test
+    fun `search delegates to dataSource with provided filter`() = runBlocking {
+        val filter = SearchFilter(account = "Savings")
+        coEvery { dataSource.search("food", filter) } returns emptyList()
+
+        repository.search("food", filter)
+
+        coVerify { dataSource.search("food", filter) }
     }
 
     @Test
@@ -29,7 +40,7 @@ class SearchTransactionsRepositoryTest {
             Transaction(txnId = "1", date = "2026/06/01", amount = -100.0,
                 category = "Food", subcategory = "Groceries", description = "food market")
         )
-        coEvery { dataSource.search("food") } returns expected
+        coEvery { dataSource.search("food", SearchFilter()) } returns expected
 
         val result = repository.search("food")
 
@@ -38,10 +49,24 @@ class SearchTransactionsRepositoryTest {
 
     @Test
     fun `search returns empty list when dataSource returns empty`() = runBlocking {
-        coEvery { dataSource.search(any()) } returns emptyList()
+        coEvery { dataSource.search(any(), any()) } returns emptyList()
 
         val result = repository.search("xyz")
 
         assertEquals(emptyList<Transaction>(), result)
+    }
+
+    @Test
+    fun `search with filter returns filtered results from dataSource`() = runBlocking {
+        val filter = SearchFilter(category = "Food")
+        val expected = listOf(
+            Transaction(txnId = "2", date = "2026/06/01", amount = -200.0,
+                category = "Food", subcategory = "Groceries", description = "market")
+        )
+        coEvery { dataSource.search("", filter) } returns expected
+
+        val result = repository.search("", filter)
+
+        assertEquals(expected, result)
     }
 }

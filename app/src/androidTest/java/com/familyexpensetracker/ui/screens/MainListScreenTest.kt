@@ -9,6 +9,7 @@ import com.familyexpensetracker.data.model.CategorySummary
 import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.MonthSummary
 import com.familyexpensetracker.data.model.Transaction
+import com.familyexpensetracker.data.model.SearchFilter
 import com.familyexpensetracker.data.model.TransactionFilter
 import com.familyexpensetracker.ui.viewmodel.AccountViewModel
 import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
@@ -47,6 +48,7 @@ class MainListScreenTest {
     private val searchQueryFlow = MutableStateFlow("")
     private val searchResultsFlow = MutableStateFlow<List<Transaction>>(emptyList())
     private val isSearchingFlow = MutableStateFlow(false)
+    private val searchFilterFlow = MutableStateFlow(SearchFilter())
     private val accountBalanceFlow = MutableStateFlow<Double?>(null)
 
     @Before
@@ -65,6 +67,7 @@ class MainListScreenTest {
         every { searchVM.searchQuery } returns searchQueryFlow
         every { searchVM.searchResults } returns searchResultsFlow
         every { searchVM.isSearching } returns isSearchingFlow
+        every { searchVM.searchFilter } returns searchFilterFlow
         every { categoryVM.expenseCategories } returns MutableStateFlow(emptyMap())
         every { categoryVM.incomeCategories } returns MutableStateFlow(emptyMap())
         every { transactionVM.accountBalance } returns accountBalanceFlow
@@ -218,7 +221,7 @@ class MainListScreenTest {
     fun mainListScreen_searchBar_typingDoesNotCallViewModel() {
         setContent()
         composeTestRule.onNodeWithText("Search description").performTextInput("food")
-        verify(exactly = 0) { searchVM.searchTransactions(any()) }
+        verify(exactly = 0) { searchVM.searchTransactions(any(), any()) }
     }
 
     @Test
@@ -226,7 +229,7 @@ class MainListScreenTest {
         setContent()
         composeTestRule.onNodeWithText("Search description").performTextInput("food")
         composeTestRule.onNodeWithContentDescription("Refresh").performClick()
-        verify { searchVM.searchTransactions("food") }
+        verify { searchVM.searchTransactions("food", SearchFilter()) }
     }
 
     @Test
@@ -347,7 +350,7 @@ class MainListScreenTest {
         setContent()
         composeTestRule.onNodeWithText("<").assertDoesNotExist()
         composeTestRule.onNodeWithText(">").assertDoesNotExist()
-        composeTestRule.onNodeWithText("₹1200.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹1,200.00").assertIsDisplayed()
     }
 
     @Test
@@ -372,7 +375,7 @@ class MainListScreenTest {
     fun mainListScreen_accountBalance_displayedWhenAvailable() {
         accountBalanceFlow.value = 1500.75
         setContent()
-        composeTestRule.onNodeWithText("₹1500.75").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹1,500.75").assertIsDisplayed()
     }
 
     @Test

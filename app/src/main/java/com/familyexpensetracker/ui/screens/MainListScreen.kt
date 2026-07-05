@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.familyexpensetracker.data.model.FilterType
+import com.familyexpensetracker.data.model.SearchFilter
 import com.familyexpensetracker.ui.components.*
 import com.familyexpensetracker.ui.theme.AppColors
 import com.familyexpensetracker.ui.viewmodel.AccountViewModel
@@ -208,7 +209,7 @@ fun MainListScreen(
                 FloatingActionButton(
                     onClick = {
                         if (searchText.isNotBlank()) {
-                            searchVM.searchTransactions(searchText)
+                            searchVM.searchTransactions(searchText, SearchFilter())
                         } else {
                             transactionVM.fetchTransactions()
                         }

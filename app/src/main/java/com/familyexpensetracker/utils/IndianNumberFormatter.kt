@@ -9,7 +9,7 @@ object IndianNumberFormatter {
         val dotIndex = formatted.indexOf('.')
         val intPart = formatted.substring(0, dotIndex)
         val decPart = formatted.substring(dotIndex + 1)
-        return "₹${applyIndianGrouping(intPart)}.$decPart"
+        return "${AppConstants.CURRENCY_SYMBOL}${applyIndianGrouping(intPart)}.$decPart"
     }
 
     private fun applyIndianGrouping(intPart: String): String {

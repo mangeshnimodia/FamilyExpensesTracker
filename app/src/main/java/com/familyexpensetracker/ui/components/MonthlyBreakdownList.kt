@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.MonthSummary
+import com.familyexpensetracker.utils.AppConstants
 import com.familyexpensetracker.utils.IndianNumberFormatter
 import java.text.SimpleDateFormat
 
@@ -28,8 +29,8 @@ fun MonthlyBreakdownList(
     summaries: List<MonthSummary>,
     onMonthClick: (DateRange.Month) -> Unit,
 ) {
-    val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
-    LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
+    val monthFormat = SimpleDateFormat(AppConstants.DATE_FORMAT_MONTH, Locale.getDefault())
+    LazyColumn(contentPadding = PaddingValues(bottom = AppConstants.FAB_CLEARANCE_DP.dp)) {
         items(summaries.size) { index ->
             val summary = summaries[index]
             val label = monthFormat.format(

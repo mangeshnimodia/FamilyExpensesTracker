@@ -6,6 +6,7 @@ import com.familyexpensetracker.data.model.CategorySummary
 import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.MonthSummary
 import com.familyexpensetracker.data.model.Transaction
+import com.familyexpensetracker.data.model.SearchFilter
 import com.familyexpensetracker.data.model.TransactionFilter
 import com.familyexpensetracker.ui.viewmodel.AccountViewModel
 import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
@@ -45,6 +46,7 @@ class TransactionsScreenTest {
     private val searchQueryFlow = MutableStateFlow("")
     private val searchResultsFlow = MutableStateFlow<List<Transaction>>(emptyList())
     private val isSearchingFlow = MutableStateFlow(false)
+    private val searchFilterFlow = MutableStateFlow(SearchFilter())
     private val paymentMethodsFlow = MutableStateFlow<List<String>>(listOf("Cash", "UPI", "Card"))
     private val accountBalanceFlow = MutableStateFlow<Double?>(null)
 
@@ -64,6 +66,7 @@ class TransactionsScreenTest {
         every { searchVM.searchQuery } returns searchQueryFlow
         every { searchVM.searchResults } returns searchResultsFlow
         every { searchVM.isSearching } returns isSearchingFlow
+        every { searchVM.searchFilter } returns searchFilterFlow
         every { categoryVM.expenseCategories } returns MutableStateFlow(emptyMap())
         every { categoryVM.incomeCategories } returns MutableStateFlow(emptyMap())
         every { transactionVM.accountBalance } returns accountBalanceFlow

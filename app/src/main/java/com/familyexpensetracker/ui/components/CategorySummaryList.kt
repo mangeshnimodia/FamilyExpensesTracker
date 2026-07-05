@@ -18,6 +18,7 @@ import com.familyexpensetracker.ui.theme.AppColors
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.CategorySummary
+import com.familyexpensetracker.utils.AppConstants
 import com.familyexpensetracker.utils.IndianNumberFormatter
 
 @Composable
@@ -25,7 +26,7 @@ fun CategorySummaryList(
     summaries: List<CategorySummary>,
     onCategoryClick: (CategorySummary) -> Unit,
 ) {
-    LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
+    LazyColumn(contentPadding = PaddingValues(bottom = AppConstants.FAB_CLEARANCE_DP.dp)) {
         items(summaries.size) { index ->
             val summary = summaries[index]
             CategorySummaryRow(summary = summary, onClick = { onCategoryClick(summary) })

@@ -7,6 +7,7 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,7 +53,10 @@ fun TransactionsScreen(
     val searchQuery by searchVM.searchQuery.collectAsState()
     val searchResults by searchVM.searchResults.collectAsState()
     val isSearching by searchVM.isSearching.collectAsState()
+    val searchFilter by searchVM.searchFilter.collectAsState()
     val accountBalance by transactionVM.accountBalance.collectAsState()
+    val paymentMethods by paymentMethodVM.paymentMethods.collectAsState()
+    val expenseCategories by categoryVM.expenseCategories.collectAsState()
 
     val totalAmount = transactions.sumOf { it.amount }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -61,6 +65,7 @@ fun TransactionsScreen(
     var yearlyViewMode by remember { mutableStateOf(YearlyViewMode.Category) }
     var expandedCategory by remember { mutableStateOf<String?>(null) }
     var searchText by remember { mutableStateOf("") }
+    var showFilterPanel by remember { mutableStateOf(false) }
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
@@ -118,25 +123,49 @@ fun TransactionsScreen(
                         .fillMaxSize()
                         .padding(padding)
                 ) {
-                    OutlinedTextField(
-                        value = searchText,
-                        onValueChange = { searchText = it },
-                        label = { Text("Search description") },
-                        singleLine = true,
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp, vertical = 4.dp),
-                        trailingIcon = {
-                            if (searchText.isNotBlank()) {
-                                IconButton(onClick = {
-                                    searchText = ""
-                                    searchVM.searchTransactions("")
-                                }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Clear search")
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        OutlinedTextField(
+                            value = searchText,
+                            onValueChange = { searchText = it },
+                            label = { Text("Search description") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            trailingIcon = {
+                                if (searchText.isNotBlank()) {
+                                    IconButton(onClick = {
+                                        searchText = ""
+                                        searchVM.searchTransactions("")
+                                    }) {
+                                        Icon(Icons.Default.Close, contentDescription = "Clear search")
+                                    }
                                 }
-                            }
-                        },
-                    )
+                            },
+                        )
+                        IconButton(onClick = { showFilterPanel = !showFilterPanel }) {
+                            Icon(Icons.Default.FilterList, contentDescription = "Toggle filters")
+                        }
+                    }
+                    if (showFilterPanel) {
+                        val categoryNames = expenseCategories.keys.toList()
+                        val subcategoryNames = if (searchFilter.category.isNotBlank()) {
+                            expenseCategories[searchFilter.category] ?: emptyList()
+                        } else {
+                            expenseCategories.values.flatten().distinct()
+                        }
+                        SearchFilterPanel(
+                            filter = searchFilter,
+                            accounts = availableAccounts,
+                            categories = categoryNames,
+                            subcategories = subcategoryNames,
+                            paymentMethods = paymentMethods,
+                            onFilterChange = { searchVM.updateSearchFilter(it) },
+                        )
+                    }
 
                     PeriodTabBar(
                         selectedTab = selectedPeriodTab,
@@ -271,8 +300,8 @@ fun TransactionsScreen(
 
                         FloatingActionButton(
                             onClick = {
-                                if (searchText.isNotBlank()) {
-                                    searchVM.searchTransactions(searchText)
+                                if (searchText.isNotBlank() || !searchFilter.isEmpty()) {
+                                    searchVM.searchTransactions(searchText, searchFilter)
                                 } else {
                                     transactionVM.fetchTransactions()
                                 }
