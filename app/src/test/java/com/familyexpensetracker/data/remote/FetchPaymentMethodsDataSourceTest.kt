@@ -35,7 +35,7 @@ class FetchPaymentMethodsDataSourceTest {
     @Test
     fun `fetch returns unique payment methods and skips header`() = runBlocking {
         mockSheetValues(listOf(
-            listOf("PaymentMethod"),
+            listOf("PaymentMethods"),
             listOf("Cash"),
             listOf("UPI"),
             listOf("Cash"),
@@ -77,7 +77,7 @@ class FetchPaymentMethodsDataSourceTest {
     @Test
     fun `fetch filters out blank payment method names`() = runBlocking {
         mockSheetValues(listOf(
-            listOf("PaymentMethod"),
+            listOf("PaymentMethods"),
             listOf("Cash"),
             listOf(""),
             listOf("UPI"),

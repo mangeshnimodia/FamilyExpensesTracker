@@ -16,7 +16,7 @@ class FetchPaymentMethodsDataSource(private val service: Sheets) {
 
         val values = response.getValues() ?: return@withContext emptyList()
 
-        val dataRows = if (values.isNotEmpty() && (values[0].getOrNull(AppConstants.COL_ADMIN_PAYMENT_METHOD)?.toString()?.lowercase() == "paymentmethod")) {
+        val dataRows = if (values.isNotEmpty() && (values[0].getOrNull(AppConstants.COL_ADMIN_PAYMENT_METHOD)?.toString()?.lowercase() == "paymentmethods")) {
             values.drop(1)
         } else {
             values
