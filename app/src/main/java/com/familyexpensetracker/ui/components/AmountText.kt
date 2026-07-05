@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import com.familyexpensetracker.ui.theme.AppColors
 import com.familyexpensetracker.utils.IndianNumberFormatter
+import kotlin.math.abs
 
 @Composable
 fun AmountText(
@@ -19,7 +20,7 @@ fun AmountText(
     val color = if (amount >= 0) AppColors.incomeGreen else AppColors.expenseRed
     onColorCaptured?.invoke(color)
     Text(
-        text = IndianNumberFormatter.formatAmount(amount),
+        text = IndianNumberFormatter.formatAmount(abs(amount)),
         style = style,
         color = color,
         modifier = modifier,
