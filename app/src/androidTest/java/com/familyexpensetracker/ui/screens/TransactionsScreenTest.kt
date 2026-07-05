@@ -15,6 +15,9 @@ import com.familyexpensetracker.ui.viewmodel.SearchViewModel
 import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
+import org.junit.Assert.assertEquals
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
@@ -167,5 +170,109 @@ class TransactionsScreenTest {
         composeTestRule.onNodeWithText("Cancel").performClick()
 
         composeTestRule.onNodeWithText("Search description").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_filterToggle_showsFilterPanel() {
+        composeTestRule.setContent {
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Toggle filters").performClick()
+
+        composeTestRule.onNodeWithText("Account").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Category").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Min Amount").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Max Amount").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Exact match").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_filterToggle_hidesFilterPanel_whenToggledAgain() {
+        composeTestRule.setContent {
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Toggle filters").performClick()
+        composeTestRule.onNodeWithText("Account").assertIsDisplayed()
+
+        composeTestRule.onNodeWithContentDescription("Toggle filters").performClick()
+        composeTestRule.onNodeWithText("Account").assertDoesNotExist()
+    }
+
+    @Test
+    fun transactionsScreen_filterPanel_accountSelection_callsUpdateSearchFilter() {
+        val accountsFlow2 = MutableStateFlow<List<String>>(listOf("Passbook", "Wallet"))
+        every { accountVM.accounts } returns accountsFlow2
+
+        composeTestRule.setContent {
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Toggle filters").performClick()
+        composeTestRule.onNodeWithText("Account").performClick()
+        composeTestRule.onAllNodesWithText("Passbook")[1].performClick()
+
+        val slot = slot<SearchFilter>()
+        verify { searchVM.updateSearchFilter(capture(slot)) }
+        assertEquals("Passbook", slot.captured.account)
+    }
+
+    @Test
+    fun transactionsScreen_filterPanel_minAmount_callsUpdateSearchFilter() {
+        composeTestRule.setContent {
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Toggle filters").performClick()
+        composeTestRule.onNodeWithText("Min Amount").performTextInput("100")
+
+        val slot = slot<SearchFilter>()
+        verify { searchVM.updateSearchFilter(capture(slot)) }
+        assertEquals(100.0, slot.captured.minAmount)
+    }
+
+    @Test
+    fun transactionsScreen_refreshFab_withNonEmptyFilter_callsSearchTransactions() {
+        searchFilterFlow.value = SearchFilter(account = "Passbook")
+
+        composeTestRule.setContent {
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Refresh").performClick()
+
+        val slot = slot<SearchFilter>()
+        verify { searchVM.searchTransactions(any(), capture(slot)) }
+        assertEquals("Passbook", slot.captured.account)
+    }
+
+    @Test
+    fun transactionsScreen_refreshFab_withSearchTextAndFilter_passesFilterToSearch() {
+        searchFilterFlow.value = SearchFilter(category = "Food", minAmount = 50.0)
+
+        composeTestRule.setContent {
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
+        }
+
+        composeTestRule.onNodeWithText("Search description").performTextInput("groceries")
+        composeTestRule.onNodeWithContentDescription("Refresh").performClick()
+
+        val slot = slot<SearchFilter>()
+        verify { searchVM.searchTransactions("groceries", capture(slot)) }
+        assertEquals("Food", slot.captured.category)
+        assertEquals(50.0, slot.captured.minAmount)
+    }
+
+    @Test
+    fun transactionsScreen_refreshFab_emptyTextAndEmptyFilter_callsFetchTransactions() {
+        composeTestRule.setContent {
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Refresh").performClick()
+
+        verify(exactly = 0) { searchVM.searchTransactions(any(), any()) }
+        verify { transactionVM.fetchTransactions() }
     }
 }
