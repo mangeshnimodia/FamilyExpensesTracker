@@ -476,13 +476,33 @@ class AddExpenseScreenTest {
     }
 
     @Test
-    fun paymentMethod_loadPaymentMethodsCalledOnLaunch() {
+    fun addExpenseScreen_doesNotCallLoadPaymentMethods_onLaunch() {
         composeTestRule.setContent {
             AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
         composeTestRule.waitForIdle()
 
-        verify { paymentMethodVM.loadPaymentMethods() }
+        verify(exactly = 0) { paymentMethodVM.loadPaymentMethods() }
+    }
+
+    @Test
+    fun addExpenseScreen_doesNotCallLoadCategories_onLaunch() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
+        }
+        composeTestRule.waitForIdle()
+
+        verify(exactly = 0) { categoryVM.loadCategories() }
+    }
+
+    @Test
+    fun addExpenseScreen_doesNotCallLoadAccounts_onLaunch() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
+        }
+        composeTestRule.waitForIdle()
+
+        verify(exactly = 0) { accountVM.loadAccounts() }
     }
 
     @Test

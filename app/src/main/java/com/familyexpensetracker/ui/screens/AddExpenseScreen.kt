@@ -55,9 +55,6 @@ fun AddExpenseScreen(
     LaunchedEffect(formState.transactionType) { formState.resetCategoryForType() }
 
     LaunchedEffect(Unit) {
-        categoryVM.loadCategories()
-        accountVM.loadAccounts()
-        paymentMethodVM.loadPaymentMethods()
         try { amountFocusRequester.requestFocus() } catch (_: Exception) { }
     }
 

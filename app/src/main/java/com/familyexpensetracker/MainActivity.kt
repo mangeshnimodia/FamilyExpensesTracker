@@ -72,5 +72,12 @@ class MainActivity : ComponentActivity() {
         accountVM = deps.accountViewModel
         searchVM = deps.searchViewModel
         paymentMethodVM = deps.paymentMethodViewModel
+        initApp()
+    }
+
+    private fun initApp() {
+        accountVM?.loadAccounts()
+        categoryVM?.loadCategories()
+        paymentMethodVM?.loadPaymentMethods()
     }
 }

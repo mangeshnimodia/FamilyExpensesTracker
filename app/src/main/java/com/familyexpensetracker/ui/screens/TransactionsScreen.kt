@@ -75,10 +75,6 @@ fun TransactionsScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        accountVM.loadAccounts()
-    }
-
     LaunchedEffect(selectedPeriodTab, selectedFilter) {
         expandedCategory = null
     }
