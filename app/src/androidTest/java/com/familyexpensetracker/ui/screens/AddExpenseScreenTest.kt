@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.ui.viewmodel.AccountViewModel
 import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
+import com.familyexpensetracker.ui.viewmodel.PaymentMethodViewModel
 import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 import io.mockk.every
 import io.mockk.mockk
@@ -29,10 +30,12 @@ class AddExpenseScreenTest {
     private val transactionVM = mockk<TransactionViewModel>(relaxed = true)
     private val categoryVM = mockk<CategoryViewModel>(relaxed = true)
     private val accountVM = mockk<AccountViewModel>(relaxed = true)
+    private val paymentMethodVM = mockk<PaymentMethodViewModel>(relaxed = true)
 
     private val expenseCategoriesFlow = MutableStateFlow<Map<String, List<String>>>(emptyMap())
     private val incomeCategoriesFlow = MutableStateFlow<Map<String, List<String>>>(emptyMap())
     private val accountsFlow = MutableStateFlow<List<String>>(emptyList())
+    private val paymentMethodsFlow = MutableStateFlow<List<String>>(listOf("Cash", "UPI", "Card"))
     private val selectedDateRangeFlow = MutableStateFlow<DateRange>(DateRange.Day(Date()))
 
     @Before
@@ -40,8 +43,9 @@ class AddExpenseScreenTest {
         every { categoryVM.expenseCategories } returns expenseCategoriesFlow
         every { categoryVM.incomeCategories } returns incomeCategoriesFlow
         every { accountVM.accounts } returns accountsFlow
+        every { paymentMethodVM.paymentMethods } returns paymentMethodsFlow
         every { transactionVM.selectedDateRange } returns selectedDateRangeFlow
-        
+
         // Provide some default data so that dropdowns have options if needed
         expenseCategoriesFlow.value = mapOf("Daily Living" to listOf("Groceries"))
         incomeCategoriesFlow.value = mapOf("Income" to listOf("Salary"))
@@ -51,7 +55,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_initialState() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNodeWithText("Amount").assertIsDisplayed()
@@ -61,7 +65,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_canSwitchToIncome() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNode(hasText("Income") and hasClickAction()).performClick()
@@ -71,7 +75,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_validatesInputBeforeAdding() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         // Add button should be disabled initially (amount is empty)
@@ -85,7 +89,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_triggersViewModelOnAdd() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNodeWithText("Amount").performTextInput("100")
@@ -107,7 +111,7 @@ class AddExpenseScreenTest {
             account = "Passbook"
         )
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {}, transactionToEdit = txn)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {}, transactionToEdit = txn)
         }
 
         composeTestRule.onNodeWithText("Edit Entry").assertIsDisplayed()
@@ -129,7 +133,7 @@ class AddExpenseScreenTest {
             account = "Passbook"
         )
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {}, transactionToEdit = txn)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {}, transactionToEdit = txn)
         }
 
         composeTestRule.onNodeWithText("Update").performClick()
@@ -141,7 +145,7 @@ class AddExpenseScreenTest {
     fun addExpenseScreen_transferMode_showsToFromAccounts() {
         accountsFlow.value = listOf("Bank", "Cash")
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         // Switch to Transfer tab
@@ -160,7 +164,7 @@ class AddExpenseScreenTest {
     fun addExpenseScreen_transferMode_triggersViewModel() {
         accountsFlow.value = listOf("Bank", "Cash")
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNodeWithText("Transfer").performClick()
@@ -193,7 +197,7 @@ class AddExpenseScreenTest {
             account = "Passbook"
         )
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {}, transactionToEdit = txn, isCopy = true)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {}, transactionToEdit = txn, isCopy = true)
         }
 
         composeTestRule.onNodeWithText("Copy Entry").assertIsDisplayed()
@@ -213,7 +217,7 @@ class AddExpenseScreenTest {
             account = "Passbook"
         )
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {}, transactionToEdit = txn, isCopy = true)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {}, transactionToEdit = txn, isCopy = true)
         }
 
         composeTestRule.onNodeWithText("Copy").performClick()
@@ -227,7 +231,7 @@ class AddExpenseScreenTest {
         val expectedLabel = SimpleDateFormat(AppConstants.DATE_FORMAT_UI, Locale.getDefault()).format(fixedDate)
 
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
         composeTestRule.waitForIdle()
 
@@ -240,7 +244,7 @@ class AddExpenseScreenTest {
         selectedDateRangeFlow.value = DateRange.Day(fixedDate)
 
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
         composeTestRule.waitForIdle()
 
@@ -253,7 +257,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_showsAddMoreButton_forNewEntry() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNode(hasText("Add More") and hasClickAction()).assertExists()
@@ -272,7 +276,7 @@ class AddExpenseScreenTest {
             account = "Passbook"
         )
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {}, transactionToEdit = txn)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {}, transactionToEdit = txn)
         }
 
         composeTestRule.onNodeWithText("Add More").assertDoesNotExist()
@@ -291,7 +295,7 @@ class AddExpenseScreenTest {
             account = "Passbook"
         )
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {}, transactionToEdit = txn, isCopy = true)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {}, transactionToEdit = txn, isCopy = true)
         }
 
         composeTestRule.onNodeWithText("Add More").assertDoesNotExist()
@@ -300,7 +304,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_addMoreButton_isDisabledWhenFormInvalid() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         // Amount is empty — Add More must be disabled
@@ -310,7 +314,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_addMoreButton_isEnabledWhenFormValid() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNodeWithText("Amount").performTextInput("200")
@@ -321,7 +325,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_addMoreButton_callsViewModelAndClearsAmount_forExpense() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNodeWithText("Amount").performTextInput("300")
@@ -335,7 +339,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_addMoreButton_callsViewModelForIncome() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNode(hasText("Income") and hasClickAction()).performClick()
@@ -351,7 +355,7 @@ class AddExpenseScreenTest {
     fun addExpenseScreen_addMoreButton_callsViewModelForTransfer() {
         accountsFlow.value = listOf("Bank", "Cash")
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNodeWithText("Transfer").performClick()
@@ -375,7 +379,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_addMoreButton_canAddMultipleTransactions() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNodeWithText("Amount").performTextInput("100")
@@ -390,7 +394,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_addButton_showsAddLabel() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).assertExists()
@@ -399,7 +403,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_bothButtons_areDisplayedSideBySide() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).assertExists()
@@ -410,7 +414,7 @@ class AddExpenseScreenTest {
     fun addExpenseScreen_addButton_callsDismiss() {
         var dismissCalled = false
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = { dismissCalled = true })
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = { dismissCalled = true })
         }
 
         composeTestRule.onNodeWithText("Amount").performTextInput("100")
@@ -423,7 +427,7 @@ class AddExpenseScreenTest {
     fun addExpenseScreen_addMoreButton_doesNotCallDismiss() {
         var dismissCalled = false
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = { dismissCalled = true })
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = { dismissCalled = true })
         }
 
         composeTestRule.onNodeWithText("Amount").performTextInput("100")
@@ -435,7 +439,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_addMoreButton_resetsTabToExpense_afterIncome() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNode(hasText("Income") and hasClickAction()).performClick()
@@ -449,7 +453,7 @@ class AddExpenseScreenTest {
     @Test
     fun addExpenseScreen_addMoreButton_clearsDescription() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNodeWithText("Amount").performTextInput("300")
@@ -459,12 +463,60 @@ class AddExpenseScreenTest {
         composeTestRule.onNodeWithText("SomeDescription").assertDoesNotExist()
     }
 
+    // ── Feature 5: Payment Method Dropdown ──────────────────────────────────
+
+    @Test
+    fun paymentMethod_defaultCashIsShown() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Cash").assertIsDisplayed()
+    }
+
+    @Test
+    fun paymentMethod_loadPaymentMethodsCalledOnLaunch() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
+        }
+        composeTestRule.waitForIdle()
+
+        verify { paymentMethodVM.loadPaymentMethods() }
+    }
+
+    @Test
+    fun paymentMethod_dropdown_showsOptions() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Cash").performClick()
+
+        composeTestRule.onNodeWithText("UPI").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Card").assertIsDisplayed()
+    }
+
+    @Test
+    fun paymentMethod_dropdown_selectingOptionUpdatesForm() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Cash").performClick()
+        composeTestRule.onNodeWithText("UPI").performClick()
+
+        composeTestRule.onNodeWithText("UPI").assertIsDisplayed()
+    }
+
     // ── Feature 1: Date label ────────────────────────────────────────────────
 
     @Test
     fun addExpenseScreen_dateLabel_doesNotShowDatePrefix() {
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
 
         composeTestRule.onNodeWithText("Date:").assertDoesNotExist()
@@ -477,7 +529,7 @@ class AddExpenseScreenTest {
         selectedDateRangeFlow.value = DateRange.Day(fixedDate)
 
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
         composeTestRule.waitForIdle()
 
@@ -495,7 +547,7 @@ class AddExpenseScreenTest {
         val dateLabel = SimpleDateFormat(AppConstants.DATE_FORMAT_UI, Locale.getDefault()).format(fixedDate)
 
         composeTestRule.setContent {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = {})
         }
         composeTestRule.waitForIdle()
 

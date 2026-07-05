@@ -22,6 +22,7 @@ import com.familyexpensetracker.data.model.FilterType
 import com.familyexpensetracker.ui.components.*
 import com.familyexpensetracker.ui.viewmodel.AccountViewModel
 import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
+import com.familyexpensetracker.ui.viewmodel.PaymentMethodViewModel
 import com.familyexpensetracker.ui.viewmodel.SearchViewModel
 import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 
@@ -32,6 +33,7 @@ fun TransactionsScreen(
     categoryVM: CategoryViewModel,
     accountVM: AccountViewModel,
     searchVM: SearchViewModel,
+    paymentMethodVM: PaymentMethodViewModel,
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -287,19 +289,19 @@ fun TransactionsScreen(
             }
         }
         composable(NavRoutes.ADD) {
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = { navController.popBackStack() })
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = { navController.popBackStack() })
         }
         composable(NavRoutes.EDIT) { backStackEntry ->
             val txnId = backStackEntry.arguments?.getString("txnId")
             val transaction = transactions.find { it.txnId == txnId }
                 ?: searchResults.find { it.txnId == txnId }
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction)
         }
         composable(NavRoutes.COPY) { backStackEntry ->
             val txnId = backStackEntry.arguments?.getString("txnId")
             val transaction = transactions.find { it.txnId == txnId }
                 ?: searchResults.find { it.txnId == txnId }
-            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction, isCopy = true)
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, paymentMethodVM = paymentMethodVM, onDismiss = { navController.popBackStack() }, transactionToEdit = transaction, isCopy = true)
         }
         composable(NavRoutes.SUBCATEGORY) { backStackEntry ->
             val category = backStackEntry.arguments?.getString("category") ?: ""

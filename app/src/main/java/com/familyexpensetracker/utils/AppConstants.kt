@@ -9,6 +9,7 @@ object AppConstants {
     const val RANGE_EXPENSE_CATEGORIES = "admin!A:B"
     const val RANGE_ACCOUNTS = "admin!D:D"
     const val RANGE_INCOME_CATEGORIES = "admin!F:G"
+    const val RANGE_PAYMENT_METHODS = "PaymentMethod!A:A"
     
     const val APPLICATION_NAME = "Family Expense Tracker"
     
@@ -31,6 +32,7 @@ object AppConstants {
     const val KEY_EXPENSE_CATEGORIES_MAP = "expense_categories_map"
     const val KEY_INCOME_CATEGORIES_MAP = "income_categories_map"
     const val KEY_ACCOUNTS_LIST = "accounts_list"
+    const val KEY_PAYMENT_METHODS_LIST = "payment_methods_list"
 
     const val DATE_FORMAT_DB = "yyyy/MM/dd"
     const val DATE_FORMAT_UI = "EEE, dd MMM yyyy"
@@ -49,7 +51,6 @@ object AppConstants {
     const val CURRENCY_SYMBOL           = "₹"
     const val FAB_CLEARANCE_DP          = 88
     const val DATE_FORMAT_MONTH         = "MMMM yyyy"
-    const val DATE_FORMAT_FY            = "FY%02d-%02d"
     const val TIMEZONE_UTC              = "UTC"
     const val SHEETS_VALUE_INPUT_OPTION = "USER_ENTERED"
     const val GOOGLE_ACCOUNT_TYPE       = "com.google"
@@ -58,4 +59,5 @@ object AppConstants {
     const val COL_ADMIN_CATEGORY = 0
     const val COL_ADMIN_SUBCATEGORY = 1
     const val COL_ADMIN_ACCOUNT = 0
+    const val COL_ADMIN_PAYMENT_METHOD = 0
 }

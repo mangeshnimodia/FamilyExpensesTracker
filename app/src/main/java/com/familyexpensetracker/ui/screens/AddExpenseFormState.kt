@@ -35,6 +35,7 @@ class AddExpenseFormState(
     var showDatePicker by mutableStateOf(false)
     var categoryExpanded by mutableStateOf(false)
     var subcategoryExpanded by mutableStateOf(false)
+    var paymentMethodExpanded by mutableStateOf(false)
     var accountExpanded by mutableStateOf(false)
     var toAccountExpanded by mutableStateOf(false)
 
@@ -98,6 +99,7 @@ class AddExpenseFormState(
         showDatePicker = false
         categoryExpanded = false
         subcategoryExpanded = false
+        paymentMethodExpanded = false
         accountExpanded = false
         toAccountExpanded = false
     }

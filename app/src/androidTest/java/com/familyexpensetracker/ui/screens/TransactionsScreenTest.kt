@@ -9,6 +9,7 @@ import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.model.TransactionFilter
 import com.familyexpensetracker.ui.viewmodel.AccountViewModel
 import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
+import com.familyexpensetracker.ui.viewmodel.PaymentMethodViewModel
 import com.familyexpensetracker.ui.viewmodel.SearchViewModel
 import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 import io.mockk.every
@@ -28,6 +29,7 @@ class TransactionsScreenTest {
     private val categoryVM = mockk<CategoryViewModel>(relaxed = true)
     private val accountVM = mockk<AccountViewModel>(relaxed = true)
     private val searchVM = mockk<SearchViewModel>(relaxed = true)
+    private val paymentMethodVM = mockk<PaymentMethodViewModel>(relaxed = true)
 
     private val transactionsFlow = MutableStateFlow<List<Transaction>>(emptyList())
     private val isLoadingFlow = MutableStateFlow(false)
@@ -43,6 +45,7 @@ class TransactionsScreenTest {
     private val searchQueryFlow = MutableStateFlow("")
     private val searchResultsFlow = MutableStateFlow<List<Transaction>>(emptyList())
     private val isSearchingFlow = MutableStateFlow(false)
+    private val paymentMethodsFlow = MutableStateFlow<List<String>>(listOf("Cash", "UPI", "Card"))
     private val accountBalanceFlow = MutableStateFlow<Double?>(null)
 
     @Before
@@ -64,12 +67,13 @@ class TransactionsScreenTest {
         every { categoryVM.expenseCategories } returns MutableStateFlow(emptyMap())
         every { categoryVM.incomeCategories } returns MutableStateFlow(emptyMap())
         every { transactionVM.accountBalance } returns accountBalanceFlow
+        every { paymentMethodVM.paymentMethods } returns paymentMethodsFlow
     }
 
     @Test
     fun transactionsScreen_navigatesToAddScreen_onFabClick() {
         composeTestRule.setContent {
-            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
         }
 
         composeTestRule.onNodeWithContentDescription("Add Expense").performClick()
@@ -93,7 +97,7 @@ class TransactionsScreenTest {
         )
 
         composeTestRule.setContent {
-            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
         }
 
         composeTestRule.onNodeWithText("Food").performClick()
@@ -117,7 +121,7 @@ class TransactionsScreenTest {
         transactionsFlow.value = emptyList()
 
         composeTestRule.setContent {
-            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
         }
 
         composeTestRule.onNodeWithContentDescription("Edit").performClick()
@@ -140,7 +144,7 @@ class TransactionsScreenTest {
         transactionsFlow.value = emptyList()
 
         composeTestRule.setContent {
-            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
         }
 
         composeTestRule.onNodeWithContentDescription("Copy").performClick()
@@ -151,7 +155,7 @@ class TransactionsScreenTest {
     @Test
     fun transactionsScreen_addScreen_dismissReturnsToMainList() {
         composeTestRule.setContent {
-            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM)
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
         }
 
         composeTestRule.onNodeWithContentDescription("Add Expense").performClick()

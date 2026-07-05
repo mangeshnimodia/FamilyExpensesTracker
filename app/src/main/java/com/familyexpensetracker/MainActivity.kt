@@ -18,6 +18,7 @@ import com.familyexpensetracker.data.remote.GoogleSheetsServiceProvider
 import com.familyexpensetracker.ui.screens.TransactionsScreen
 import com.familyexpensetracker.ui.viewmodel.AccountViewModel
 import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
+import com.familyexpensetracker.ui.viewmodel.PaymentMethodViewModel
 import com.familyexpensetracker.ui.viewmodel.SearchViewModel
 import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 
@@ -27,6 +28,7 @@ class MainActivity : ComponentActivity() {
     private var categoryVM: CategoryViewModel? by mutableStateOf(null)
     private var accountVM: AccountViewModel? by mutableStateOf(null)
     private var searchVM: SearchViewModel? by mutableStateOf(null)
+    private var paymentMethodVM: PaymentMethodViewModel? by mutableStateOf(null)
 
     private val authManager = GoogleAuthManager(
         activity = this,
@@ -48,8 +50,9 @@ class MainActivity : ComponentActivity() {
                     val catVM = categoryVM
                     val accVM = accountVM
                     val srchVM = searchVM
-                    if (txVM != null && catVM != null && accVM != null && srchVM != null) {
-                        TransactionsScreen(txVM, catVM, accVM, srchVM)
+                    val pmVM = paymentMethodVM
+                    if (txVM != null && catVM != null && accVM != null && srchVM != null && pmVM != null) {
+                        TransactionsScreen(txVM, catVM, accVM, srchVM, pmVM)
                     } else {
                         Box(contentAlignment = Alignment.Center) {
                             Button(onClick = { authManager.startSignIn() }) {
@@ -68,5 +71,6 @@ class MainActivity : ComponentActivity() {
         categoryVM = deps.categoryViewModel
         accountVM = deps.accountViewModel
         searchVM = deps.searchViewModel
+        paymentMethodVM = deps.paymentMethodViewModel
     }
 }

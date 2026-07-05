@@ -18,6 +18,7 @@ import com.familyexpensetracker.ui.components.AppDatePicker
 import com.familyexpensetracker.ui.components.AppDropdown
 import com.familyexpensetracker.ui.viewmodel.AccountViewModel
 import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
+import com.familyexpensetracker.ui.viewmodel.PaymentMethodViewModel
 import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
 import com.familyexpensetracker.utils.AppConstants
 import java.util.Calendar
@@ -28,6 +29,7 @@ fun AddExpenseScreen(
     transactionVM: TransactionViewModel,
     categoryVM: CategoryViewModel,
     accountVM: AccountViewModel,
+    paymentMethodVM: PaymentMethodViewModel,
     onDismiss: () -> Unit,
     transactionToEdit: Transaction? = null,
     isCopy: Boolean = false,
@@ -39,6 +41,7 @@ fun AddExpenseScreen(
     val incomeCategories by categoryVM.incomeCategories.collectAsState()
     val categoriesMap = if (formState.transactionType == TransactionType.EXPENSE) expenseCategories else incomeCategories
     val accountsList by accountVM.accounts.collectAsState()
+    val paymentMethodsList by paymentMethodVM.paymentMethods.collectAsState()
 
     val currentRange by transactionVM.selectedDateRange.collectAsState()
     val initialDate = remember(currentRange, transactionToEdit) {
@@ -54,6 +57,7 @@ fun AddExpenseScreen(
     LaunchedEffect(Unit) {
         categoryVM.loadCategories()
         accountVM.loadAccounts()
+        paymentMethodVM.loadPaymentMethods()
         try { amountFocusRequester.requestFocus() } catch (_: Exception) { }
     }
 
@@ -117,12 +121,7 @@ fun AddExpenseScreen(
 
             CategorySubcategoryFields(formState = formState, categoriesMap = categoriesMap)
 
-            OutlinedTextField(
-                value = formState.paymentMethod,
-                onValueChange = { formState.paymentMethod = it },
-                label = { Text("Payment Method") },
-                modifier = Modifier.fillMaxWidth(),
-            )
+            PaymentMethodField(formState = formState, paymentMethodsList = paymentMethodsList)
 
             AccountSelectionFields(formState = formState, accountsList = accountsList)
 
@@ -216,6 +215,23 @@ private fun AddButtonRow(
             Text("Add More")
         }
     }
+}
+
+@Composable
+private fun PaymentMethodField(
+    formState: AddExpenseFormState,
+    paymentMethodsList: List<String>,
+) {
+    AppDropdown(
+        label = "Payment Method",
+        selectedValue = formState.paymentMethod,
+        options = paymentMethodsList,
+        expanded = formState.paymentMethodExpanded,
+        onExpandedChange = { formState.paymentMethodExpanded = it },
+        onValueSelected = { formState.paymentMethod = it },
+        onDismiss = { formState.paymentMethodExpanded = false },
+        defaultValue = AppConstants.DEFAULT_PAYMENT_METHOD,
+    )
 }
 
 @Composable
