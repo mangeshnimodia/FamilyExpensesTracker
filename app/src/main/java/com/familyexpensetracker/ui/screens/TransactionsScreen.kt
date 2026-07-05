@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -54,6 +55,7 @@ fun TransactionsScreen(
     val searchResults by searchVM.searchResults.collectAsState()
     val isSearching by searchVM.isSearching.collectAsState()
     val searchFilter by searchVM.searchFilter.collectAsState()
+    val isSearchActive by searchVM.isSearchActive.collectAsState()
     val accountBalance by transactionVM.accountBalance.collectAsState()
     val paymentMethods by paymentMethodVM.paymentMethods.collectAsState()
     val expenseCategories by categoryVM.expenseCategories.collectAsState()
@@ -146,6 +148,9 @@ fun TransactionsScreen(
                                 }
                             },
                         )
+                        IconButton(onClick = { searchVM.searchTransactions(searchText, searchFilter) }) {
+                            Icon(Icons.Default.Search, contentDescription = "Search")
+                        }
                         IconButton(onClick = { showFilterPanel = !showFilterPanel }) {
                             Icon(Icons.Default.FilterList, contentDescription = "Toggle filters")
                         }
@@ -164,6 +169,17 @@ fun TransactionsScreen(
                             subcategories = subcategoryNames,
                             paymentMethods = paymentMethods,
                             onFilterChange = { searchVM.updateSearchFilter(it) },
+                            onSearch = {
+                                searchVM.searchTransactions(searchText, searchFilter)
+                                showFilterPanel = false
+                            },
+                            onClear = {
+                                searchText = ""
+                                searchVM.clearSearch()
+                                showFilterPanel = false
+                                transactionVM.fetchTransactions()
+                                transactionVM.fetchAccountBalance()
+                            },
                         )
                     }
 
@@ -227,7 +243,7 @@ fun TransactionsScreen(
                     }
 
                     Box(modifier = Modifier.fillMaxSize()) {
-                        if (searchQuery.isNotBlank()) {
+                        if (isSearchActive) {
                             when {
                                 isSearching -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                                 searchResults.isEmpty() -> Text(
@@ -300,11 +316,9 @@ fun TransactionsScreen(
 
                         FloatingActionButton(
                             onClick = {
-                                if (searchText.isNotBlank() || !searchFilter.isEmpty()) {
-                                    searchVM.searchTransactions(searchText, searchFilter)
-                                } else {
-                                    transactionVM.fetchTransactions()
-                                }
+                                searchVM.clearSearch()
+                                searchText = ""
+                                transactionVM.fetchTransactions()
                                 transactionVM.fetchAccountBalance()
                             },
                             modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),

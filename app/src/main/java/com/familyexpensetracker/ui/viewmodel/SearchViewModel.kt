@@ -29,19 +29,30 @@ class SearchViewModel(
     private val _searchFilter = MutableStateFlow(SearchFilter())
     val searchFilter: StateFlow<SearchFilter> = _searchFilter.asStateFlow()
 
+    private val _isSearchActive = MutableStateFlow(false)
+    val isSearchActive: StateFlow<Boolean> = _isSearchActive.asStateFlow()
+
     fun updateSearchFilter(filter: SearchFilter) {
         _searchFilter.value = filter
+    }
+
+    fun clearSearch() {
+        searchJob?.cancel()
+        _searchQuery.value = ""
+        _searchResults.value = emptyList()
+        _isSearching.value = false
+        _isSearchActive.value = false
+        _searchFilter.value = SearchFilter()
     }
 
     fun searchTransactions(query: String, filter: SearchFilter = _searchFilter.value) {
         searchJob?.cancel()
         if (query.isBlank() && filter.isEmpty()) {
-            _searchQuery.value = ""
-            _searchResults.value = emptyList()
-            _isSearching.value = false
+            clearSearch()
             return
         }
         _searchQuery.value = query
+        _isSearchActive.value = true
         searchJob = viewModelScope.launch {
             _isSearching.value = true
             try {

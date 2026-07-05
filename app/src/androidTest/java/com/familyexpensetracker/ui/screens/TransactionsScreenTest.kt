@@ -50,6 +50,7 @@ class TransactionsScreenTest {
     private val searchResultsFlow = MutableStateFlow<List<Transaction>>(emptyList())
     private val isSearchingFlow = MutableStateFlow(false)
     private val searchFilterFlow = MutableStateFlow(SearchFilter())
+    private val isSearchActiveFlow = MutableStateFlow(false)
     private val paymentMethodsFlow = MutableStateFlow<List<String>>(listOf("Cash", "UPI", "Card"))
     private val accountBalanceFlow = MutableStateFlow<Double?>(null)
 
@@ -70,6 +71,7 @@ class TransactionsScreenTest {
         every { searchVM.searchResults } returns searchResultsFlow
         every { searchVM.isSearching } returns isSearchingFlow
         every { searchVM.searchFilter } returns searchFilterFlow
+        every { searchVM.isSearchActive } returns isSearchActiveFlow
         every { categoryVM.expenseCategories } returns MutableStateFlow(emptyMap())
         every { categoryVM.incomeCategories } returns MutableStateFlow(emptyMap())
         every { transactionVM.accountBalance } returns accountBalanceFlow
@@ -123,6 +125,7 @@ class TransactionsScreenTest {
             description = "food market"
         )
         searchQueryFlow.value = "food"
+        isSearchActiveFlow.value = true
         searchResultsFlow.value = listOf(txn)
         transactionsFlow.value = emptyList()
 
@@ -146,6 +149,7 @@ class TransactionsScreenTest {
             description = "petrol"
         )
         searchQueryFlow.value = "petrol"
+        isSearchActiveFlow.value = true
         searchResultsFlow.value = listOf(txn)
         transactionsFlow.value = emptyList()
 
@@ -170,6 +174,18 @@ class TransactionsScreenTest {
         composeTestRule.onNodeWithText("Cancel").performClick()
 
         composeTestRule.onNodeWithText("Search description").assertIsDisplayed()
+    }
+
+    @Test
+    fun transactionsScreen_searchIcon_callsSearchTransactions() {
+        composeTestRule.setContent {
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
+        }
+
+        composeTestRule.onNodeWithText("Search description").performTextInput("food")
+        composeTestRule.onNodeWithContentDescription("Search").performClick()
+
+        verify { searchVM.searchTransactions("food", any()) }
     }
 
     @Test
@@ -233,7 +249,7 @@ class TransactionsScreenTest {
     }
 
     @Test
-    fun transactionsScreen_refreshFab_withNonEmptyFilter_callsSearchTransactions() {
+    fun transactionsScreen_refreshFab_withNonEmptyFilter_callsClearSearchAndFetchTransactions() {
         searchFilterFlow.value = SearchFilter(account = "Passbook")
 
         composeTestRule.setContent {
@@ -242,15 +258,13 @@ class TransactionsScreenTest {
 
         composeTestRule.onNodeWithContentDescription("Refresh").performClick()
 
-        val slot = slot<SearchFilter>()
-        verify { searchVM.searchTransactions(any(), capture(slot)) }
-        assertEquals("Passbook", slot.captured.account)
+        verify(exactly = 0) { searchVM.searchTransactions(any(), any()) }
+        verify { searchVM.clearSearch() }
+        verify { transactionVM.fetchTransactions() }
     }
 
     @Test
-    fun transactionsScreen_refreshFab_withSearchTextAndFilter_passesFilterToSearch() {
-        searchFilterFlow.value = SearchFilter(category = "Food", minAmount = 50.0)
-
+    fun transactionsScreen_refreshFab_withSearchText_callsClearSearchAndFetchTransactions() {
         composeTestRule.setContent {
             TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
         }
@@ -258,14 +272,13 @@ class TransactionsScreenTest {
         composeTestRule.onNodeWithText("Search description").performTextInput("groceries")
         composeTestRule.onNodeWithContentDescription("Refresh").performClick()
 
-        val slot = slot<SearchFilter>()
-        verify { searchVM.searchTransactions("groceries", capture(slot)) }
-        assertEquals("Food", slot.captured.category)
-        assertEquals(50.0, slot.captured.minAmount)
+        verify(exactly = 0) { searchVM.searchTransactions(any(), any()) }
+        verify { searchVM.clearSearch() }
+        verify { transactionVM.fetchTransactions() }
     }
 
     @Test
-    fun transactionsScreen_refreshFab_emptyTextAndEmptyFilter_callsFetchTransactions() {
+    fun transactionsScreen_refreshFab_emptyTextAndEmptyFilter_callsClearSearchAndFetchTransactions() {
         composeTestRule.setContent {
             TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
         }
@@ -273,6 +286,34 @@ class TransactionsScreenTest {
         composeTestRule.onNodeWithContentDescription("Refresh").performClick()
 
         verify(exactly = 0) { searchVM.searchTransactions(any(), any()) }
+        verify { searchVM.clearSearch() }
         verify { transactionVM.fetchTransactions() }
+    }
+
+    @Test
+    fun transactionsScreen_filterPanel_searchButton_callsSearchTransactionsAndClosesPanel() {
+        composeTestRule.setContent {
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Toggle filters").performClick()
+        composeTestRule.onNodeWithText("Search").performClick()
+
+        verify { searchVM.searchTransactions(any(), any()) }
+        composeTestRule.onNodeWithText("Account").assertDoesNotExist()
+    }
+
+    @Test
+    fun transactionsScreen_filterPanel_clearButton_callsClearSearchAndClosesPanel() {
+        composeTestRule.setContent {
+            TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Toggle filters").performClick()
+        composeTestRule.onNodeWithText("Clear").performClick()
+
+        verify { searchVM.clearSearch() }
+        verify { transactionVM.fetchTransactions() }
+        composeTestRule.onNodeWithText("Account").assertDoesNotExist()
     }
 }

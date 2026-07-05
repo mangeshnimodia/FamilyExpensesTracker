@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +31,8 @@ fun SearchFilterPanel(
     subcategories: List<String>,
     paymentMethods: List<String>,
     onFilterChange: (SearchFilter) -> Unit,
+    onSearch: () -> Unit = {},
+    onClear: () -> Unit = {},
 ) {
     var accountExpanded by remember { mutableStateOf(false) }
     var categoryExpanded by remember { mutableStateOf(false) }
@@ -118,6 +122,14 @@ fun SearchFilterPanel(
                 text = "Exact match",
                 style = MaterialTheme.typography.bodyMedium,
             )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            OutlinedButton(onClick = onClear, modifier = Modifier.weight(1f)) { Text("Clear") }
+            Button(onClick = onSearch, modifier = Modifier.weight(1f)) { Text("Search") }
         }
     }
 }

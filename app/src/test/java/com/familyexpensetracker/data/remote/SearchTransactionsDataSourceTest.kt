@@ -305,6 +305,22 @@ class SearchTransactionsDataSourceTest {
     }
 
     @Test
+    fun `search returns results sorted descending by date`() = runBlocking {
+        mockSheet(listOf(
+            listOf("1", "2026/06/01", "100.0", "Food", "Groceries", "UPI", "item", "Savings", ""),
+            listOf("2", "2026/06/15", "200.0", "Food", "Groceries", "UPI", "item", "Savings", ""),
+            listOf("3", "2026/06/08", "150.0", "Food", "Groceries", "UPI", "item", "Savings", ""),
+        ))
+
+        val result = dataSource.search("item")
+
+        assertEquals(3, result.size)
+        assertEquals("2", result[0].txnId) // 2026/06/15 newest
+        assertEquals("3", result[1].txnId) // 2026/06/08 middle
+        assertEquals("1", result[2].txnId) // 2026/06/01 oldest
+    }
+
+    @Test
     fun `search with all filters combined in single pass`() = runBlocking {
         mockSheet(listOf(
             listOf("1", "2026/06/01", "-150.0", "Food",      "Groceries", "UPI",  "market visit", "Savings", ""),

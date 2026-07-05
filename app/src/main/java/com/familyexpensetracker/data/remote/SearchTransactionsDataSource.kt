@@ -29,6 +29,7 @@ class SearchTransactionsDataSource(private val service: Sheets) {
                     matchesFilter(row, filter)
             }
             .map { rowMapper.mapRow(it) }
+            .sortedByDescending { it.date }
             .toList()
     }
 

@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.utils.IndianNumberFormatter
+import com.familyexpensetracker.utils.TransactionDateFormatter
 
 @Composable
 fun TransactionItem(
@@ -48,7 +49,7 @@ fun TransactionItem(
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    text = txn.date,
+                    text = TransactionDateFormatter.format(txn.date),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline,
                     modifier = Modifier.weight(1f),

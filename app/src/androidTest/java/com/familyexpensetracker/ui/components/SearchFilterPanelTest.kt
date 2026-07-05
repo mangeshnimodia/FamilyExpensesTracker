@@ -244,4 +244,24 @@ class SearchFilterPanelTest {
         verify { onFilterChange(capture(slot)) }
         assertEquals("UPI", slot.captured.paymentMethod)
     }
+
+    @Test
+    fun searchFilterPanel_searchButton_callsOnSearch() {
+        val onSearch: () -> Unit = mockk(relaxed = true)
+        composeTestRule.setContent {
+            SearchFilterPanel(defaultFilter(), accounts, categories, subcategories, paymentMethods, {}, onSearch = onSearch)
+        }
+        composeTestRule.onNodeWithText("Search").performClick()
+        verify { onSearch() }
+    }
+
+    @Test
+    fun searchFilterPanel_clearButton_callsOnClear() {
+        val onClear: () -> Unit = mockk(relaxed = true)
+        composeTestRule.setContent {
+            SearchFilterPanel(defaultFilter(), accounts, categories, subcategories, paymentMethods, {}, onClear = onClear)
+        }
+        composeTestRule.onNodeWithText("Clear").performClick()
+        verify { onClear() }
+    }
 }

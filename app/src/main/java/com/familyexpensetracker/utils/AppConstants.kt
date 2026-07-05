@@ -9,7 +9,7 @@ object AppConstants {
     const val RANGE_EXPENSE_CATEGORIES = "admin!A:B"
     const val RANGE_ACCOUNTS = "admin!D:D"
     const val RANGE_INCOME_CATEGORIES = "admin!F:G"
-    const val RANGE_PAYMENT_METHODS = "PaymentMethod!A:A"
+    const val RANGE_PAYMENT_METHODS = "admin!I:I"
     
     const val APPLICATION_NAME = "Family Expense Tracker"
     
@@ -36,6 +36,7 @@ object AppConstants {
 
     const val DATE_FORMAT_DB = "yyyy/MM/dd"
     const val DATE_FORMAT_UI = "EEE, dd MMM yyyy"
+    const val DATE_FORMAT_TRANSACTION = "dd/MM/yyyy"
 
     // Transaction Column Indexes
     const val COL_TXN_ID = 0

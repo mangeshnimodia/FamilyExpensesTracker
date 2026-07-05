@@ -51,6 +51,11 @@ class SearchViewModelTest {
     }
 
     @Test
+    fun `isSearchActive defaults to false`() {
+        assertFalse(viewModel.isSearchActive.value)
+    }
+
+    @Test
     fun `updateSearchFilter updates searchFilter state`() {
         val filter = SearchFilter(account = "Savings", category = "Food")
         viewModel.updateSearchFilter(filter)
@@ -71,6 +76,30 @@ class SearchViewModelTest {
         assertEquals("", viewModel.searchQuery.value)
         assertTrue(viewModel.searchResults.value.isEmpty())
         assertFalse(viewModel.isSearching.value)
+        assertFalse(viewModel.isSearchActive.value)
+    }
+
+    @Test
+    fun `clearSearch resets all search state`() = runTest {
+        val results = listOf(mockk<Transaction>())
+        coEvery { searchRepository.search("food", SearchFilter()) } returns results
+        viewModel.searchTransactions("food")
+        assertTrue(viewModel.isSearchActive.value)
+
+        viewModel.clearSearch()
+
+        assertEquals("", viewModel.searchQuery.value)
+        assertTrue(viewModel.searchResults.value.isEmpty())
+        assertFalse(viewModel.isSearching.value)
+        assertFalse(viewModel.isSearchActive.value)
+        assertEquals(SearchFilter(), viewModel.searchFilter.value)
+    }
+
+    @Test
+    fun `clearSearch resets filter to empty`() {
+        viewModel.updateSearchFilter(SearchFilter(account = "Savings"))
+        viewModel.clearSearch()
+        assertEquals(SearchFilter(), viewModel.searchFilter.value)
     }
 
     @Test
@@ -83,6 +112,7 @@ class SearchViewModelTest {
         assertEquals("food", viewModel.searchQuery.value)
         assertEquals(results, viewModel.searchResults.value)
         assertFalse(viewModel.isSearching.value)
+        assertTrue(viewModel.isSearchActive.value)
     }
 
     @Test
@@ -96,6 +126,7 @@ class SearchViewModelTest {
         assertEquals("", viewModel.searchQuery.value)
         assertEquals(results, viewModel.searchResults.value)
         assertFalse(viewModel.isSearching.value)
+        assertTrue(viewModel.isSearchActive.value)
     }
 
     @Test
