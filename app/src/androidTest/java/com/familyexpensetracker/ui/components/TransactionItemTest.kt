@@ -80,6 +80,26 @@ class TransactionItemTest {
     }
 
     @Test
+    fun transactionItem_displaysLakhAmountWithIndianGrouping() {
+        val txn = Transaction(
+            txnId = "2",
+            date = "2026/06/28",
+            amount = -100000.0,
+            category = "Rent",
+            subcategory = "",
+            paymentMethod = "NEFT",
+            description = "",
+            account = "Bank"
+        )
+
+        composeTestRule.setContent {
+            TransactionItem(txn = txn)
+        }
+
+        composeTestRule.onNodeWithText("₹1,00,000.00").assertIsDisplayed()
+    }
+
+    @Test
     fun transactionItem_onCopyTriggered() {
         var copiedTxn: Transaction? = null
         val txn = Transaction(

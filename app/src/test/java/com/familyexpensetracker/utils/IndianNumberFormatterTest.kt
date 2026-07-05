@@ -1,6 +1,7 @@
 package com.familyexpensetracker.utils
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class IndianNumberFormatterTest {
@@ -53,5 +54,27 @@ class IndianNumberFormatterTest {
     @Test
     fun formatAmount_twoDecimalPlaces_alwaysShown() {
         assertEquals("₹1,200.00", IndianNumberFormatter.formatAmount(1200.0))
+    }
+
+    @Test
+    fun formatAmount_centsNinetyNine_roundsCorrectly() {
+        assertEquals("₹123.99", IndianNumberFormatter.formatAmount(123.99))
+    }
+
+    @Test
+    fun formatAmount_centsOne_showsCorrectly() {
+        assertEquals("₹100.01", IndianNumberFormatter.formatAmount(100.01))
+    }
+
+    @Test
+    fun formatAmount_doesNotContainRawUnformattedNumber() {
+        val result = IndianNumberFormatter.formatAmount(100000.0)
+        assertFalse("Raw unformatted number must not appear", result.contains("100000"))
+    }
+
+    @Test
+    fun formatAmount_negativeAmount_doesNotContainMinusSign() {
+        val result = IndianNumberFormatter.formatAmount(-500.0)
+        assertFalse("Negative amounts must not show a minus sign", result.contains("-"))
     }
 }

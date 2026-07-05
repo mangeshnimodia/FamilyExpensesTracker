@@ -458,4 +458,53 @@ class AddExpenseScreenTest {
 
         composeTestRule.onNodeWithText("SomeDescription").assertDoesNotExist()
     }
+
+    // ── Feature 1: Date label ────────────────────────────────────────────────
+
+    @Test
+    fun addExpenseScreen_dateLabel_doesNotShowDatePrefix() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+
+        composeTestRule.onNodeWithText("Date:").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Date").assertDoesNotExist()
+    }
+
+    @Test
+    fun addExpenseScreen_dateButton_clickOpensDatePicker() {
+        val fixedDate = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }.time
+        selectedDateRangeFlow.value = DateRange.Day(fixedDate)
+
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+        composeTestRule.waitForIdle()
+
+        val dateLabel = SimpleDateFormat(AppConstants.DATE_FORMAT_UI, Locale.getDefault()).format(fixedDate)
+        composeTestRule.onNodeWithText(dateLabel).performClick()
+
+        // The date picker dialog's OK button must now be visible
+        composeTestRule.onNodeWithText("OK").assertIsDisplayed()
+    }
+
+    @Test
+    fun addExpenseScreen_dateButton_dismissingPickerRestoresOriginalLabel() {
+        val fixedDate = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }.time
+        selectedDateRangeFlow.value = DateRange.Day(fixedDate)
+        val dateLabel = SimpleDateFormat(AppConstants.DATE_FORMAT_UI, Locale.getDefault()).format(fixedDate)
+
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText(dateLabel).performClick()
+        // Two "Cancel" nodes exist: TopAppBar nav icon + date picker dialog button.
+        // Select the one that has "OK" as a sibling — that's the dialog's Cancel.
+        composeTestRule.onNode(hasText("Cancel") and hasAnySibling(hasText("OK"))).performClick()
+
+        // Picker closed and original date label is still shown
+        composeTestRule.onNodeWithText(dateLabel).assertIsDisplayed()
+    }
 }

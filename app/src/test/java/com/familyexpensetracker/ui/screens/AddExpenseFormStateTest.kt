@@ -221,6 +221,16 @@ class AddExpenseFormStateTest {
     }
 
     @Test
+    fun `displayDateFormatter formats selectedDate as EEE dd MMM yyyy`() {
+        val s = AddExpenseFormState()
+        s.selectedDate = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }.time
+        val result = s.displayDateFormatter.format(s.selectedDate)
+        // DATE_FORMAT_UI = "EEE, dd MMM yyyy" → "Mon, 15 Jun 2026"
+        val expected = SimpleDateFormat(AppConstants.DATE_FORMAT_UI, Locale.getDefault()).format(s.selectedDate)
+        assertEquals(expected, result)
+    }
+
+    @Test
     fun `displayDateFormatter and dateFormatter produce different outputs for same date`() {
         val s = AddExpenseFormState()
         s.selectedDate = Calendar.getInstance().apply { set(2026, Calendar.JUNE, 15) }.time
