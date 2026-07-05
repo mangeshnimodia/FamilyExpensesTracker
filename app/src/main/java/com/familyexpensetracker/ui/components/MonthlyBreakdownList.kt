@@ -13,13 +13,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.familyexpensetracker.ui.theme.AppColors
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.MonthSummary
 import com.familyexpensetracker.utils.AppConstants
-import com.familyexpensetracker.utils.IndianNumberFormatter
 import java.text.SimpleDateFormat
 
 import java.util.Calendar
@@ -69,11 +67,9 @@ private fun MonthSummaryRow(
             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
             modifier = Modifier.weight(1f),
         )
-        val amountColor = if (summary.totalAmount < 0) AppColors.expenseRed else AppColors.summaryGreen
-        Text(
-            text = IndianNumberFormatter.formatAmount(summary.totalAmount),
+        AmountText(
+            amount = summary.totalAmount,
             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = amountColor,
         )
     }
 }

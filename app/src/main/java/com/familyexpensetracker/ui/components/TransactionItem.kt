@@ -9,11 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.familyexpensetracker.ui.theme.AppColors
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.Transaction
-import com.familyexpensetracker.utils.IndianNumberFormatter
 import com.familyexpensetracker.utils.TransactionDateFormatter
 
 @Composable
@@ -23,7 +21,6 @@ fun TransactionItem(
     onEdit: (Transaction) -> Unit = {},
     onCopy: (Transaction) -> Unit = {},
 ) {
-    val amountColor = if (txn.amount < 0) MaterialTheme.colorScheme.error else AppColors.incomeGreen
     val categoryText = if (txn.subcategory.isNotBlank()) "${txn.category}/${txn.subcategory}" else txn.category
 
     Card(
@@ -55,13 +52,10 @@ fun TransactionItem(
                     modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
-                Text(
-                    text = IndianNumberFormatter.formatAmount(txn.amount),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = amountColor,
+                AmountText(
+                    amount = txn.amount,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                     modifier = Modifier.weight(1f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.End,
                 )
             }
             // Row 2: Description | Edit / Copy / Delete

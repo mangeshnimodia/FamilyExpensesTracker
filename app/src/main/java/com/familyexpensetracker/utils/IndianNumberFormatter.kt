@@ -4,12 +4,12 @@ import kotlin.math.abs
 
 object IndianNumberFormatter {
     fun formatAmount(amount: Double): String {
-        val absAmount = abs(amount)
-        val formatted = "%.2f".format(absAmount)
+        val formatted = "%.2f".format(abs(amount))
         val dotIndex = formatted.indexOf('.')
         val intPart = formatted.substring(0, dotIndex)
         val decPart = formatted.substring(dotIndex + 1)
-        return "${AppConstants.CURRENCY_SYMBOL}${applyIndianGrouping(intPart)}.$decPart"
+        val body = "${AppConstants.CURRENCY_SYMBOL}${applyIndianGrouping(intPart)}.$decPart"
+        return if (amount < 0) "−$body" else body
     }
 
     private fun applyIndianGrouping(intPart: String): String {

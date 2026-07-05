@@ -12,12 +12,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.ui.screens.PeriodNavigator
-import com.familyexpensetracker.utils.IndianNumberFormatter
 
 @Composable
 fun PeriodNavBar(
@@ -27,7 +25,6 @@ fun PeriodNavBar(
     onNext: () -> Unit,
     navigator: PeriodNavigator = PeriodNavigator(),
     expenseTotal: Double = 0.0,
-    totalColor: Color = MaterialTheme.colorScheme.error,
 ) {
     val navigable = navigator.isNavigable(dateRange)
     Surface(
@@ -42,10 +39,9 @@ fun PeriodNavBar(
             TextButton(onClick = onPrevious, enabled = navigable) { Text("<") }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(text = label, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = IndianNumberFormatter.formatAmount(expenseTotal),
+                AmountText(
+                    amount = expenseTotal,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = totalColor,
                 )
             }
             TextButton(onClick = onNext, enabled = navigable) { Text(">") }

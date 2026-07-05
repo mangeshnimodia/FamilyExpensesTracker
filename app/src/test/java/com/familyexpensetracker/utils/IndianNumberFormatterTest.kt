@@ -1,7 +1,6 @@
 package com.familyexpensetracker.utils
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class IndianNumberFormatterTest {
@@ -42,13 +41,13 @@ class IndianNumberFormatterTest {
     }
 
     @Test
-    fun formatAmount_negativeAmount_usesAbsoluteValue() {
-        assertEquals("₹500.00", IndianNumberFormatter.formatAmount(-500.0))
+    fun formatAmount_negativeAmount_preservesSign() {
+        assertEquals("−₹500.00", IndianNumberFormatter.formatAmount(-500.0))
     }
 
     @Test
-    fun formatAmount_negativeLakh_usesAbsoluteValue() {
-        assertEquals("₹1,00,000.00", IndianNumberFormatter.formatAmount(-100000.0))
+    fun formatAmount_negativeLakh_preservesSign() {
+        assertEquals("−₹1,00,000.00", IndianNumberFormatter.formatAmount(-100000.0))
     }
 
     @Test
@@ -69,12 +68,12 @@ class IndianNumberFormatterTest {
     @Test
     fun formatAmount_doesNotContainRawUnformattedNumber() {
         val result = IndianNumberFormatter.formatAmount(100000.0)
-        assertFalse("Raw unformatted number must not appear", result.contains("100000"))
+        assert(!result.contains("100000")) { "Raw unformatted number must not appear" }
     }
 
     @Test
-    fun formatAmount_negativeAmount_doesNotContainMinusSign() {
+    fun formatAmount_negativeAmount_containsUnicodeMinusSign() {
         val result = IndianNumberFormatter.formatAmount(-500.0)
-        assertFalse("Negative amounts must not show a minus sign", result.contains("-"))
+        assert(result.startsWith("−")) { "Negative amounts must start with Unicode minus sign (U+2212)" }
     }
 }

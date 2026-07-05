@@ -14,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.familyexpensetracker.ui.theme.AppColors
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
@@ -196,11 +195,6 @@ fun TransactionsScreen(
                         FilterType.INCOME -> transactions.filter { it.amount > 0 }.sumOf { it.amount }
                         FilterType.BALANCE -> totalAmount
                     }
-                    val periodColor = when (selectedFilter.type) {
-                        FilterType.INCOME -> AppColors.incomeGreen
-                        FilterType.EXPENSE -> MaterialTheme.colorScheme.error
-                        else -> if (periodTotal < 0) MaterialTheme.colorScheme.error else AppColors.incomeGreen
-                    }
                     if (selectedPeriodTab != PeriodTab.All) {
                         PeriodNavBar(
                             dateRange = selectedDateRange,
@@ -209,13 +203,9 @@ fun TransactionsScreen(
                             onNext = { transactionVM.setSelectedDateRange(periodNavigator.next(selectedDateRange)) },
                             navigator = periodNavigator,
                             expenseTotal = periodTotal,
-                            totalColor = periodColor,
                         )
                     } else {
-                        TotalBanner(
-                            total = periodTotal,
-                            totalColor = periodColor,
-                        )
+                        TotalBanner(total = periodTotal)
                     }
 
                     Row(

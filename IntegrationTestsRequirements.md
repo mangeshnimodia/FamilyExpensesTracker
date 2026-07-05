@@ -25,6 +25,9 @@ Tests -
 3. Delete entry
     - GIVEN: User adds an entry
     - WHEN: User delete this entry. User hits the refresh button.
-    - THEN: Entry is deleted from the excel and test validates the entry is no more shown on UI on refresh on that particular date. 
-
+    - THEN: Entry is deleted from the excel and test validates the entry is no more shown on UI on refresh on that particular date.
+4. Balance view
+   - Based on the prefilled data, balance is shown correctly for different accounts
+5. Search filters
+   - Based on the prefilled data, search honors different filters and search criteria
    

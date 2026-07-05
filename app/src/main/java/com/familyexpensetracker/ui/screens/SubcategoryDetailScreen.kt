@@ -27,14 +27,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.familyexpensetracker.ui.theme.AppColors
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.familyexpensetracker.data.model.SubcategoryGroup
+import com.familyexpensetracker.ui.components.AmountText
 import com.familyexpensetracker.ui.components.TransactionItem
 import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
-import com.familyexpensetracker.utils.IndianNumberFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +79,6 @@ private fun SubcategoryGroupRow(
     onCopy: (com.familyexpensetracker.data.model.Transaction) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val amountColor = if (group.totalAmount < 0) AppColors.expenseRed else AppColors.summaryGreen
 
     Column {
         Row(
@@ -102,10 +100,9 @@ private fun SubcategoryGroupRow(
                     color = MaterialTheme.colorScheme.outline,
                 )
             }
-            Text(
-                text = IndianNumberFormatter.formatAmount(group.totalAmount),
+            AmountText(
+                amount = group.totalAmount,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = amountColor,
             )
             Icon(
                 imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,

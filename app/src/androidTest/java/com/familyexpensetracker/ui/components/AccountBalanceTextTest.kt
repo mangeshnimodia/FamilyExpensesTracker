@@ -39,12 +39,12 @@ class AccountBalanceTextTest {
     }
 
     @Test
-    fun accountBalanceText_negativeBalance_displaysAbsoluteValue() {
+    fun accountBalanceText_negativeBalance_displaysSignedValue() {
         composeTestRule.setContent {
             AccountBalanceText(balance = -320.50)
         }
 
-        composeTestRule.onNodeWithText("₹320.50").assertIsDisplayed()
+        composeTestRule.onNodeWithText("−₹320.50").assertIsDisplayed()
     }
 
     @Test

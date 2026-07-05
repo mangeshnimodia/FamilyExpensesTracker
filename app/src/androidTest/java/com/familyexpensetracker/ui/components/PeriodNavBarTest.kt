@@ -139,7 +139,7 @@ class PeriodNavBarTest {
     }
 
     @Test
-    fun periodNavBar_showsNegativeTotalWithoutMinusSign() {
+    fun periodNavBar_showsNegativeTotalWithSignedAmount() {
         composeTestRule.setContent {
             PeriodNavBar(
                 dateRange = DateRange.Day(Date()),
@@ -150,6 +150,6 @@ class PeriodNavBarTest {
             )
         }
 
-        composeTestRule.onNodeWithText("₹500.75").assertIsDisplayed()
+        composeTestRule.onNodeWithText("−₹500.75").assertIsDisplayed()
     }
 }

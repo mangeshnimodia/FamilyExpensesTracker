@@ -158,6 +158,6 @@ class SubcategoryDetailScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText("₹200.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("−₹200.00").assertIsDisplayed()
     }
 }

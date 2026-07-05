@@ -14,12 +14,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.familyexpensetracker.ui.theme.AppColors
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.familyexpensetracker.data.model.CategorySummary
 import com.familyexpensetracker.utils.AppConstants
-import com.familyexpensetracker.utils.IndianNumberFormatter
 
 @Composable
 fun CategorySummaryList(
@@ -59,11 +57,9 @@ private fun CategorySummaryRow(
                 color = MaterialTheme.colorScheme.outline,
             )
         }
-        val amountColor = if (summary.totalAmount < 0) AppColors.expenseRed else AppColors.summaryGreen
-        Text(
-            text = IndianNumberFormatter.formatAmount(summary.totalAmount),
+        AmountText(
+            amount = summary.totalAmount,
             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = amountColor,
         )
     }
 }
