@@ -51,11 +51,7 @@ class AddExpenseFormState(
     val submitLabel: String
         get() = when {
             isCopy -> "Copy"
-            transactionToEdit == null -> when (transactionType) {
-                TransactionType.EXPENSE  -> "Add Expense"
-                TransactionType.INCOME   -> "Add Income"
-                TransactionType.TRANSFER -> "Add Transfer"
-            }
+            transactionToEdit == null -> "Add"
             else -> "Update"
         }
 
@@ -88,6 +84,22 @@ class AddExpenseFormState(
             account = account,
             transferId = if (isCopy) null else transactionToEdit?.transferId,
         )
+    }
+
+    fun resetToDefaults() {
+        transactionType = TransactionType.EXPENSE
+        amount = ""
+        category = AppConstants.DEFAULT_CATEGORY
+        subcategory = AppConstants.DEFAULT_SUBCATEGORY
+        paymentMethod = AppConstants.DEFAULT_PAYMENT_METHOD
+        account = AppConstants.DEFAULT_ACCOUNT
+        toAccount = AppConstants.DEFAULT_ACCOUNT
+        description = ""
+        showDatePicker = false
+        categoryExpanded = false
+        subcategoryExpanded = false
+        accountExpanded = false
+        toAccountExpanded = false
     }
 
     fun buildTransferParams(): TransferParams = TransferParams(

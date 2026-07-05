@@ -88,21 +88,21 @@ class AddExpenseFormStateTest {
     // ── submitLabel ──────────────────────────────────────────────────────────
 
     @Test
-    fun `submitLabel is Add Expense for new expense`() {
+    fun `submitLabel is Add for new expense`() {
         val s = AddExpenseFormState(); s.transactionType = TransactionType.EXPENSE
-        assertEquals("Add Expense", s.submitLabel)
+        assertEquals("Add", s.submitLabel)
     }
 
     @Test
-    fun `submitLabel is Add Income for new income`() {
+    fun `submitLabel is Add for new income`() {
         val s = AddExpenseFormState(); s.transactionType = TransactionType.INCOME
-        assertEquals("Add Income", s.submitLabel)
+        assertEquals("Add", s.submitLabel)
     }
 
     @Test
-    fun `submitLabel is Add Transfer for new transfer`() {
+    fun `submitLabel is Add for new transfer`() {
         val s = AddExpenseFormState(); s.transactionType = TransactionType.TRANSFER
-        assertEquals("Add Transfer", s.submitLabel)
+        assertEquals("Add", s.submitLabel)
     }
 
     @Test
@@ -227,6 +227,75 @@ class AddExpenseFormStateTest {
         val db = s.dateFormatter.format(s.selectedDate)
         val ui = s.displayDateFormatter.format(s.selectedDate)
         assertNotEquals("UI and DB formatters must produce different strings", db, ui)
+    }
+
+    // ── resetToDefaults ──────────────────────────────────────────────────────
+
+    @Test
+    fun `resetToDefaults clears amount`() {
+        val s = AddExpenseFormState()
+        s.amount = "500"
+        s.resetToDefaults()
+        assertEquals("", s.amount)
+    }
+
+    @Test
+    fun `resetToDefaults resets category to default expense`() {
+        val s = AddExpenseFormState()
+        s.category = "Custom"
+        s.resetToDefaults()
+        assertEquals(AppConstants.DEFAULT_CATEGORY, s.category)
+    }
+
+    @Test
+    fun `resetToDefaults resets subcategory to default expense`() {
+        val s = AddExpenseFormState()
+        s.subcategory = "Custom Sub"
+        s.resetToDefaults()
+        assertEquals(AppConstants.DEFAULT_SUBCATEGORY, s.subcategory)
+    }
+
+    @Test
+    fun `resetToDefaults resets payment method to default`() {
+        val s = AddExpenseFormState()
+        s.paymentMethod = "NEFT"
+        s.resetToDefaults()
+        assertEquals(AppConstants.DEFAULT_PAYMENT_METHOD, s.paymentMethod)
+    }
+
+    @Test
+    fun `resetToDefaults resets account to default`() {
+        val s = AddExpenseFormState()
+        s.account = "Wallet"
+        s.resetToDefaults()
+        assertEquals(AppConstants.DEFAULT_ACCOUNT, s.account)
+    }
+
+    @Test
+    fun `resetToDefaults clears description`() {
+        val s = AddExpenseFormState()
+        s.description = "Some desc"
+        s.resetToDefaults()
+        assertEquals("", s.description)
+    }
+
+    @Test
+    fun `resetToDefaults resets transaction type to EXPENSE`() {
+        val s = AddExpenseFormState()
+        s.transactionType = TransactionType.INCOME
+        s.resetToDefaults()
+        assertEquals(TransactionType.EXPENSE, s.transactionType)
+    }
+
+    @Test
+    fun `resetToDefaults resets income categories when type was INCOME`() {
+        val s = AddExpenseFormState()
+        s.transactionType = TransactionType.INCOME
+        s.category = AppConstants.DEFAULT_INCOME_CATEGORY
+        s.subcategory = AppConstants.DEFAULT_INCOME_SUBCATEGORY
+        s.resetToDefaults()
+        assertEquals(AppConstants.DEFAULT_CATEGORY, s.category)
+        assertEquals(AppConstants.DEFAULT_SUBCATEGORY, s.subcategory)
     }
 
 }

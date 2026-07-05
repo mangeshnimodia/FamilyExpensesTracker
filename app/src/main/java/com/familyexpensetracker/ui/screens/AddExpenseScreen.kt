@@ -135,33 +135,85 @@ fun AddExpenseScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = {
-                    if (formState.transactionType == TransactionType.TRANSFER) {
-                        val p = formState.buildTransferParams()
-                        transactionVM.addAccountTransfer(
-                            fromAccount = p.fromAccount,
-                            toAccount = p.toAccount,
-                            amount = p.amount,
-                            paymentMethod = p.paymentMethod,
-                            description = p.description,
-                            transactionDate = p.transactionDate,
-                        )
-                    } else {
-                        val transaction = formState.buildTransaction()
-                        if (transactionToEdit == null || isCopy) {
-                            transactionVM.addTransaction(transaction, formState.selectedDate)
+            if (transactionToEdit == null && !isCopy) {
+                AddButtonRow(
+                    formState = formState,
+                    transactionVM = transactionVM,
+                    onDismiss = onDismiss,
+                )
+            } else {
+                Button(
+                    onClick = {
+                        if (transactionToEdit != null && !isCopy) {
+                            transactionVM.updateTransaction(formState.buildTransaction(), formState.selectedDate)
                         } else {
-                            transactionVM.updateTransaction(transaction, formState.selectedDate)
+                            transactionVM.addTransaction(formState.buildTransaction(), formState.selectedDate)
                         }
-                    }
-                    onDismiss()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = formState.isFormValid,
-            ) {
-                Text(formState.submitLabel)
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = formState.isFormValid,
+                ) {
+                    Text(formState.submitLabel)
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun AddButtonRow(
+    formState: AddExpenseFormState,
+    transactionVM: TransactionViewModel,
+    onDismiss: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Button(
+            onClick = {
+                if (formState.transactionType == TransactionType.TRANSFER) {
+                    val p = formState.buildTransferParams()
+                    transactionVM.addAccountTransfer(
+                        fromAccount = p.fromAccount,
+                        toAccount = p.toAccount,
+                        amount = p.amount,
+                        paymentMethod = p.paymentMethod,
+                        description = p.description,
+                        transactionDate = p.transactionDate,
+                    )
+                } else {
+                    transactionVM.addTransaction(formState.buildTransaction(), formState.selectedDate)
+                }
+                onDismiss()
+            },
+            modifier = Modifier.weight(1f),
+            enabled = formState.isFormValid,
+        ) {
+            Text(formState.submitLabel)
+        }
+        OutlinedButton(
+            onClick = {
+                if (formState.transactionType == TransactionType.TRANSFER) {
+                    val p = formState.buildTransferParams()
+                    transactionVM.addAccountTransfer(
+                        fromAccount = p.fromAccount,
+                        toAccount = p.toAccount,
+                        amount = p.amount,
+                        paymentMethod = p.paymentMethod,
+                        description = p.description,
+                        transactionDate = p.transactionDate,
+                    )
+                } else {
+                    transactionVM.addTransaction(formState.buildTransaction(), formState.selectedDate)
+                }
+                formState.resetToDefaults()
+            },
+            modifier = Modifier.weight(1f),
+            enabled = formState.isFormValid,
+        ) {
+            Text("Add More")
         }
     }
 }

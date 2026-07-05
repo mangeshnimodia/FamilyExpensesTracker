@@ -10,6 +10,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -53,9 +55,7 @@ class AddExpenseScreenTest {
         }
 
         composeTestRule.onNodeWithText("Amount").assertIsDisplayed()
-        // The title is in the TopAppBar, the button is at the bottom.
-        // Button usually has a click action and is focusable.
-        composeTestRule.onNode(hasText("Add Expense") and hasClickAction()).assertExists()
+        composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).assertExists()
     }
 
     @Test
@@ -64,10 +64,8 @@ class AddExpenseScreenTest {
             AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
         }
 
-        // Tab "Income" - use specific matcher to avoid ambiguity with the button
-        composeTestRule.onNode(hasText("Income") and hasClickAction() and !hasText("Add Income")).performClick()
-        // Button text should change to "Add Income"
-        composeTestRule.onNode(hasText("Add Income") and hasClickAction()).assertIsDisplayed()
+        composeTestRule.onNode(hasText("Income") and hasClickAction()).performClick()
+        composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).assertIsDisplayed()
     }
 
     @Test
@@ -77,13 +75,11 @@ class AddExpenseScreenTest {
         }
 
         // Add button should be disabled initially (amount is empty)
-        composeTestRule.onNode(hasText("Add Expense") and hasClickAction()).assertIsNotEnabled()
+        composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).assertIsNotEnabled()
 
-        // Enter amount
         composeTestRule.onNodeWithText("Amount").performTextInput("50")
-        
-        // Should now be enabled
-        composeTestRule.onNode(hasText("Add Expense") and hasClickAction()).assertIsEnabled()
+
+        composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).assertIsEnabled()
     }
 
     @Test
@@ -93,7 +89,7 @@ class AddExpenseScreenTest {
         }
 
         composeTestRule.onNodeWithText("Amount").performTextInput("100")
-        composeTestRule.onNode(hasText("Add Expense") and hasClickAction()).performClick()
+        composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).performClick()
 
         verify { transactionVM.addTransaction(any(), any()) }
     }
@@ -169,13 +165,10 @@ class AddExpenseScreenTest {
 
         composeTestRule.onNodeWithText("Transfer").performClick()
         composeTestRule.onNodeWithText("Amount").performTextInput("500")
-        
-        // Use dropdown logic to select accounts if needed, but here we just verify button click
-        // Default accounts might already be set by the screen's remember state
-        
-        composeTestRule.onNode(hasText("Add Transfer") and hasClickAction()).performClick()
 
-        verify { 
+        composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).performClick()
+
+        verify {
             transactionVM.addAccountTransfer(
                 fromAccount = any(),
                 toAccount = any(),
@@ -183,7 +176,7 @@ class AddExpenseScreenTest {
                 paymentMethod = any(),
                 description = any(),
                 transactionDate = any()
-            ) 
+            )
         }
     }
 
@@ -255,4 +248,214 @@ class AddExpenseScreenTest {
         composeTestRule.onNodeWithText("2026/06/15").assertDoesNotExist()
     }
 
+    // ── Add + Add more dual buttons ──────────────────────────────────────────
+
+    @Test
+    fun addExpenseScreen_showsAddMoreButton_forNewEntry() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+
+        composeTestRule.onNode(hasText("Add More") and hasClickAction()).assertExists()
+    }
+
+    @Test
+    fun addExpenseScreen_doesNotShowAddMoreButton_forEditEntry() {
+        val txn = com.familyexpensetracker.data.model.Transaction(
+            txnId = "edit-1",
+            date = "2026/06/28",
+            amount = -250.0,
+            category = "Daily Living",
+            subcategory = "Groceries",
+            paymentMethod = "Cash",
+            description = "Test Edit",
+            account = "Passbook"
+        )
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {}, transactionToEdit = txn)
+        }
+
+        composeTestRule.onNodeWithText("Add More").assertDoesNotExist()
+    }
+
+    @Test
+    fun addExpenseScreen_doesNotShowAddMoreButton_forCopyEntry() {
+        val txn = com.familyexpensetracker.data.model.Transaction(
+            txnId = "copy-src",
+            date = "2026/06/28",
+            amount = -300.0,
+            category = "Daily Living",
+            subcategory = "Groceries",
+            paymentMethod = "Cash",
+            description = "Monthly groceries",
+            account = "Passbook"
+        )
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {}, transactionToEdit = txn, isCopy = true)
+        }
+
+        composeTestRule.onNodeWithText("Add More").assertDoesNotExist()
+    }
+
+    @Test
+    fun addExpenseScreen_addMoreButton_isDisabledWhenFormInvalid() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+
+        // Amount is empty — Add More must be disabled
+        composeTestRule.onNode(hasText("Add More") and hasClickAction()).assertIsNotEnabled()
+    }
+
+    @Test
+    fun addExpenseScreen_addMoreButton_isEnabledWhenFormValid() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+
+        composeTestRule.onNodeWithText("Amount").performTextInput("200")
+
+        composeTestRule.onNode(hasText("Add More") and hasClickAction()).assertIsEnabled()
+    }
+
+    @Test
+    fun addExpenseScreen_addMoreButton_callsViewModelAndClearsAmount_forExpense() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+
+        composeTestRule.onNodeWithText("Amount").performTextInput("300")
+        composeTestRule.onNode(hasText("Add More") and hasClickAction()).performClick()
+
+        verify { transactionVM.addTransaction(any(), any()) }
+        // After Add More, amount is cleared — Add button must be disabled
+        composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).assertIsNotEnabled()
+    }
+
+    @Test
+    fun addExpenseScreen_addMoreButton_callsViewModelForIncome() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+
+        composeTestRule.onNode(hasText("Income") and hasClickAction()).performClick()
+        composeTestRule.onNodeWithText("Amount").performTextInput("1500")
+        composeTestRule.onNode(hasText("Add More") and hasClickAction()).performClick()
+
+        verify { transactionVM.addTransaction(any(), any()) }
+        // Form should reset — Add button disabled again
+        composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).assertIsNotEnabled()
+    }
+
+    @Test
+    fun addExpenseScreen_addMoreButton_callsViewModelForTransfer() {
+        accountsFlow.value = listOf("Bank", "Cash")
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+
+        composeTestRule.onNodeWithText("Transfer").performClick()
+        composeTestRule.onNodeWithText("Amount").performTextInput("2000")
+        composeTestRule.onNode(hasText("Add More") and hasClickAction()).performClick()
+
+        verify {
+            transactionVM.addAccountTransfer(
+                fromAccount = any(),
+                toAccount = any(),
+                amount = 2000.0,
+                paymentMethod = any(),
+                description = any(),
+                transactionDate = any()
+            )
+        }
+        // Form should reset — Add button disabled again
+        composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).assertIsNotEnabled()
+    }
+
+    @Test
+    fun addExpenseScreen_addMoreButton_canAddMultipleTransactions() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+
+        composeTestRule.onNodeWithText("Amount").performTextInput("100")
+        composeTestRule.onNode(hasText("Add More") and hasClickAction()).performClick()
+
+        composeTestRule.onNodeWithText("Amount").performTextInput("200")
+        composeTestRule.onNode(hasText("Add More") and hasClickAction()).performClick()
+
+        verify(exactly = 2) { transactionVM.addTransaction(any(), any()) }
+    }
+
+    @Test
+    fun addExpenseScreen_addButton_showsAddLabel() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+
+        composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).assertExists()
+    }
+
+    @Test
+    fun addExpenseScreen_bothButtons_areDisplayedSideBySide() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+
+        composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).assertExists()
+        composeTestRule.onNode(hasText("Add More") and hasClickAction()).assertExists()
+    }
+
+    @Test
+    fun addExpenseScreen_addButton_callsDismiss() {
+        var dismissCalled = false
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = { dismissCalled = true })
+        }
+
+        composeTestRule.onNodeWithText("Amount").performTextInput("100")
+        composeTestRule.onNode(hasText("Add") and hasClickAction() and !hasText("Add More")).performClick()
+
+        assertTrue(dismissCalled)
+    }
+
+    @Test
+    fun addExpenseScreen_addMoreButton_doesNotCallDismiss() {
+        var dismissCalled = false
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = { dismissCalled = true })
+        }
+
+        composeTestRule.onNodeWithText("Amount").performTextInput("100")
+        composeTestRule.onNode(hasText("Add More") and hasClickAction()).performClick()
+
+        assertFalse(dismissCalled)
+    }
+
+    @Test
+    fun addExpenseScreen_addMoreButton_resetsTabToExpense_afterIncome() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+
+        composeTestRule.onNode(hasText("Income") and hasClickAction()).performClick()
+        composeTestRule.onNodeWithText("Amount").performTextInput("500")
+        composeTestRule.onNode(hasText("Add More") and hasClickAction()).performClick()
+
+        // Income tab must no longer be selected after reset to EXPENSE
+        composeTestRule.onNode(hasText("Income") and isSelected()).assertDoesNotExist()
+    }
+
+    @Test
+    fun addExpenseScreen_addMoreButton_clearsDescription() {
+        composeTestRule.setContent {
+            AddExpenseScreen(transactionVM = transactionVM, categoryVM = categoryVM, accountVM = accountVM, onDismiss = {})
+        }
+
+        composeTestRule.onNodeWithText("Amount").performTextInput("300")
+        composeTestRule.onNodeWithText("Description").performTextInput("SomeDescription")
+        composeTestRule.onNode(hasText("Add More") and hasClickAction()).performClick()
+
+        composeTestRule.onNodeWithText("SomeDescription").assertDoesNotExist()
+    }
 }
