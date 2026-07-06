@@ -143,6 +143,51 @@ class PeriodNavBarTest {
     }
 
     @Test
+    fun periodNavBar_showsDatePickerIconForDayRange() {
+        composeTestRule.setContent {
+            PeriodNavBar(
+                dateRange = DateRange.Day(Date()),
+                label = "Today",
+                onPrevious = {},
+                onNext = {},
+                onDateSelected = {},
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Pick date").assertIsDisplayed()
+    }
+
+    @Test
+    fun periodNavBar_noDatePickerIconForMonthRange() {
+        composeTestRule.setContent {
+            PeriodNavBar(
+                dateRange = DateRange.Month(2026, 5),
+                label = "June 2026",
+                onPrevious = {},
+                onNext = {},
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Pick date").assertDoesNotExist()
+    }
+
+    @Test
+    fun periodNavBar_datePickerIcon_callsOnDateSelected() {
+        var selectedDate: Date? = null
+        composeTestRule.setContent {
+            PeriodNavBar(
+                dateRange = DateRange.Day(Date()),
+                label = "Today",
+                onPrevious = {},
+                onNext = {},
+                onDateSelected = { selectedDate = it },
+            )
+        }
+
+        composeTestRule.onNodeWithContentDescription("Pick date").assertIsDisplayed()
+    }
+
+    @Test
     fun periodNavBar_showsNegativeTotalWithSignedAmount() {
         composeTestRule.setContent {
             PeriodNavBar(

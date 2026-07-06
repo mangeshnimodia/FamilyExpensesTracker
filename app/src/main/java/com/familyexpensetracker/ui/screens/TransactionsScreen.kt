@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.FilterType
 import com.familyexpensetracker.ui.components.*
 import com.familyexpensetracker.ui.viewmodel.AccountViewModel
@@ -199,6 +200,7 @@ fun TransactionsScreen(
                             onNext = { transactionVM.setSelectedDateRange(periodNavigator.next(selectedDateRange)) },
                             navigator = periodNavigator,
                             expenseTotal = periodTotal,
+                            onDateSelected = { transactionVM.setSelectedDateRange(DateRange.Day(it)) },
                         )
                     } else {
                         TotalBanner(total = periodTotal)

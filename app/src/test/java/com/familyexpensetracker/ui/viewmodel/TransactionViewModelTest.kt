@@ -334,4 +334,23 @@ class TransactionViewModelTest {
         viewModel.fetchAccountBalance()
         assertNull(viewModel.accountBalance.value)
     }
+
+    @Test
+    fun `setSelectedDateRange updates selectedDateRange value`() = runTest {
+        val newDate = Calendar.getInstance().apply { set(2026, 5, 15) }.time
+        viewModel.setSelectedDateRange(DateRange.Day(newDate))
+        val range = viewModel.selectedDateRange.value
+        assertTrue(range is DateRange.Day)
+        assertEquals(newDate, (range as DateRange.Day).date)
+    }
+
+    @Test
+    fun `fetchTransactions after setSelectedDateRange uses new range`() = runTest {
+        val newDate = Calendar.getInstance().apply { set(2026, 5, 15) }.time
+        val newRange = DateRange.Day(newDate)
+        coEvery { fetchRepository.fetch(any(), any()) } returns emptyList()
+        viewModel.setSelectedDateRange(newRange)
+        viewModel.fetchTransactions()
+        coVerify { fetchRepository.fetch(newRange, any()) }
+    }
 }
