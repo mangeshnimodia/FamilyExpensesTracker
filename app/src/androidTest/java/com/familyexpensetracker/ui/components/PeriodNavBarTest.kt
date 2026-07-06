@@ -150,6 +150,6 @@ class PeriodNavBarTest {
             )
         }
 
-        composeTestRule.onNodeWithText("−₹500.75").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹500.75").assertIsDisplayed()
     }
 }

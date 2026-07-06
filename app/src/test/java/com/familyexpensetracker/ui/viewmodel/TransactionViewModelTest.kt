@@ -241,7 +241,7 @@ class TransactionViewModelTest {
 
         viewModel.fetchTransactions()
 
-        assertEquals(700.0, viewModel.expenseTotal.value, 0.001)
+        assertEquals(-700.0, viewModel.expenseTotal.value, 0.001)
     }
 
     @Test
@@ -263,7 +263,7 @@ class TransactionViewModelTest {
         )
         coEvery { fetchRepository.fetch(any(), any()) } returns txns
         viewModel.fetchTransactions()
-        assertEquals(500.0, viewModel.expenseTotal.value, 0.001)
+        assertEquals(-500.0, viewModel.expenseTotal.value, 0.001)
 
         viewModel.setSelectedDateRange(DateRange.Month(2026, 5))
 
@@ -277,7 +277,7 @@ class TransactionViewModelTest {
         )
         coEvery { fetchRepository.fetch(any(), any()) } returns txns
         viewModel.fetchTransactions()
-        assertEquals(500.0, viewModel.expenseTotal.value, 0.001)
+        assertEquals(-500.0, viewModel.expenseTotal.value, 0.001)
 
         viewModel.setSelectedFilter(TransactionFilter(selectedAccounts = listOf("Bank")))
 
@@ -291,7 +291,7 @@ class TransactionViewModelTest {
         )
         coEvery { fetchRepository.fetch(any(), any()) } returns txns
         viewModel.fetchTransactions()
-        assertEquals(500.0, viewModel.expenseTotal.value, 0.001)
+        assertEquals(-500.0, viewModel.expenseTotal.value, 0.001)
 
         viewModel.setSelectedAccount("Bank")
 

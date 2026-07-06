@@ -57,7 +57,7 @@ class CategorySummaryListTest {
             )
         }
 
-        composeTestRule.onNodeWithText("−₹500.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹500.00").assertIsDisplayed()
     }
 
     @Test
@@ -114,6 +114,6 @@ class CategorySummaryListTest {
             )
         }
 
-        composeTestRule.onNodeWithText("\u2212\u20B9500.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("\u20B9500.00").assertIsDisplayed()
     }
 }

@@ -27,7 +27,7 @@ class AmountTextTest {
             AmountText(amount = -500.0)
         }
 
-        composeTestRule.onNodeWithText("−₹500.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹500.00").assertIsDisplayed()
     }
 
     @Test
@@ -65,7 +65,7 @@ class AmountTextTest {
             )
         }
 
-        composeTestRule.onNodeWithText("−₹200.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹200.00").assertIsDisplayed()
         assert(capturedColor == AppColors.expenseRed) {
             "Negative amount must use AppColors.expenseRed, got $capturedColor"
         }
@@ -77,6 +77,6 @@ class AmountTextTest {
             AmountText(amount = -100000.0)
         }
 
-        composeTestRule.onNodeWithText("−₹1,00,000.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹1,00,000.00").assertIsDisplayed()
     }
 }

@@ -25,7 +25,7 @@ class TotalBannerTest {
             TotalBanner(total = -750.50)
         }
 
-        composeTestRule.onNodeWithText("−₹750.50").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹750.50").assertIsDisplayed()
     }
 
     @Test

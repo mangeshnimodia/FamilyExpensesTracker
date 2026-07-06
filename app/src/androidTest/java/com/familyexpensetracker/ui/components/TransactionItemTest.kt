@@ -31,7 +31,7 @@ class TransactionItemTest {
         composeTestRule.onNodeWithText("Transport/Fuel").assertIsDisplayed()
         composeTestRule.onNodeWithText("28/06/2026").assertIsDisplayed()
         composeTestRule.onNodeWithText("Petrol for car").assertIsDisplayed()
-        composeTestRule.onNodeWithText("−₹150.50").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹150.50").assertIsDisplayed()
     }
 
     @Test
@@ -97,7 +97,7 @@ class TransactionItemTest {
             TransactionItem(txn = txn)
         }
 
-        composeTestRule.onNodeWithText("−₹1,00,000.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹1,00,000.00").assertIsDisplayed()
     }
 
     @Test

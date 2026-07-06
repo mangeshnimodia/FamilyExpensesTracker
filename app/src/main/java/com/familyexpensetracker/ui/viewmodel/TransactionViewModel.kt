@@ -228,7 +228,7 @@ class TransactionViewModel(
         try {
             val fetched = fetchRepository.fetch(range, filter)
             _transactions.value = fetched
-            _expenseTotal.value = fetched.filter { it.amount < 0 }.sumOf { -it.amount }
+            _expenseTotal.value = fetched.filter { it.amount < 0 }.sumOf { it.amount }
             _categorySummaries.value = summaryCalculator.calculateCategorySummaries(fetched)
             _monthSummaries.value = when (range) {
                 is DateRange.FinancialYear -> summaryCalculator.calculateFYMonthSummaries(fetched, range.startYear)

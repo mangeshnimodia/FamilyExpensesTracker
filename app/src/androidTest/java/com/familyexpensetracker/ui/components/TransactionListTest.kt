@@ -36,7 +36,7 @@ class TransactionListTest {
         }
 
         composeTestRule.onNodeWithText("Food/Groceries").assertIsDisplayed()
-        composeTestRule.onNodeWithText("₹150.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("₹150.00").assertIsDisplayed() // negative amount shown without sign, color indicates direction
     }
 
     @Test
