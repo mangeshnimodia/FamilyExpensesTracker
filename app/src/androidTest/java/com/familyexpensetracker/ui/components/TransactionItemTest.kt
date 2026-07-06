@@ -3,6 +3,7 @@ package com.familyexpensetracker.ui.components
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.familyexpensetracker.data.model.Transaction
+import com.familyexpensetracker.ui.theme.AppColors
 import org.junit.Rule
 import org.junit.Test
 
@@ -32,6 +33,9 @@ class TransactionItemTest {
         composeTestRule.onNodeWithText("28/06/2026").assertIsDisplayed()
         composeTestRule.onNodeWithText("Petrol for car").assertIsDisplayed()
         composeTestRule.onNodeWithText("₹150.50").assertIsDisplayed()
+        val color = composeTestRule.onNodeWithText("₹150.50")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(color == AppColors.expenseRed) { "Expense amount must be red, got $color" }
     }
 
     @Test
@@ -98,6 +102,9 @@ class TransactionItemTest {
         }
 
         composeTestRule.onNodeWithText("₹1,00,000.00").assertIsDisplayed()
+        val color = composeTestRule.onNodeWithText("₹1,00,000.00")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(color == AppColors.expenseRed) { "Expense amount must be red, got $color" }
     }
 
     @Test

@@ -4,6 +4,8 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.NavController
 import com.familyexpensetracker.data.model.CategorySummary
+import com.familyexpensetracker.ui.components.AmountColorSemanticsKey
+import com.familyexpensetracker.ui.theme.AppColors
 import com.familyexpensetracker.data.model.SubcategoryGroup
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.ui.viewmodel.TransactionViewModel
@@ -159,5 +161,8 @@ class SubcategoryDetailScreenTest {
         }
 
         composeTestRule.onNodeWithText("₹200.00").assertIsDisplayed()
+        val color = composeTestRule.onNodeWithText("₹200.00")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(color == AppColors.expenseRed) { "Expense subcategory amount must be red, got $color" }
     }
 }

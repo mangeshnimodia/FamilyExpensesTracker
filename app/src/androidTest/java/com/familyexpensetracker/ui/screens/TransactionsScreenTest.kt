@@ -3,10 +3,13 @@ package com.familyexpensetracker.ui.screens
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.familyexpensetracker.data.model.CategorySummary
+import com.familyexpensetracker.ui.components.AmountColorSemanticsKey
+import com.familyexpensetracker.ui.theme.AppColors
 import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.MonthSummary
 import com.familyexpensetracker.data.model.Transaction
 import com.familyexpensetracker.data.model.SearchFilter
+import com.familyexpensetracker.data.model.FilterType
 import com.familyexpensetracker.data.model.TransactionFilter
 import com.familyexpensetracker.ui.viewmodel.AccountViewModel
 import com.familyexpensetracker.ui.viewmodel.CategoryViewModel
@@ -80,9 +83,14 @@ class TransactionsScreenTest {
 
     @Test
     fun transactionsScreen_navigatesToAddScreen_onFabClick() {
+        expenseTotalFlow.value = 0.0
         composeTestRule.setContent {
             TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
         }
+
+        val totalColor = composeTestRule.onAllNodesWithText("₹0.00")[0]
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(totalColor == AppColors.incomeGreen) { "Zero expense total must be green, got $totalColor" }
 
         composeTestRule.onNodeWithContentDescription("Add Expense").performClick()
 
@@ -190,9 +198,15 @@ class TransactionsScreenTest {
 
     @Test
     fun transactionsScreen_filterToggle_showsFilterPanel() {
+        expenseTotalFlow.value = -450.0
+        selectedFilterFlow.value = TransactionFilter(type = FilterType.EXPENSE)
         composeTestRule.setContent {
             TransactionsScreen(transactionVM, categoryVM, accountVM, searchVM, paymentMethodVM)
         }
+
+        val totalColor = composeTestRule.onNodeWithText("₹450.00")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(totalColor == AppColors.expenseRed) { "Negative expense total must be red, got $totalColor" }
 
         composeTestRule.onNodeWithContentDescription("Toggle filters").performClick()
 

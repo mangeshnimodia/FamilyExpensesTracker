@@ -4,6 +4,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.familyexpensetracker.data.model.DateRange
 import com.familyexpensetracker.data.model.MonthSummary
+import com.familyexpensetracker.ui.theme.AppColors
 import io.mockk.mockk
 import io.mockk.verify
 import java.util.Calendar
@@ -41,6 +42,9 @@ class MonthlyBreakdownListTest {
         }
 
         composeTestRule.onNodeWithText("₹500.00").assertIsDisplayed()
+        val color = composeTestRule.onNodeWithText("₹500.00")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(color == AppColors.expenseRed) { "Expense month amount must be red, got $color" }
     }
 
     @Test
@@ -97,6 +101,9 @@ class MonthlyBreakdownListTest {
         }
 
         composeTestRule.onNodeWithText("\u20B92,500.00").assertIsDisplayed()
+        val color = composeTestRule.onNodeWithText("\u20B92,500.00")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(color == AppColors.incomeGreen) { "Income month amount must be green, got $color" }
     }
 
     @Test

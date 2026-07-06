@@ -2,6 +2,7 @@ package com.familyexpensetracker.ui.components
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.familyexpensetracker.ui.theme.AppColors
 import org.junit.Rule
 import org.junit.Test
 
@@ -17,6 +18,9 @@ class TotalBannerTest {
         }
 
         composeTestRule.onNodeWithText("₹1,200.00").assertIsDisplayed()
+        val color = composeTestRule.onNodeWithText("₹1,200.00")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(color == AppColors.incomeGreen) { "Positive total must be green, got $color" }
     }
 
     @Test
@@ -26,7 +30,13 @@ class TotalBannerTest {
         }
 
         composeTestRule.onNodeWithText("₹750.50").assertIsDisplayed()
+        val color = composeTestRule.onNodeWithText("₹750.50")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(color == AppColors.expenseRed) { "Negative total must be red, got $color" }
     }
+
+
+
 
     @Test
     fun totalBanner_displaysZeroTotal() {

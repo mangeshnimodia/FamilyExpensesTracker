@@ -3,6 +3,7 @@ package com.familyexpensetracker.ui.components
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.familyexpensetracker.data.model.DateRange
+import com.familyexpensetracker.ui.theme.AppColors
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Rule
@@ -41,6 +42,9 @@ class PeriodNavBarTest {
         }
 
         composeTestRule.onNodeWithText("₹1,234.50").assertIsDisplayed()
+        val color = composeTestRule.onNodeWithText("₹1,234.50")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(color == AppColors.incomeGreen) { "Positive expense total must be green, got $color" }
     }
 
     @Test
@@ -151,5 +155,8 @@ class PeriodNavBarTest {
         }
 
         composeTestRule.onNodeWithText("₹500.75").assertIsDisplayed()
+        val color = composeTestRule.onNodeWithText("₹500.75")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(color == AppColors.expenseRed) { "Negative expense total must be red, got $color" }
     }
 }

@@ -3,6 +3,7 @@ package com.familyexpensetracker.ui.components
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.familyexpensetracker.data.model.CategorySummary
+import com.familyexpensetracker.ui.theme.AppColors
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Rule
@@ -58,6 +59,9 @@ class CategorySummaryListTest {
         }
 
         composeTestRule.onNodeWithText("₹500.00").assertIsDisplayed()
+        val color = composeTestRule.onNodeWithText("₹500.00")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(color == AppColors.expenseRed) { "Expense category amount must be red, got $color" }
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.familyexpensetracker.ui.components
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.familyexpensetracker.ui.theme.AppColors
 import org.junit.Rule
 import org.junit.Test
 
@@ -36,6 +37,9 @@ class AccountBalanceTextTest {
         }
 
         composeTestRule.onNodeWithText("₹1,500.75").assertIsDisplayed()
+        val color = composeTestRule.onNodeWithText("₹1,500.75")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(color == AppColors.incomeGreen) { "Positive balance must be green, got $color" }
     }
 
     @Test
@@ -45,6 +49,9 @@ class AccountBalanceTextTest {
         }
 
         composeTestRule.onNodeWithText("₹320.50").assertIsDisplayed()
+        val color = composeTestRule.onNodeWithText("₹320.50")
+            .fetchSemanticsNode().config[AmountColorSemanticsKey]
+        assert(color == AppColors.expenseRed) { "Negative balance must be red, got $color" }
     }
 
     @Test
